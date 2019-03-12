@@ -1,15 +1,15 @@
 
-GTEST_DIR = /Users/ranzhao1/Desktop/IBE_GitHub/src/gtest
+GTEST_DIR = /home/wrk/workspace/2019spring/IBE/src/gtest
 
 # Where to find user code.
-USER_DIR = /Users/ranzhao1/Desktop/IBE_GitHub/src/BasicIdent_FullIdent
+USER_DIR = /home/wrk/workspace/2019spring/IBE/src/BasicIdent_FullIdent
 
 
 # Flags passed to the preprocessor.
-CPPFLAGS += -I$(GTEST_DIR)/include
+CPPFLAGS += -I $(GTEST_DIR)/include
 
 # Flags passed to the C++ compiler.
-CXXFLAGS += -g -Wall -Wextra  -I /usr/local/include/  -L /usr/local/lib/ -Wl,-rpath /usr/local/lib -l pbc -l gmp
+CXXFLAGS += -g -Wall -Wextra  -I /usr/local/include/  -L/usr/local/lib/ -L/usr/lib/x86_64-linux-gnu -Wl,-rpath /usr/local/lib -lpbc -lgmp
 
 
 
@@ -17,13 +17,15 @@ TESTS = bf_4_1_unittest
 
 
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
-                $(GTEST_DIR)/include/gtest/internal/*.h
+				$(GTEST_DIR)/include/gtest/internal/*.h
 
 # House-keeping build targets.
 
 all : $(TESTS)
 
 clean :
+	echo $(GTEST_DIR)
+	echo $(pwd)
 	rm -f $(TESTS) gtest.a gtest_main.a *.o
 
 # Builds gtest.a and gtest_main.a.
@@ -58,4 +60,4 @@ bf_4_1_unittest.o : $(USER_DIR)/bf_4_1_unittest.c $(USER_DIR)/bf_4_1.h $(GTEST_H
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/bf_4_1_unittest.c
 
 bf_4_1_unittest : bf_4_1_unittest.o bf_4_1.o sha1.o utils.o gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
+	$(CXX) $(CPPFLAGS) $^ $(CXXFLAGS) -lpthread -o $@
