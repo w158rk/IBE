@@ -13,7 +13,7 @@ CXXFLAGS += -g -Wall -Wextra  -I /usr/local/include/  -L/usr/local/lib/ -L/usr/l
 
 
 
-TESTS = bf_4_1_unittest
+TESTS = bf_4_2_unittest
 
 
 GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
@@ -53,11 +53,11 @@ utils.o:$(USER_DIR)/utils.h $(USER_DIR)/utils.c $(GTEST_HEADERS)
 sha1.o: $(USER_DIR)/sha1.h $(USER_DIR)/sha1.c $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/sha1.c
 
-bf_4_1.o : $(USER_DIR)/bf_4_1.c $(USER_DIR)/bf_4_1.h sha1.o  $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/bf_4_1.c 
+bf_4_2.o : $(USER_DIR)/bf_4_2.c $(USER_DIR)/bf_4_2.h sha1.o  $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/bf_4_2.c 
 
-bf_4_1_unittest.o : $(USER_DIR)/bf_4_1_unittest.c $(USER_DIR)/bf_4_1.h $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/bf_4_1_unittest.c
+bf_4_2_unittest.o : $(USER_DIR)/bf_4_2_unittest.c $(USER_DIR)/bf_4_2.h $(GTEST_HEADERS)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(USER_DIR)/bf_4_2_unittest.c
 
-bf_4_1_unittest : bf_4_1_unittest.o bf_4_1.o sha1.o utils.o gtest_main.a
+bf_4_2_unittest : bf_4_2_unittest.o bf_4_2.o sha1.o utils.o gtest_main.a
 	$(CXX) $(CPPFLAGS) $^ $(CXXFLAGS) -lpthread -o $@
