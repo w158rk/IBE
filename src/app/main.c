@@ -1,3 +1,11 @@
+/**
+ * @file main.c
+ * @brief the entrance of the whole system 
+ * 
+ * @author wrk
+ * @date 2019.03.14
+ */
+
 #include "main.h"
 
 int main()
@@ -22,12 +30,12 @@ int main()
   mpz_init(messagehash);
     
   printf("\n############SETUP############\n");
-//     printf("Please enter rbits:");
-//   scanf("%[0-9]", rbits);
-//     getchar();
-//   printf("\nPlease enter qbits:");
-//   scanf("%[0-9]", qbits);
-//     getchar();
+    printf("Please enter rbits:");
+  scanf("%[0-9]", rbits);
+    getchar();
+  printf("\nPlease enter qbits:");
+  scanf("%[0-9]", qbits);
+    getchar();
     printf("rbits = 160");
     printf("qbits = 512");
     

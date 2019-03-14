@@ -3,3 +3,9 @@
 gmp-5.0.5
  
 pbc-0.5.12
+
+doc/
+
+build/
+
+back/
