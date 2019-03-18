@@ -13,15 +13,10 @@ project (IBE)
 # so that we will find TutorialConfig.h
 # include_directories("${PROJECT_BINARY_DIR}")
 
-SET(PROJECT_LIB_DIR ${PWD}/Library)
+SET(PROJECT_LIB_DIR ${CMAKE_SOURCE_DIR}/Library)
 
 link_directories(${PROJECT_LIB_DIR})
 
-# include_directories ("${PROJECT_LIB_DIR}")
-# add_subdirectory (crypto) 
 add_subdirectory (IBE) 
 add_subdirectory (app) 
  
-# add the executable
-# add_executable (app main.c)
-# target_link_libraries (app gmp pbc)
