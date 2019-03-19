@@ -129,8 +129,9 @@ void setup_sys(int rbits,int qbits,element_t P,element_t Ppub,pairing_t pairing,
     element_mul_zn(Ppub, P, s);
 
     output_sys("pairing.conf",par);
-    output_public_par("public.conf",P,Ppub);
-    output_private_par("private.conf",s);
+    output_par("point.conf",P);
+    output_par("public.conf",Ppub);
+    output_par("private.conf",s);
 }
 
 void output_sys(const char* filename, pbc_param_t par) {
@@ -139,15 +140,7 @@ void output_sys(const char* filename, pbc_param_t par) {
     fclose(f);
 }
 
-void output_public_par(const char* filename, element_t P, element_t Ppub) {
-    FILE* f = fopen(filename, "w");
-    element_out_str(f, 16, P);
-    fprintf(f, "\n-----\n");                   // separate
-    element_out_str(f, 16, Ppub);
-    fclose(f);
-}
-
-void output_private_par(const char* filename, element_t s) {
+void output_par(const char* filename, element_t s) {
     FILE* f = fopen(filename, "w");
     element_out_str(f, 16, s);
     fclose(f);

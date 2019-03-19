@@ -2,7 +2,6 @@
 #define _BF_4_1_H_
 
 #include <pbc.h>
-#include <gmp.h>
 #include <stdio.h>
 #include <string.h>
 //#include "sha1.h"
@@ -18,6 +17,5 @@ void decryption(element_t Sid, pairing_t pairing, element_t U, char* V,
 void setup_sys(int rbits, int qbits, element_t P, element_t Ppub,
                pairing_t pairing, element_t s);
 void output_sys(const char* filename, pbc_param_t par);
-void output_private_par(const char* filename, element_t s);
-void output_public_par(const char* filename, element_t P, element_t Ppub);
+void output_par(const char* filename, element_t s);
 #endif
