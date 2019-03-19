@@ -17,5 +17,7 @@ void decryption(element_t Sid, pairing_t pairing, element_t U, char* V,
                 char* xor_result_receiver);
 void setup_sys(int rbits, int qbits, element_t P, element_t Ppub,
                pairing_t pairing, element_t s);
-
+void output_sys(const char* filename, pbc_param_t par);
+void output_private_par(const char* filename, element_t s);
+void output_public_par(const char* filename, element_t P, element_t Ppub);
 #endif

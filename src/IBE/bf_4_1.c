@@ -112,21 +112,44 @@ void decryption(element_t Sid, pairing_t pairing, element_t U, char* V,
 void setup_sys(int rbits,int qbits,element_t P,element_t Ppub,pairing_t pairing,element_t s )
 {
     
-  pbc_param_t par;   //Parameter to generate the pairing
-  pbc_param_init_a_gen(par, rbits, qbits); //Initial the parameter for the pairing
-  pairing_init_pbc_param(pairing, par);   //Initial the pairing
-    
-    
-  //In our case, the pairing must be symmetric
-  if (!pairing_is_symmetric(pairing))
-    pbc_die("pairing must be symmetric");
-    
-  element_init_G1(P, pairing);
-  element_init_G1(Ppub, pairing);
-  element_init_Zr(s, pairing);
-  element_random(P);
-  element_random(s);
-  element_mul_zn(Ppub, P, s);
-    
+    pbc_param_t par;   //Parameter to generate the pairing
+    pbc_param_init_a_gen(par, rbits, qbits); //Initial the parameter for the pairing
+    pairing_init_pbc_param(pairing, par);   //Initial the pairing
+        
+        
+    //In our case, the pairing must be symmetric
+    if (!pairing_is_symmetric(pairing))
+        pbc_die("pairing must be symmetric");
+        
+    element_init_G1(P, pairing);
+    element_init_G1(Ppub, pairing);
+    element_init_Zr(s, pairing);
+    element_random(P);
+    element_random(s);
+    element_mul_zn(Ppub, P, s);
+
+    output_sys("pairing.conf",par);
+    output_public_par("public.conf",P,Ppub);
+    output_private_par("private.conf",s);
+}
+
+void output_sys(const char* filename, pbc_param_t par) {
+    FILE* f = fopen(filename, "w");
+    pbc_param_out_str(f, par);
+    fclose(f);
+}
+
+void output_public_par(const char* filename, element_t P, element_t Ppub) {
+    FILE* f = fopen(filename, "w");
+    element_out_str(f, 16, P);
+    fprintf(f, "\n-----\n");                   // separate
+    element_out_str(f, 16, Ppub);
+    fclose(f);
+}
+
+void output_private_par(const char* filename, element_t s) {
+    FILE* f = fopen(filename, "w");
+    element_out_str(f, 16, s);
+    fclose(f);
 }
 
