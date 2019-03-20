@@ -25,24 +25,19 @@
 
 #include"bf_4_1.h"
 
-
 #define SIZE 100
-#define RBITS 160
-#define QBITS 512
 
 
 
 void get_private_key(char* ID, pairing_t pairing, element_t s, element_t Sid)
 {
-    element_t PublicKey, PrivateKey;
+    element_t PublicKey;
     element_init_G1(PublicKey, pairing);
-    element_init_G1(PrivateKey, pairing);
+    element_init_G1(Sid, pairing);
     
     element_from_hash(PublicKey, ID, strlen(ID));   //Compute user public key
-    element_mul_zn(PrivateKey, PublicKey, s);   //Compute user private key
-  element_printf("Private key Sid = %B\n", PrivateKey);
-  Sid = PrivateKey;
-    
+    element_mul_zn(Sid, PublicKey, s);   //Compute user private key
+    // Sid = PrivateKey;
 }
 
 void get_public_key(char* ID, pairing_t pairing, element_t Qid)
@@ -55,7 +50,6 @@ void get_public_key(char* ID, pairing_t pairing, element_t Qid)
   element_from_hash(PublicKey, ID, strlen(ID));   //Compute user public key
   element_printf("\nPublic key Qid = %B\n", PublicKey);
   Qid = PublicKey;
-    
 }
 
 void encryption(char* shamessage, char* ID, element_t P, element_t P_pub,
@@ -141,7 +135,12 @@ void output_sys(const char* filename, pbc_param_t par) {
 }
 
 void output_par(const char* filename, element_t s) {
-    FILE* f = fopen(filename, "w");
+    FILE *f;
+    if((f=fopen(filename,"w"))==NULL)
+    {
+        printf("open file %s error.\n",filename);
+        return ;
+    }
     element_out_str(f, 16, s);
     fclose(f);
 }
