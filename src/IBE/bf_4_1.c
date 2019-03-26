@@ -43,44 +43,44 @@ void get_private_key(char* ID, pairing_t pairing, element_t s, element_t Sid)
 void get_public_key(char* ID, pairing_t pairing, element_t Qid)
 {
     
-  element_t PublicKey, PrivateKey;
-  element_init_G1(PublicKey, pairing);
+  element_t PrivateKey;
+  element_init_G1(Qid, pairing);
   element_init_G1(PrivateKey, pairing);
     
-  element_from_hash(PublicKey, ID, strlen(ID));   //Compute user public key
-  element_printf("\nPublic key Qid = %B\n", PublicKey);
-  Qid = PublicKey;
+  element_from_hash(Qid, ID, strlen(ID));   //Compute user public key
 }
 
-void encryption(char* shamessage, char* ID, element_t P, element_t P_pub,
+void encryption(char* message, char* ID, element_t P, element_t P_pub,
                 element_t U, char* V, pairing_t pairing)
-{
-  int i;
+{       // 40个字节,320位的加密
+
+  int i, n=400;
   char sgid[SIZE];   //Sender gid string representation
   char shagid[SIZE]; //Sender H2 function result
+  char *buff = (char*)malloc(n);
+  memset(buff, 0, n);
+  strcpy(buff, message);
     
   element_t r;
   element_t Qid;
   element_t gid;
-  element_init_G1(Qid, pairing);
   element_init_GT(gid, pairing);
   element_init_Zr(r, pairing);
   element_random(r);
   element_mul_zn(U, P, r);
-  element_printf("U = %B", U);
   get_public_key(ID, pairing, Qid);
+  //printf("%s\n", ID);
   element_pairing(gid, Qid, P_pub);
   element_pow_zn(gid, gid, r);
   element_snprint(sgid, SIZE, gid);
   sha_fun(sgid, shagid);
+  //printf("[enc]%s\n",sgid);
     
   //Do the XOR operation to the shamessage and shagid
-  for (i = 0; i < 40; i++) {
-    xor_operation(shamessage[i], shagid[i], V);
-  }
+    xor_operation_char(buff, shagid, V, 40);
     
-  printf("\nV=%s\n", V);
-    
+//   //..("\nV=%s\n", V);
+//     //..("%d\n", &U);
 }
 
 void decryption(element_t Sid, pairing_t pairing, element_t U, char* V,
@@ -94,12 +94,11 @@ void decryption(element_t Sid, pairing_t pairing, element_t U, char* V,
   element_init_GT(rgid, pairing);
   element_pairing(rgid, Sid, U);
   element_snprint(sgid_receiver, SIZE, rgid);
+  //printf("[dec]%s\n",sgid_receiver);
   sha_fun(sgid_receiver, shagid_receiver);  //Generate H2(e(dID,U));
     
   //XOR V and the hash result above
-  for (i = 0; i < 40; i++) {
-    xor_operation(V[i], shagid_receiver[i], xor_result_receiver);
-  }
+    xor_operation_char(V, shagid_receiver, xor_result_receiver, 40);
     
 }
 
@@ -128,6 +127,12 @@ void setup_sys(int rbits,int qbits,element_t P,element_t Ppub,pairing_t pairing,
     output_par("private.conf",s);
 }
 
+void output_str(const char* filename, char *string) {
+    FILE* f = fopen(filename, "w");
+    fwrite(string, strlen(string), 1, f);
+    fclose(f);
+}
+
 void output_sys(const char* filename, pbc_param_t par) {
     FILE* f = fopen(filename, "w");
     pbc_param_out_str(f, par);
@@ -138,10 +143,14 @@ void output_par(const char* filename, element_t s) {
     FILE *f;
     if((f=fopen(filename,"w"))==NULL)
     {
-        printf("open file %s error.\n",filename);
+        //printf("open file %s error.\n",filename);
         return ;
     }
-    element_out_str(f, 16, s);
+    char buff[500];
+    memset(buff, '\0', 500);
+    int length = element_to_bytes(buff, s);
+    fwrite(buff, length, 1, f);
+    // element_out_str(f, 16, s);
     fclose(f);
 }
 

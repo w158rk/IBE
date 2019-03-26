@@ -11,10 +11,10 @@
 int main()
 {
     
-  char qbits[5];
-  char rbits[5];
-  char ID[SIZE];   //User ID
-  char message[SIZE];   //User message
+  char qbits[5] = "512";
+  char rbits[5] = "160"; 
+  char ID[SIZE] = "wrk";   //User ID
+  char message[SIZE] = "wrk";   //User message
   char shamessage[SIZE]; //The input message digest(sha1 result)
     
   char xor_result[SIZE]; //Sender XOR result---V
@@ -30,15 +30,6 @@ int main()
   mpz_init(messagehash);
     
   printf("\n############SETUP############\n");
-    printf("Please enter rbits:");
-  scanf("%[0-9]", rbits);
-    getchar();
-  printf("\nPlease enter qbits:");
-  scanf("%[0-9]", qbits);
-    getchar();
-    printf("rbits = 160");
-    printf("qbits = 512");
-    
   setup_sys(atoi(rbits), atoi(qbits), P, Ppub, pairing, s);
   printf("System parameters have been set!\n");
 
@@ -53,10 +44,6 @@ int main()
     printf("###########EXTRACT###########\n");
     element_init_G1(Qid, pairing);
     element_init_G1(Sid, pairing);
-    printf("Plase enter your ID:");
-    scanf("%[ a-zA-Z0-9+*-!.,&*@{}$#]", ID);
-    printf("\nID=%s\n", ID);
-    getchar();
     get_private_key(ID, pairing, s, Sid);
     get_public_key(ID, pairing, Qid);
 
@@ -66,9 +53,6 @@ int main()
     #endif 
 
     printf("##########ENCRPTION##########\n");
-    printf("\nPlase enter the message to encrypt:");
-    scanf("%[ a-zA-Z0-9+*-!.,&*@{}$#]", message);
-    getchar();
     printf("The original message=%s", message);
     
     sha_fun(message, shamessage);   //Get the message digest
@@ -78,7 +62,7 @@ int main()
     encryption(shamessage, ID, P, Ppub, U, xor_result, pairing);
     printf("Send <U,V> to the receiver!\n");
     
-    printf("##########DECRYPTION##########");
+    printf("##########DECRYPTION##########\n");
     decryption(Sid, pairing, U, xor_result, xor_result_receiver);
     printf("\nThe recovery message digest is %s\n", xor_result_receiver);
     printf("The original message digest is %s\n", shamessage);

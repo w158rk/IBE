@@ -11,5 +11,6 @@
 void sha_fun(char target_string[], char* sha_result);
 int htoi(char a);
 void xor_operation(const char a, const char b, char* xor_result);
+void xor_operation_char(char* a, char* b, char* xor_result, int length);
 
 #endif

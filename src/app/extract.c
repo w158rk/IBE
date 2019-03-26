@@ -21,24 +21,23 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    char *buff = NULL;
+    char *buff = (char *)malloc(BUFF_SIZE);
 
     char *ID = argv[1];   
     
     pairing_t pairing;   //The pair of bilinear map
     element_t s, Sid; 
 
-    readFromFile(&buff, pairing_file);
+    readFromFile(buff, pairing_file);
     pairing_init_set_str(pairing, buff);
-    free(buff);
 
-    readFromFile(&buff, private_file);
+    readFromFile(buff, private_file);
     element_init_Zr(s, pairing);
-    element_set_str(s, buff, BASE);
-    free(buff);
+    element_from_bytes(s, buff);
 
-    printf("###########EXTRACT###########\n");
+    //printf("###########EXTRACT###########\n");
     get_private_key(ID, pairing, s, Sid);
+    // element_//printf("[main] Sid = %B\n", Sid);
     
     char filename[SIZE] = "sk_";
     strcpy(filename+3, ID);

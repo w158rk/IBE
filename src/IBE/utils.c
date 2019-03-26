@@ -43,12 +43,11 @@ int htoi(char a)
    }
 
     return i;
-
 }
 
 void xor_operation(char a, char b, char* xor_result)
 {
-
+      // a,b都是十六进制的数
    int i;
    int j;
    int z;
@@ -59,7 +58,15 @@ void xor_operation(char a, char b, char* xor_result)
    z = i ^ j;
    sprintf(result, "%X", z);
    strcat(xor_result, result);
-
 }
+
+void xor_operation_char(char* a, char* b, char* xor_result, int length)
+{
+   int i;
+   for(i=0; i<length; i++) {
+      xor_result[i] = a[i] ^ b[i];
+   }
+}
+
 
 #endif // UTILS_C

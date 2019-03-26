@@ -9,6 +9,7 @@
 #include "main.h"
 
 #define STRINGSIZE 200
+
 const char pairing_file[] = "pairing.conf";
 const char public_file[] = "public.conf";
 const char point_file[] = "point.conf";
@@ -20,7 +21,7 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    char *buff = NULL;
+    char *buff = (char *)malloc(BUFF_SIZE);
 
     char *destination = argv[1];   //ID of receiver
     char message[SIZE];             //User message
@@ -37,36 +38,41 @@ int main(int argc, char **argv)
 
 
 
-    readFromFile(&buff, pairing_file);
-    pairing_init_set_str(pairing, buff);
-    free(buff);
+    int length = readFromFile(buff, pairing_file);
+    pairing_init_set_buf(pairing, buff, length);
 
-    readFromFile(&buff, public_file);
+    readFromFile(buff, public_file);
     element_init_G1(Ppub, pairing);
-    element_set_str(Ppub, buff, BASE);
-    free(buff);
+    element_from_bytes(Ppub, buff);
 
-    readFromFile(&buff, point_file);
+    readFromFile(buff, point_file);
     element_init_G1(P, pairing);
-    element_set_str(P, buff, BASE);
-    free(buff);
+    element_from_bytes(P, buff);
+    
+    //element_printf("[main] P = %B\n", P);
 
+    // mpz_t messagehash;
+    // mpz_init(messagehash);
     
-    mpz_t messagehash;
-    mpz_init(messagehash);
-    
-    printf("##########ENCRPTION##########\n");
-    printf("\nPlase enter the message to encrypt:");
-    scanf("%[ a-zA-Z0-9+*-!.,&*@{}$#]", message);
+    //printf("##########ENCRPTION##########\n");
+    //printf("\nPlase enter the message to encrypt:");
+    scanf("%[ a-zA-Z0-9+*-!.,&*@{}$#']", message);
     getchar();
-    printf("The original message=%s", message);
-    
-    sha_fun(message, shamessage);   //Get the message digest
-    printf("\nThe message hash=%s\n", shamessage);
+    //printf("The original message=%s\n", message);
     
     element_init_G1(U, pairing);
-    encryption(shamessage, destination, P, Ppub, U, xor_result, pairing);
+    encryption(message, destination, P, Ppub, U, xor_result, pairing);
+    //element_printf("[main] U = %B\n", U);
     printf("Send <U,V> to the receiver!\n");
+
+    // //element_printf("%B\n", U);
+    char ufile[SIZE] = "U_";
+    strcpy(ufile+2, destination);
+    output_par(ufile, U);
+
+    char vfile[SIZE] = "V_";
+    strcpy(vfile+2, destination);
+    output_str(vfile, xor_result);
     
     element_clear(P);
     element_clear(Ppub);
