@@ -25,11 +25,11 @@ class Server(User):
             while True:
                 try:
                     data = conn.recv(1024)  #接收数据
-                    if(len(data)==0):
+                    if not data:
                         break
                     self.parse(data)
                     print("finished")
-                    conn.send(data.upper()) #然后再发送数据
+                    # conn.send(data.upper()) #然后再发送数据
                 except ConnectionResetError as e:
                     print('关闭了正在占线的链接！')
                     break

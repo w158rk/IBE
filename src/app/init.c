@@ -21,6 +21,8 @@ int main(int argc, char **argv)
     mpz_t messagehash;
     mpz_init(messagehash);
 
+    printf("beign to set up system!\n");
+
     setup_sys(atoi(rbits), atoi(qbits), P, Ppub, pairing, s);
     printf("System parameters have been set!\n");
 

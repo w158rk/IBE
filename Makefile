@@ -1,19 +1,20 @@
 rm_dir = rm -rf
 mv_command = mv
 cmake_args = 
-add_lib = 
+lib_files = 
 
 ifeq ($(OS),Windows_NT)
 	rm_dir = rd /s /q
 	mv_command = move
 	cmake_args = -G "MinGW Makefiles"
-	add_lib = src/Library/pbc.dll
+	# lib_files = $(wildcard src/Library/WIN32/*)
 endif
 
-lib : CMakeLists.txt $(add_lib)
-	mkdir build && cd build && cmake $(cmake_args) ../ && make
-	$(move) $(add_lib) build/	
+all : build CMakeLists.txt  # $(lib_files)
+	cd build && cmake $(cmake_args) ../ && make
 
+build:
+	mkdir build 
 
 clean:
 	$(rm_dir) build 

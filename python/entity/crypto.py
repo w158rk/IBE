@@ -1,21 +1,31 @@
 # from commands import CryptoCommand
-import subprocess
+from sys import platform
+from subprocess import call
 
-appdir = "./build/app/"
+bindirs ={
+    "unix" : "./build/bin/",
+    "win32" : ".\\build\\bin\\"
+} 
+
+bindir = bindirs[platform]
 
 def setup():
-    status = subprocess.call("./build/app/setup", shell=True)
+    status = call(bindir+"setup", shell=True)
 
 def extract(id):
-    status = subprocess.call(appdir+"extract " + id, shell=True)
+    status = call(bindir+"extract " + id, shell=True)
 
 def encrypt(m, id):
     """
-    take 64 bytes as an unit to encrypt, now only encrypt less than a unit has been implemented
+    take 64 bytes as an unit to encrypt, 
+    now only encrypt less than a unit has been implemented
     """
-    status = subprocess.call("./build/app/encrypt " + id + " " + m, shell=True)
+    print(platform)
+    print("encrypt")
+    status = call(bindir+"encrypt " + id + " " + m, shell=True)
+    print("encrypt finished")
 
 def decrypt(id):
-    status = subprocess.call("./build/app/decrypt " + id, shell=True)
+    status = call(bindir+"decrypt " + id, shell=True)
 
 

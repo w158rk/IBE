@@ -52,7 +52,6 @@ def sendPacket(host, port, packet):
     """
     send the stream to the given ip:port
     """
-    print(packet.toBytes())
     s = socket.socket()         # 创建 socket 对象
 
     s.connect((host, port))
