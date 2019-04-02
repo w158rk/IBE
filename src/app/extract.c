@@ -35,9 +35,7 @@ int main(int argc, char **argv)
     element_init_Zr(s, pairing);
     element_from_bytes(s, buff);
 
-    //printf("###########EXTRACT###########\n");
     get_private_key(ID, pairing, s, Sid);
-    // element_//printf("[main] Sid = %B\n", Sid);
     
     char filename[SIZE] = "sk_";
     strcpy(filename+3, ID);

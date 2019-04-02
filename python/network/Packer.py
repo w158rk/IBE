@@ -6,6 +6,9 @@ class Packer:
     ###################################
 
     @classmethod
+    """
+    take the args, output a packet corresponding to the given type
+    """
     def enpack(cls, type, *args):
         f = getattr(cls, 'enpack_'+type)
         return f(args)
