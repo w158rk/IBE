@@ -1,4 +1,5 @@
-from user import Client
+from users.Base import Client
 
 client = Client("client")
-client.send("wrk", "wrk", "localhost", 12345)
+packet = client.makePacket("IBE_ENC", "wrk", "wrk")
+client.sendPacket("localhost", 12345, packet)
