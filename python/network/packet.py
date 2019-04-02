@@ -8,7 +8,7 @@ from struct import pack, unpack
 from enum import Enum 
 
 """
-public interfaces are:
+the only public interfaces are:
     Packet.fromStream()
     PacketInvalidError()
 """
@@ -30,13 +30,17 @@ class Packet :
     def toBytes(self):
         """
         converts all of the contents into a byte stream
+        
+        no args
+
+        return: the byte stream corresponding to the object
         """
         f = getattr(self, 'toBytes_'+self.type)
         return f()
-        # return pack('>I', self.content)          # big-endian
 
     def toBytes_IBE_ENC(self):
-        stream = pack(Packet.PACK_IBE_ENC,bytes(self.type, encoding='utf8'), self.u, self.v)
+        stream = pack(Packet.PACK_IBE_ENC,
+            bytes(self.type, encoding='utf8'), self.u, self.v)
         return stream
 
     def toBytes_IBE_DEC(self):
@@ -58,13 +62,20 @@ class Packet :
     def fromBytes_IBE_ENC(cls, stream):
         packet = Packet()
         packetType, u, v = unpack(Packet.PACK_IBE_ENC, stream)
-        setattr(packet, 'type', 'IBE_ENC')
+        setattr(packet, 'type', packetType)
         setattr(packet, 'u', u)
         setattr(packet, 'v', v)
         return packet
 
     @classmethod
     def fromBytes(cls, stream):
+        """
+        [class method] get a packet from byte stream
+        args:
+            stream : list of bytes 
+        return:
+            an object of class Packet
+        """
         attrTuple = unpack(Packet.PACK_IBE_ENC, stream)
         packetType = attrTuple[0]
         packetType = str(packetType, encoding='utf-8')
@@ -72,10 +83,11 @@ class Packet :
         return f(stream)
 
     @classmethod
-    def fromBytes_Extr_ACK(cls, stream):
+    def fromBytes_Extr_ACK(cls, stream):                # get the encrypted ACK message
+                                                        # with the private key of that user
         packet = Packet()
         packetType, cipher = unpack(Packet.PACK_IBE_ENC, stream)
-        setattr(packet, 'type', 'Extra_ACK')
+        setattr(packet, 'type', packetType)
         setattr(packet, 'cipher', cipher)
 
 class PacketInvalidError(TypeError):
