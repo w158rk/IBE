@@ -59,7 +59,7 @@ class User:
 
     def makePacket_IBE_ENC(self, message, targetID):
         # encrypt the message
-        encrypt(message, self.id)
+        encrypt(message, targetID)
         u = None
         v = None
         with open("U_"+targetID, 'rb') as f:

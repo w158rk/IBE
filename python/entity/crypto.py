@@ -3,7 +3,7 @@ from sys import platform
 from subprocess import call
 
 bindirs ={
-    "unix" : "./build/bin/",
+    "linux" : "./build/bin/",
     "win32" : ".\\build\\bin\\"
 } 
 

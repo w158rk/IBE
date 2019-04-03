@@ -62,7 +62,7 @@ class Packet :
     def fromBytes_IBE_ENC(cls, stream):
         packet = Packet()
         packetType, u, v = unpack(Packet.PACK_IBE_ENC, stream)
-        setattr(packet, 'type', packetType)
+        setattr(packet, 'type', "IBE_ENC")
         setattr(packet, 'u', u)
         setattr(packet, 'v', v)
         return packet
@@ -87,7 +87,7 @@ class Packet :
                                                         # with the private key of that user
         packet = Packet()
         packetType, cipher = unpack(Packet.PACK_IBE_ENC, stream)
-        setattr(packet, 'type', packetType)
+        setattr(packet, 'type', "Extr_ACK")
         setattr(packet, 'cipher', cipher)
 
 class PacketInvalidError(TypeError):

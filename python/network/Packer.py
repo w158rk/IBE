@@ -6,10 +6,10 @@ class Packer:
     ###################################
 
     @classmethod
-    """
-    take the args, output a packet corresponding to the given type
-    """
     def enpack(cls, type, *args):
+        """
+        take the args, output a packet corresponding to the given type
+        """
         f = getattr(cls, 'enpack_'+type)
         return f(args)
 
@@ -27,7 +27,9 @@ class Packer:
 
     @classmethod
     def depack(cls, packet):
-        return 'depack_'+getattr(packet, type)(packet) 
+        fname = 'depack_'+getattr(packet, 'type')
+        f = getattr(cls, fname)
+        return f(packet) 
 
     @classmethod
     def depack_IBE_ENC(cls, packet):

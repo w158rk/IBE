@@ -18,3 +18,6 @@ build:
 
 clean:
 	$(rm_dir) build 
+	$(rm_dir) *_*
+	$(rm_dir) *.conf
+

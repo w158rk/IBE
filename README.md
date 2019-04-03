@@ -1,3 +1,7 @@
+# 注！！！！！！
+
+有效文件不要以后缀名*.conf和带下划线'_'的形式存储在根目录下，`make clean`会删除这些文件。
+
 # C语言部分
 
 ## Windows 平台
@@ -27,7 +31,7 @@ make
 
 ### dependency 
 
-cmake、gcc、g++、Makefile、libgmp
+cmake、gcc、g++、Makefile、libgmp10, libgmp3-dev
 
 > 都是 sudo apt install 可以解决的
 
@@ -50,6 +54,16 @@ make
 
 client用server的公钥加密一段消息发送给server，server用自己的私钥解密
 
-## 带实现
+## 待实现
 
+* 系统建立
 
+* 私钥分发
+
+* AES加密
+
+* 秘密共享
+
+* 文件配置主体信息( txt, json, xml, csv ... )
+
+* 正式文档（可等吧……）
