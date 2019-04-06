@@ -1,0 +1,55 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+
+// Enable ECB, CTR and CBC mode. Note this can be done before including aes.h or at compile-time.
+// E.g. with GCC by using the -D flag: gcc -c aes.c -DCBC=0 -DCTR=1 -DECB=1
+#include "aes.h"
+
+
+
+// use cbc 256
+
+int main(int argc, char * argv[]) {
+    // in, key, iv, out
+    char in[SIZE+1]={0};
+    char key[SIZE+1]={0}; 
+    char iv[AES_BLOCKLEN+1]={0};
+    
+    if(argc < 4) {
+        printf("Not enough args are provided...");
+        exit(1);
+    }
+
+    FILE *fp = fopen(argv[1], "rb");
+    fread(in, SIZE, 1, fp);
+    fclose(fp);
+    #ifdef DEBUG 
+    printf("%s", in);
+    #endif    
+
+    fp = fopen(argv[2], "rb");
+    fread(key, SIZE, 1, fp);
+    fclose(fp);
+    #ifdef DEBUG 
+    printf("%s", key);
+    #endif       
+
+    fp = fopen(argv[3], "rb");
+    fread(iv, AES_BLOCKLEN, 1, fp);
+    fclose(fp);
+    #ifdef DEBUG 
+    printf("%s", iv);
+    #endif    
+
+
+    struct AES_ctx ctx;
+
+    AES_init_ctx_iv(&ctx, key, iv);
+    AES_CBC_decrypt_buffer(&ctx, in, SIZE);
+
+    fp = fopen(argv[4], "wb");
+    fwrite(in, SIZE, 1, fp);
+    fclose(fp);
+}
