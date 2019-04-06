@@ -34,7 +34,8 @@ class User:
         with open("V_"+self.id, "wb") as f:
             f.write(v)
             f.close()
-        decrypt(self.id)
+        message = decrypt(self.id)
+        self.handleMessage(message)
 
     def handlePacket(self, host, port, packet):
         if not packet.type:
@@ -72,6 +73,14 @@ class User:
         ## make a packet
         return Packer.enpack('IBE_ENC', u, v)
 
+    ###########################################
+    ## handle message functions 
+    ##########################################
+    @abstractmethod
+    def handleMessage(self, message):
+        """
+        message : string vector
+        """
 
 class Server(User):
 

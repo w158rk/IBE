@@ -1,5 +1,5 @@
 from entity.crypto import extract
-from network.packet import Packer
+from network.Packer import Packer
 from users.Base import Server 
 
 class KGC(Server):

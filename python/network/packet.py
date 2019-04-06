@@ -86,7 +86,7 @@ class Packet :
     def fromBytes_Extr_ACK(cls, stream):                # get the encrypted ACK message
                                                         # with the private key of that user
         packet = Packet()
-        packetType, cipher = unpack(Packet.PACK_IBE_ENC, stream)
+        _, cipher = unpack(Packet.PACK_IBE_ENC, stream)
         setattr(packet, 'type', "Extr_ACK")
         setattr(packet, 'cipher', cipher)
 

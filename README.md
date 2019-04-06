@@ -60,7 +60,11 @@ client用server的公钥加密一段消息发送给server，server用自己的�
 
 * 私钥分发
 
-* AES加密
+### AES加密
+
+* pycrypto --- Windows下依赖VC 2014 --- 抛弃
+* crypto --- 是python写的一个应用程序 --- 还是得安装依赖，不大舒服，但应该是可以用的
+* 自定义C语言实现 --- 库来自https://github.com/kokke/tiny-AES-c
 
 * 秘密共享
 
