@@ -16,8 +16,8 @@ const char private_file[] = "private.conf";
 int main(int argc, char **argv)
 {
     
-    if(argc==1){
-        printf("Please provide the ID!\n");
+    if(argc!=3){
+        printf("2 arguments needed\n");
         return -1;
     }
 
@@ -37,8 +37,7 @@ int main(int argc, char **argv)
 
     get_private_key(ID, pairing, s, Sid);
     
-    char filename[SIZE] = "sk_";
-    strcpy(filename+3, ID);
+    char *filename = argv[2];
     output_par(filename, Sid);
 
     element_clear(Sid);

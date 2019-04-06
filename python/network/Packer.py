@@ -10,8 +10,12 @@ class Packer:
         """
         take the args, output a packet corresponding to the given type
         """
-        f = getattr(cls, 'enpack_'+type)
-        return f(args)
+        try:
+            f = getattr(cls, 'enpack_'+type)
+        except NameError:
+            print("Not able to make the type " + type + " packet")
+        else:
+            return f(*args)
 
     @classmethod
     def enpack_IBE_ENC(cls, *args):
@@ -22,14 +26,21 @@ class Packer:
         return packet
 
     @classmethod 
-    def enpack_AES_ACK(cls, *args):
+    def enpack_EXTR_ACK(cls, *args):
         packet = Packet() 
-        setattr(packet, 'type', "AES_ACK")
+        setattr(packet, 'type', "EXTR_ACK")
         setattr(packet, 'cipher', args[0])          # encrypted message
+        setattr(packet, "iv", args[1])              # decrypt initial vector
         return packet
 
-    # @classmethod 
-    # def enpack_AES_ASK(cls, *args):
+    @classmethod 
+    def enpack_EXTR_ASK(cls, *args):
+        packet = Packet() 
+        setattr(packet, 'type', "EXTR_ASK")
+        setattr(packet, "uid", args[0])
+        setattr(packet, "sessionKey", args[1])
+        print("[enpack]" ,packet)
+        return packet
     #############################################
     ## get pack info
     #############################################
@@ -51,5 +62,9 @@ class Packer:
         return (getattr(packet, 'u'), getattr(packet, 'v'))
 
     @classmethod
-    def depack_AES_ACK(cls, packet):
+    def depack_EXTR_ACK(cls, packet):
         return getattr(packet, 'cipher')
+
+    @classmethod
+    def depack_EXTR_ASK(cls, packet):
+        return (getattr(packet, 'uid'), getattr(packet, 'sessionKey'))

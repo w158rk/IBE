@@ -21,31 +21,9 @@ int main(int argc, char * argv[]) {
     char key[SIZE+1]={0}; 
     char iv[AES_BLOCKLEN+1]={0};
     
-    if(argc < 4) {
-        #ifdef DEBUG 
-        memset(in, 'a', SIZE);
-        memset(key, 'a', SIZE);
-        memset(iv, 'a', AES_BLOCKLEN);
-        struct AES_ctx ctx;
-
-        AES_init_ctx_iv(&ctx, key, iv);
-        printf("%s\n", in);
-        
-        AES_CBC_encrypt_buffer(&ctx, in, SIZE);
-            #ifdef DEBUG 
-        printf("iv:%s\n", iv);
-        printf("%s\n", in);
-        #endif    
-
-        AES_init_ctx_iv(&ctx, key, iv);
-        AES_CBC_decrypt_buffer(&ctx, in, SIZE);
-        printf("iv:%s\n", iv);
-        printf("[res]%s\n", in);
-        return 0;
-        #endif    
-
-        printf("Not enough args are provided...\n");
-        // exit(1);
+    if(argc != 5) {
+        printf("4 arguments needed");
+        exit(1);
     }
     FILE *fp = fopen(argv[1], "rb");
     fread(in, SIZE, 1, fp);

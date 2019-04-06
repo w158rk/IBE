@@ -1,6 +1,6 @@
-# from commands import CryptoCommand
+# from command import CryptoCommand
 from json import load
-from random import choice
+from random import choice, randint
 from sys import platform
 from subprocess import call
 
@@ -11,12 +11,28 @@ with open(cfgPath, 'r') as f:
     f.close()
 bindir = params['bindir'][platform]
 
+#########################################
+##              IBE 
+#########################################
 
 def setup():
     status = call(bindir+"setup", shell=True)
 
-def extract(id):
-    status = call(bindir+"extract " + id, shell=True)
+def extract(uid):
+    prefix = "ibe_"
+
+    # run the program
+    index = "extract"
+    command = bindir + params['command'][index]
+    args = params["args_format"][index].format(uid) 
+    _ = call(command + " " + args, shell=True)
+    print(command + " " + args)
+
+    # get the result
+    strList = ["sk"]
+    res = inputFiles(prefix, uid, strList)
+
+    return res[0]            # return sk
 
 def encrypt(m, id):
     """
@@ -26,51 +42,78 @@ def encrypt(m, id):
     prefix = "ibe_"
     randstr = gen_random_str()
     typeList = [m, id]
-    strList = ["m", "sk"]
+    print("[encrypt] ", m)
+    print("[encrypt] ", id)
+    strList = ["m", "id"]
     outputFiles(prefix, randstr, typeList, strList)
 
     # run the program
     index = "encrypt_ibe"
-    command = bindir + params['commands'][index]
-    args = params["args_format"][index].format(randstr, id) 
-    _ = call(command + " " + args)
+    command = bindir + params['command'][index]
+    args = params["args_format"][index].format(randstr) 
+    _ = call(command + " " + args, shell=True)
+    print(command + " " + args)
 
     # get the result
     strList = ["u", "v"]
-    filename = prefix+"_m_"+randstr
     res = inputFiles(prefix, randstr, strList)
 
     # remove the temp files 
-    command = params['commands']["clean"][platform]
-    _ = call(command + " " + args )             
+    command = params['command']["clean"][platform]
+    _ = call(command + " " + args, shell=True )             
+    print(res[0])
+    print(res[1])
 
     return (res[0], res[1])         # return (u, v)
 
-def decrypt(u, v, id):
+def decrypt(u, v, sk):
     """
     decrypt, return piain text
     """
     # generate the input files for the c program
     prefix = "ibe_"
     randstr = gen_random_str()
-    typeList = [u, v, id]
+    typeList = [u, v, sk]
+    print(u)
+    print(v)
     strList = ["u", "v", "sk"]
     outputFiles(prefix, randstr, typeList, strList)
     
     # run the program
     index = "decrypt_ibe"
-    command = bindir + params['commands'][index]
-    args = params["args_format"][index].format(randstr, id) 
-    _ = call(command + " " + args)
+    command = bindir + params['command'][index]
+    args = params["args_format"][index].format(randstr) 
+    _ = call(command + " " + args, shell=True)
+    print(command + " " + args)
 
     # get the result
     res = inputFiles(prefix, randstr, ['m'])
 
     # remove the temp files 
-    command = params['commands']["clean"][platform]
-    _ = call(command + " " + args )             
+    command = params['command']["clean"][platform]
+    _ = call(command + " " + args, shell=True)             
 
-    return res[0]
+    return str(res[0])
+
+#############################################
+##              aes
+#############################################
+def gen_key_aes():
+    """
+    generate a 256 bits(32 bytes) key
+    """
+
+    res = [randint(0, 256) for i in range(32)]
+    return bytes(res)
+
+def gen_iv_aes():
+    """
+    generate a 128 bits(32 bytes) key
+    """
+
+    res = [randint(0, 256) for i in range(16)]
+    return bytes(res)
+
 
 def encrypt_aes(m, key, iv):
     """
@@ -97,7 +140,7 @@ def aes(type, text, key, iv):
     outputFiles(prefix, randstr, typeList, strList)
 
     # run the encrypt program
-    command = bindir + params['commands'][type+'_aes']
+    command = bindir + params['command'][type+'_aes']
     args = params["args_format"]['aes'].format(randstr)  
     _ = call(command + " " + args )             
 
@@ -105,10 +148,14 @@ def aes(type, text, key, iv):
     res = inputFiles(prefix, randstr, ['out'])
     
     # remove the temp files 
-    command = params['commands']["clean"][platform]
+    command = params['command']["clean"][platform]
     _ = call(command + " " + args )             
 
     return res[0]
+
+#########################################################
+##          utils
+#########################################################
 
 def gen_random_str():
     letters = "abcdefghijklmnopqrstuvwxyz"
@@ -121,7 +168,7 @@ def inputFiles(prefix, randstr, strList):
         raise RuntimeError("No files to put in")
     res = []
     for s in strList:
-        filename = prefix+s+randstr
+        filename = prefix + s + "_"  +randstr
         with open(filename,"rb") as f:
             temp = f.read()
             res.append(temp)
@@ -131,6 +178,8 @@ def inputFiles(prefix, randstr, strList):
 def outputFiles(prefix, randstr, typeList, strList):
     for m,s in zip(typeList, strList):
         filename = prefix + s + "_" + randstr
+        if isinstance(m, str):
+            m = bytes(m, encoding="utf8")
         with open(filename,"wb") as f:
             f.write(m)
             f.close()

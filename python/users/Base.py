@@ -3,7 +3,7 @@ from socket import socket, AF_INET, SOCK_STREAM
 
 from network.packet import Packet 
 from network.Packer import Packer, PacketInvalidError
-from entity.crypto import encrypt, decrypt
+from entity.crypto import encrypt, decrypt, gen_key_aes
 
 class User:
     def __init__(self, id):
@@ -22,19 +22,25 @@ class User:
         """
         self.sendStream(host, port, packet.toBytes())
 
+    def readSk(self):
+        """
+        get the User's sk
+        """
+        filename = "ibe_sk_" + self.id 
+        with open(filename, "rb") as f:
+            sk = f.read()
+            f.close() 
+        return sk
+
     ##########################################
     ## handle packet functions
     ##########################################
 
     def handlePacket_IBE_ENC(self, host, port, packet):
         u,v = Packer.depack(packet)
-        with open("U_"+self.id, "wb") as f:
-            f.write(u)
-            f.close()
-        with open("V_"+self.id, "wb") as f:
-            f.write(v)
-            f.close()
-        message = decrypt(self.id)
+        sk = self.readSk()
+        message = decrypt(u,v,sk)
+        print("[handlePacket] {0}".format(message))
         self.handleMessage(message)
 
     def handlePacket(self, host, port, packet):
@@ -50,28 +56,30 @@ class User:
     ##########################################
     ## make packet functions 
     ##########################################
-    def makePacket(self, type, message, targetID):
+    def makePacket(self, type, *args):
         try:
             f = getattr(self, 'makePacket_'+type)
         except NameError:
             print("Not able to make the type " + type + " packet")
         else:
-            return f(message, targetID)
+            return f(*args)
 
-    def makePacket_IBE_ENC(self, message, targetID):
+    def makePacket_IBE_ENC(self, *args):
         # encrypt the message
-        encrypt(message, targetID)
-        u = None
-        v = None
-        with open("U_"+targetID, 'rb') as f:
-            u = f.read()
-            f.close() 
-        with open("V_"+targetID, 'rb') as f:
-            v = f.read() 
-            f.close() 
-        
+        message = args[0]
+        targetID = args[1]
+        u, v = encrypt(message, targetID)
+
         ## make a packet
         return Packer.enpack('IBE_ENC', u, v)
+
+    def makePacket_EXTR_ASK(self, *args):
+        """
+        id and aes secret key
+        """
+        uid = self.id 
+        r = gen_key_aes()
+        return Packer.enpack('EXTR_ASK', uid, r)
 
     ###########################################
     ## handle message functions 
@@ -85,7 +93,7 @@ class User:
 class Server(User):
 
     def __init__(self, id, port=None, host='localhost'):
-        self.id = id 
+        super(Server, self).__init__(id)
         self.host = host 
         self.port = port
         self.socket = None
