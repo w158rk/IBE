@@ -1,22 +1,44 @@
-from entity.crypto import extract, encrypt_aes, gen_iv_aes
+import logging
+
+logging.basicConfig(level=logging.DEBUG,
+                    datefmt='%Y/%m/%d %H:%M:%S',
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(lineno)d - %(module)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+from entity.crypto import extract, encrypt_aes, gen_iv_aes, setup
 from network.Packer import Packer
-from users.Base import Server 
+from users.Server import Server 
 
 class KGC(Server):
     def __init__(self, id, port=None, host='localhost'):
-        p = port 
-        h = host
         print(type(super(KGC, self)))
-        super(KGC, self).__init__(id, port=p, host=h)
+        super(KGC, self).__init__(id, port=port, host=host)
     
-    def handlePacket_EXTR_ASK(self, host, port, packet):
+    def handlePacket_EXTR_ASK(self, conn, packet):
         uid, sessionKey = Packer.depack(packet)
         sk = extract(uid)
-        iv = gen_iv_aes
-        cipher = encrypt_aes(sk, sessionKey, iv) 
-        response = self.makePacket(cipher, iv)
-        self.sendPacket(host, port, response)
+        logger.debug("extracted key : %s" % sk)
+        logger.debug("extracted key length : %d" % len(sk))
+        iv = gen_iv_aes()
+        cipher = encrypt_aes(sk, sessionKey, iv)
+        logging.debug(cipher)
+        logging.debug(iv)
+        response = self.makePacket("EXTR_ACK", cipher, iv)
+        try: 
+            self.sendPacket(conn, response)
+        except RuntimeError:
+            logger.debug("RuntimeError")
+            conn.close()
+        else:
+            pass
+            
 
-    def makePacket_Extr_ACK(self, *args):
-        return Packer.enpack('Extr_ACK', args)
+    def makePacket_EXTR_ACK(self, cipher, iv):
+        return Packer.enpack('EXTR_ACK', cipher, iv)
 
+    def system_setup(self):
+        setup()
+
+    def run(self):
+        self.system_setup()
+        super(KGC, self).run() 

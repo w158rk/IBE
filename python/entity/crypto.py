@@ -16,7 +16,9 @@ bindir = params['bindir'][platform]
 #########################################
 
 def setup():
-    status = call(bindir+"setup", shell=True)
+    index = "setup"
+    command = bindir + params['command'][index]
+    _ = call(command, shell=True)
 
 def extract(uid):
     prefix = "ibe_"
@@ -26,11 +28,13 @@ def extract(uid):
     command = bindir + params['command'][index]
     args = params["args_format"][index].format(uid) 
     _ = call(command + " " + args, shell=True)
-    print(command + " " + args)
 
     # get the result
     strList = ["sk"]
     res = inputFiles(prefix, uid, strList)
+
+    command = params['command']["clean"][platform]
+    _ = call(command + " " + args, shell=True )             
 
     return res[0]            # return sk
 
@@ -103,7 +107,7 @@ def gen_key_aes():
     generate a 256 bits(32 bytes) key
     """
 
-    res = [randint(0, 256) for i in range(32)]
+    res = [randint(0, 255) for i in range(32)]
     return bytes(res)
 
 def gen_iv_aes():
@@ -131,7 +135,7 @@ def decrypt_aes(c, key, iv):
 def aes(type, text, key, iv):
     if type not in ['encrypt', 'decrypt']:
         raise AESTypeError
-    prefix = "aes"
+    prefix = "aes_"
 
     # generate the input files for the c program
     randstr = gen_random_str()
@@ -142,14 +146,14 @@ def aes(type, text, key, iv):
     # run the encrypt program
     command = bindir + params['command'][type+'_aes']
     args = params["args_format"]['aes'].format(randstr)  
-    _ = call(command + " " + args )             
+    _ = call(command + " " + args, shell=True)             
 
     # read the result 
     res = inputFiles(prefix, randstr, ['out'])
     
     # remove the temp files 
     command = params['command']["clean"][platform]
-    _ = call(command + " " + args )             
+    _ = call(command + " " + args, shell=True)             
 
     return res[0]
 
