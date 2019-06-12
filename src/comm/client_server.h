@@ -5,7 +5,6 @@
 #ifndef CLIENT_SERVER_H
 #define CLIENT_SERVER_H
 
-
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +22,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+
+# define __SOCKET_MODE__
+
 #define BUFFER_SIZE             1024
 #define MAX_STRING              256
 #define SERVER_PORT             5001
@@ -30,6 +32,17 @@
 #define SERVER_IP_ADDRESS       "127.0.0.1"
 #define SERVER_PUBLIC_FIFO_NAME "/tmp/server_public_fifo"
 #define SA                      struct sockaddr
+
+#define CRYPTO_IBE 					  	0
+#define CRYPTO_AES 						1
+#define CRYPTO_HEAD_LEN 				56
+
+/* IBE 
+ * parameters
+ */
+# define AES_KEY_LEN 					32 
+# define AES_IV_LEN 					16 
+
 
 #define SUCCESS                       0
 #define FAILURE                       1
@@ -70,9 +83,9 @@ typedef struct
 	char departure_time[MAX_STRING];
 }query_booked_ticket_result;
 
-char*   Fgets(char* s, int size, FILE* stream);
+int   Fgets(char* s, int size, FILE* stream);
 ssize_t Write(int fd, const void *vptr, size_t n);
 int     Accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 void    remove_ending_line_break(char* string);
-char*   read_line(char* line, int size, FILE* stream, bool exist_on_fail);
+int   read_line(char* line, int size, FILE* stream, bool exist_on_fail);
 #endif

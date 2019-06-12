@@ -3,7 +3,6 @@
 
 # include <openssl/evp.h>
 # include <openssl/err.h>
-# include <openssl/sm9.h>
 # include <openssl/rand.h>
 
 #include "../crypto/crypto.h"

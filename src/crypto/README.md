@@ -41,3 +41,9 @@ int i2d_SM9PrivateKey_fp(FILE *fp, SM9PrivateKey *a);
 int i2d_SM9Signature_fp(FILE *fp, SM9Signature *a);
 int i2d_SM9Ciphertext_fp(FILE *fp, SM9Ciphertext *a);
 ```
+
+## AES 
+
+```c
+AES_cbc_encrypt(buf, buf, (size_t)lengths[testnum], &aes_ks3, iv, AES_ENCRYPT);
+```
