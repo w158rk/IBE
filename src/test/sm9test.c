@@ -11,8 +11,8 @@
 
 char mpk_filename[] = "mpk.conf";
 char msk_filename[] = "msk.conf";
-char sk_filename[] = "sk.conf";
-char id[] = "test";
+char sk_filename[] = "sk_Server.conf";
+char id[] = "Server";
 char data[BUFF_SIZE] = "This is a test text";
 char c_buf[BUFF_SIZE] = {'\0'};
 char out[BUFF_SIZE] = {'\0'};

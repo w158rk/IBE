@@ -2,6 +2,8 @@
 #define CRYPTO_H 
 # include <openssl/sm9.h>
 
+#define MPK_FILENAME "mpk.conf"
+
 int system_setup(const char* mpk_filename, const char* msk_filename);
 SM9PrivateKey* extract_private_key(SM9MasterSecret* msk, const char* id);
 int sm9_encrypt(const unsigned char* data, size_t data_len, unsigned char* c_buf, size_t *c_len, 
