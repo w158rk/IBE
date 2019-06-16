@@ -1,50 +1,26 @@
-/**
- * This file is the implementaion of server
- */
+/*****************************************************************************
+Copyright: ...
+File name: core.c
+Description: 主要的应用函数，对外接口函数 	：		socket_main
+Author: 王瑞凯
+Version: ...
+Date: 2019-06-16
+History: ...
+*****************************************************************************/
 
-#include <pthread.h>
+
 
 #include "../crypto/crypto.h"
-#include "client_server.h"
-#include "server.h"
-#define __DEBUG__
+#include "base.h"
+// #define __DEBUG__
 
-#define SYSTEM_LOG "/tmp/ibe_log"
-#define NUM_THREADS 4
 
-void sig_chld(int signo);
-void *socket_listener_run(void *args);
-int run_get_private_key(const char* id, int id_len);
-FILE* open_log_file();
-int socket_client_run(const char* entity_id, int id_len);
+/* 
+ * internal functions
+ */ 
 
-int listen_port;
-
-int socket_main(const char* entity_id, int id_len, int port) {
-	// 启动一个监听线程
-	char error_sig = 0;
-	listen_port = port;
-	pthread_t threads[NUM_THREADS];
-
-	// 函数参数
-	char args[MAX_ID_SIZE+1];
-	args[0] = error_sig;
-	memcpy(args+1, entity_id, MAX_ID_SIZE);
-
-	int listen_rc = pthread_create(&threads[0], NULL, socket_listener_run, (void *)args);
-	if(listen_rc) {
-		fprintf(stderr, "create listening thread fail\n");
-		return -1;
-	}
-
-	while (-1 != args[0]) {
-		if(-1 == socket_client_run(entity_id, id_len)) {
-			args[0] = -1;
-		}
-	}
-}
-
-int socket_client_run(const char* entity_id, int id_len) {
+int socket_interface_run(const char* entity_id, int id_len) {
+	
 	printf("What do you want to do? %s\n", entity_id);
 	printf("Choose from :\n");
 	printf("\t1. Extract your Private Key\n");
@@ -69,11 +45,14 @@ void *socket_listener_run(void *args)
 {
 	char *error_sig = (char *)args;
 	char entity_id[MAX_ID_SIZE];
-	memcpy(entity_id, (char *)args+1, MAX_ID_SIZE);
+	memcpy(entity_id, (char *)args+8, MAX_ID_SIZE);
 
 	int listen_fd, connect_fd;
 	struct sockaddr_in client_addr;
 	socklen_t client_len;
+
+	int *p = (int *)args+1;			// 读取监听端口
+	int listen_port = *p;
 
 	if((listen_fd = create_listening_socket(listen_port)) == -1)
 	{
@@ -133,7 +112,7 @@ void *socket_listener_run(void *args)
 				fprintf(stdout, "establish client server socket connection\n");
 				#endif
 
-				if(run_server_core(entity_id, read_file, write_file, open_log_file()) == -1)
+				if(run_listen_core(entity_id, read_file, write_file, open_log_file()) == -1)
 				{
 					// 业务
 					fprintf(stderr, "server core has error\n");

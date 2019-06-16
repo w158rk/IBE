@@ -1,8 +1,7 @@
 /**
  * This file contains wrapper functions and facility functions used  in client and server
  */
-
-#include "client_server.h"
+#include "base.h"
 #include "../crypto/crypto.h"
 
 /*

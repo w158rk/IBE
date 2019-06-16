@@ -1,5 +1,6 @@
-#include "../comm/client_server.h"
-#include "../comm/server.h"
+#include "config.h"
+#include "client.h"
+#include "comm.h"
 
 int main() {
 

@@ -10,6 +10,7 @@ SET(PROJECT_LIB_DIR ${CMAKE_SOURCE_DIR}/src/lib)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 link_directories(${PROJECT_LIB_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/src/include)
 
 # add_subdirectory (${CMAKE_SOURCE_DIR}/src/IBE) 
 add_subdirectory (${CMAKE_SOURCE_DIR}/src/crypto) 
