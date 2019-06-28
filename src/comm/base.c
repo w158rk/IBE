@@ -108,7 +108,7 @@ int handle_ibe(const char *id, FILE *read_file, FILE *write_file) {
 	char len_str[5] = {'\0'};				// 长度
 	unsigned int c_len;
 	char *c;
-	if (-1 == fread(len_str, sizeof(char), 4, read_file)) {
+	if (-1 == fread(len_str, sizeof(char), 4, read_file)) {				//把read_file中的内容读入len_str
 		fprintf(stderr, "read IBE cipher length error\n");
 		return -1;
 	}
