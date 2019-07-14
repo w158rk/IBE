@@ -24,3 +24,4 @@ __pycache__/
 *.conf 
 ibe_*
 *.pyc
+docs/
