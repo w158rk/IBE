@@ -75,7 +75,7 @@ int SS_poly_rand(SS_POLY* poly, unsigned int length, BIGNUM *p) {
     BIGNUM **coeff_list = (BIGNUM **)malloc(length * sizeof(BIGNUM *));
 
     BIGNUM *zero = BN_new();
-    BN_zaro(zero);              /*set to zero*/
+    BN_zero(zero);              /*set to zero*/
 
     BIGNUM *raw = BN_new();
     BIGNUM *final = BN_new();
