@@ -7,20 +7,40 @@ cmake ../
 make
 ```
 
-# 运行 
+# Documents 
+
+```
+doxygen Doxyfile
+firefox docs/html/index.html &
+```
+
+# run tests
+
+## get the configure files
 
 ```
 ./sm9test               // 生成配置文件 
+```
+
+## run the simple communication 
+
+```
 ./servertest            // 运行server
 ./client                // 运行client
 ```
 
 运行结果：Server 获取到 Client 的ID 和 AES 密钥
-
 ```
 decrypted text : Client
 decrypted text length : 52
 ```
+
+## test the secret sharing functions 
+
+```
+./sstest                // test the secret sharing functions
+```
+
 
 # todo 
 
@@ -35,4 +55,9 @@ decrypted text length : 52
     （要不要再加一轮ACK待后续修改）
     6. 会话密钥协商结束后用$(key_A||key_B)$为AES密钥的通信设计
 * 秘密共享 
+    1. <del>generate a random polynomial</del>
+    2. <del>get the value of f(x) given the x</del>
+    3. <del>get the value of the lagrange polynomial $l_i(x)$ given the x</del>
+    4. point addition
+    5. scalar multiplication
 * 签名和认证

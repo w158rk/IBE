@@ -6,102 +6,148 @@
  * */
 
 #include "./ss.h"
+#define SWAP(x, y) { temp = x; x = y; y = temp; }
 
-/**
- * @brief calculate the value of a^b 
- * @param[out]  r       the result 
- * @param[in]   a       the base 
- * @param[in]   b       the exponent 
- * @param[in]   m       the moduli 
- * @return      1 if everything goes smoothly
- */
-
-int BN_mod_pow(BIGNUM *r, const BIGNUM *a, const int b, const BIGNUM *m) {
-
-    int it = b;
-    BIGNUM *temp1  = BN_new();
-    BIGNUM *temp2  = BN_new();
-    BIGNUM *temp  = BN_new();;
-    BN_copy(temp, m);
-    BN_one(r);          /*set to 1*/
-
-    BN_CTX *mul_ctx = BN_CTX_new();
-    BN_CTX *sqr_ctx = BN_CTX_new();
-
-    while (0 != it) {
-        /* @todo here we use the unsecure method using conditional 
-         *       jumps to implement the algorithm. THis method is
-         *       is known as subject to the side-channel attacks.
-         *       We can modufy this part after the whole things are 
-         *       settled
-         */
-        
-        int flag = b & 1;
-        if(flag) {
-
-            if(0 == BN_mod_mul(temp, r, temp1, m, mul_ctx)) 
-                goto end;
-            r = temp;
-
-        } 
-        
-        if(0 == BN_mod_sqr(temp2, temp1, m, sqr_ctx)) 
-            goto end;
-
-        /* exchange the points, in case the multiple call of new method*/
-        temp = temp1;
-        temp1 = temp2;
-        temp2 = temp;
-    }
-        
-    BN_clear_free(temp);
-    BN_clear_free(temp1);
-    BN_clear_free(temp2);
-    return 1;
-
-end:
-    BN_clear_free(temp);
-    BN_clear_free(temp1);
-    BN_clear_free(temp2);
-    BN_clear(r);    
-    return 0;
+SS_POLY *SS_POLY_new(void) {
+    
+    SS_POLY *p = (SS_POLY *)malloc(sizeof(SS_POLY));
+    return p;
 
 }
 
 int SS_poly_rand(SS_POLY* poly, unsigned int length, BIGNUM *p) {
-        
+    /**
+     * @todo the check of the validation of the coefficient 
+     */
     int i=0;
     /* allocate the space for the coefficients */
     BIGNUM **coeff_list = (BIGNUM **)malloc(length * sizeof(BIGNUM *));
-
+    
     BIGNUM *zero = BN_new();
     BN_zero(zero);              /*set to zero*/
 
     BIGNUM *raw = BN_new();
-    BIGNUM *final = BN_new();
+    BN_CTX *ctx = BN_CTX_new();
 
     /* generate the random coefficients */
     for (i=0; i<length; ++i) {
+        BIGNUM *final = BN_new();
         if(0 == BN_rand(raw, SS_P_BITS, BN_RAND_TOP_ANY, BN_RAND_BOTTOM_ANY))
             goto end;
         
         /* get the value to the range [0, p-1] */
-        if(0 == BN_mod_add_quick(final, raw, zero, p)) goto end;
+        if(0 == BN_mod_add(final, raw, zero, p, ctx)) goto end;
 
         coeff_list[i] = final;
     }
 
     poly -> length = length;
     poly -> coeff = coeff_list;
+    
+    BN_CTX_free(ctx);
     return 1;
 
 end:
+    BN_CTX_free(ctx);
     return 0;
 
 }
 
 int SS_poly_apply(BIGNUM *value, SS_POLY *poly, BIGNUM *x, BIGNUM *p) {
 
-        
+    int i=0;
+    BIGNUM *r = BN_new();
+    BN_zero(r);                 /* set as 0*/
+    BIGNUM *temp = BN_new();            /* temp variable */
+    BIGNUM **coeff_list = poly->coeff;   
+
+    BN_CTX *mul_ctx = BN_CTX_new();
+    BN_CTX *add_ctx = BN_CTX_new();
+
+    for (i=poly->length-1; i>0; --i) {
+        if(0 == BN_mod_add(temp, r, coeff_list[i], p, add_ctx))
+            goto end;
+        if(0 == BN_mod_mul(r, temp, x, p, mul_ctx))
+            goto end;
+    }    
+
+    if(0 == BN_mod_add(value, r, coeff_list[0], p, add_ctx))
+        goto end;
+
+    /* free the allocated space */
+    BN_free(r);
+    BN_free(temp);
+    BN_CTX_free(mul_ctx);
+    BN_CTX_free(add_ctx);
+    
+    return 1;
+
+end:    /* something went wrong */
+    BN_free(r);
+    BN_free(temp);
+    BN_CTX_free(mul_ctx);
+    BN_CTX_free(add_ctx);
+    BN_zero(value);
+
+    return 0;
+
+}
+
+int SS_lagrange_value(BIGNUM *value, BIGNUM **x_list, unsigned int length,
+                        unsigned int i, BIGNUM *x, BIGNUM *p)
+{
+
+    BIGNUM *numerator = BN_new();
+    BIGNUM *denominator = BN_new();
+    BIGNUM *r = BN_new();
+    BIGNUM *d = BN_new();
+    BIGNUM *temp = NULL;
+
+    BN_one(numerator);
+    BN_one(denominator);
+
+    BN_CTX * ctx = BN_CTX_new();
+
+    /* calculate (x-x1)(x-x2)...(x-xn) */
+    /* calculate (xi-x1)(xi-x2)...(xi-xn) */
+    
+    int j=0;
+    for (j=0; j<length; ++j) {
+        if(j == i) continue;
+
+        if(0 == BN_mod_sub(d, x, x_list[j], p, ctx)) 
+            goto end;
+        if(0 == BN_mod_mul(r, numerator, d, p, ctx)) 
+            goto end;
+        SWAP(r, numerator);
+
+        if(0 == BN_mod_sub(d, x_list[i], x_list[j], p, ctx)) 
+            goto end;
+        if(0 == BN_mod_mul(r, denominator, d, p, ctx)) 
+            goto end;
+        SWAP(r, denominator);
+
+    }
+    
+    /* get the inversion of denominator and multiply it with the numerator */
+    BN_mod_inverse(d, denominator, p, ctx);
+    if(0 == BN_mod_mul(value, d, numerator, p, ctx))
+        goto end;
+
+    BN_free(numerator);
+    BN_free(denominator);
+    BN_free(d);
+    BN_free(r);
+    BN_CTX_free(ctx);
+    return 1;
+
+end:
+
+    BN_free(numerator);
+    BN_free(denominator);
+    BN_free(d);
+    BN_free(r);
+    BN_CTX_free(ctx);
+    return 0;
 
 }
