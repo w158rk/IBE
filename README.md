@@ -58,6 +58,19 @@ decrypted text length : 52
     1. <del>generate a random polynomial</del>
     2. <del>get the value of f(x) given the x</del>
     3. <del>get the value of the lagrange polynomial $l_i(x)$ given the x</del>
-    4. point addition
-    5. scalar multiplication
+    4. <del>point addition</del>
+    5. <del>scalar multiplication</del>
 * 签名和认证
+
+# notes 
+
+## functions for point addition and scalar multiplication 
+
+```c
+int EC_POINT_add(const EC_GROUP *group, EC_POINT *r, const EC_POINT *a,
+                 const EC_POINT *b, BN_CTX *ctx);
+
+int EC_POINTs_mul(const EC_GROUP *group, EC_POINT *r, const BIGNUM *n,
+                  size_t num, const EC_POINT *p[], const BIGNUM *m[],
+                  BN_CTX *ctx);
+```

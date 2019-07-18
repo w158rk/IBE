@@ -113,25 +113,82 @@ int run_listen_core(const char* server_id, FILE* read_file, FILE* write_file, FI
 				return -1;
 			}
 		}
+
+		/* now I have got the crypto type, so what I should do is to get the plain text
+		 * from the packet 
+		 * */
+		unsigned char decrypted_message[BUFFER_SIZE];
+		size_t m_len;
 		switch (crypto_type)
 		{
 			case CRYPTO_IBE:
-				if(handle_ibe(server_id, read_file, write_file) == -1)
+
+				if(receive_ibe(decrypted_message, &m_len, server_id, read_file) == -1)
 				{
 					fprintf(stderr, "handle IBE packet error\n");
 					return -1;
 				}
 				break;
+			
 			case CRYPTO_AES:
-				if(handle_aes() == -1)
+
+				if(receive_aes(decrypted_message, &m_len, read_file, aes_key) == -1)
 				{
 					fprintf(stderr, "handle AES packet error\n");
 					return -1;
 				}
 				break;
+
 		}
+
+		/* now I get the plain text */
+		handle_message(decrypted_message, m_len, write_file);
+
 	} while(1);				// 客户端关闭之前一直执行
 
 	return 0;
 }
 
+// this function is from Unix Network Programming Section 3.9
+ssize_t Write(int fd, const void *vptr, size_t n)
+{
+	size_t nleft;
+	ssize_t nwritten;
+	const char* ptr;
+
+	ptr = vptr;
+	nleft = n;
+	while(nleft > 0)
+	{
+		if((nwritten = write(fd, ptr, nleft)) <= 0)
+		{
+			if(nwritten < 0 && errno == EINTR)
+				nwritten = 0; // and call write() again
+			else
+				return -1; // error
+		}
+
+		nleft -= nwritten;
+		ptr += nwritten;
+	}
+
+	return n;
+}
+
+int Accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+{
+	int connect_fd;
+	if((connect_fd = accept(sockfd, addr, addrlen)) == -1)
+	{
+		if(errno == EINTR || errno == ECONNABORTED)
+		{
+			return Accept(sockfd, addr, addrlen);
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	
+	return connect_fd;
+}

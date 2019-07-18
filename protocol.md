@@ -6,14 +6,23 @@
 
 ### IBE 
 
-|字段   | type  | 消息长度 | 空 |
+|      | type  | 消息长度 | 空 |
 | ---  | ---   |  ---| ---|
 |长度   | 1    | 4|                 19|
 |值     | 0    | 整个包（含头）的长度|0|
 
 ### AES
 
-|字段   | type  |      iv	    |  消息长度 | 空 |
+|       | type  |      iv	    |  消息长度 | 空 |
 | ---  | ---   |   ----     | ---|       ---|
 |长度   | 1     |     16	    |  4|       3|
 |值     | 1  |   初始向量 | 整个包的长度| 0|
+
+## protocol of the application layer 
+
+<!-- ### apply for the private key 
+
+|     | type | ID length | ID | null | 
+| --- | --- | --- | --- | --- |
+| length (bytes) |  4                    | the number which the ID length represents | 
+| value          |  the length of the id |   -->

@@ -1,5 +1,8 @@
-/**
- * This file contains the data, macro common to both client and server
+/**!
+ * @file base.h
+ * @author Wang Ruikai 
+ * @date July 14th, 2019 
+ * @brief This file contains the data, macro common to both client and server
  */
 
 #ifndef BASE_H
@@ -21,7 +24,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "config.h"
+#include <ctx.h>
 
 #define __SOCKET_MODE__
 
@@ -45,8 +48,7 @@
  * AES parameteres 
  */
 #define AES_HEAD_LEN                    21
-#define AES_KEY_LEN 					32 
-#define AES_IV_LEN 					16 
+#define AES_IV_LEN 					    16 
 /*
  *通信参数
  */
@@ -82,14 +84,65 @@ int run_listen_core(const char* server_id, FILE* read_file, FILE* write_file, FI
 void *socket_listener_run(void *args);
 void sig_chld(int signo);
 
-/*
- * 加密数据包处理函数
- */
-int handle_ibe(const char *id, FILE *read_file, FILE *write_file);
-int handle_aes();
+/****************************************************************
+ * functions to convert between the cipher and the plaintext
+ **************************************************************/
 
-/* 
- * 功能函数
+/**!
+ * @brief receive the IBE packet and decrypt it into plain message
+ * @param[out] m the decrypted message
+ * @param[out] m_len the length of the decrypted message
+ * @param[in] id the id of the user 
+ * @param[in] read_file socket file where the cipher comes in
+ * @return 0 if no error, -1 if something wrong
+ */
+int receive_ibe(unsigned char *m, size_t *m_len, 
+                 const char *id, FILE *read_file);
+
+/**!
+ * @brief make a IBE packet for the given message and send it out 
+ * @param[in] m the message to send 
+ * @param[in] m_len the length of the message 
+ * @param[in] id the target id 
+ * @param[in] id_len the length of the target id
+ * @param[in] write_file the socket file where to send information 
+ * @return 0 if no error, -1 if something wrong
+ */
+int send_ibe(unsigned char *m, size_t m_len, const char* id, 
+                size_t id_len, FILE *write_file);
+
+/**!
+ * @brief get the AES packet and decrypt it into plain message 
+ * @param m the decrypted message 
+ * @param m_len the length of the decrypted message 
+ * @param read_file the socket file where the user receives information 
+ * @param aes_key the key for decryption 
+ * return 0 if no error, -1 if something wrong 
+ */ 
+int receive_aes(unsigned char *m, size_t *m_len, 
+                FILE *read_file, unsigned char* aes_key); 
+
+/**!
+ * @brief make a AES packet for the given message and send it out 
+ * @param[in] m the message to send 
+ * @param[in] m_len the length of the message 
+ * @param[in] key the aes key for encrypt 
+ * @param[in] write_file the socket file where to send information 
+ * @return 0 if no error, -1 if something wrong
+ */
+int send_aes(unsigned char *m, size_t m_len, 
+             const char* key, FILE *write_file);
+
+
+
+
+/****************************************************************
+ * functions for complex purposes
+ **************************************************************/
+/**!
+ * @brief get the private key for a user 
+ * @param[in] id ID of the user who are to apply for the private key 
+ * @param[in] id_len the length of the ID
  */
 int run_get_private_key(const char* id, int id_len);
 
@@ -97,6 +150,14 @@ int run_get_private_key(const char* id, int id_len);
  * 系统函数
  */
 FILE* open_log_file();
+
+/**!
+ * @brief run the user interface. Generally, it receives a request from the 
+ *      the user and do something 
+ * @param entity_id the id of the user 
+ * @param id_len the length of the id 
+ * @return -1 when something wrong, 0 when no errors
+ */
 int socket_interface_run(const char* entity_id, int id_len);
 
 #endif
