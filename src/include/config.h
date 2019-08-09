@@ -24,19 +24,24 @@
 #define SERVER_LISTEN_PORT      5001
 #define SERVER_RUN_PORT         5002
 
-/* key lengths */
-#define AES_KEY_BITS            256 
-#define AES_KEY_LEN             (AES_KEY_BITS/8)
 
 
 /* application protocol */
 
 #define PLAIN_MESSAGE_TYPE          0
-
 #define PRIVATE_KEY_REQUEST_TYPE    1
+#define PRIVATE_KEY_RESPONSE_TYPE   2
+#define SESSION_KEY_REQUEST_TYPE    3
+#define SESSION_KEY_ACK_TYPE        4
+#define SESSION_KEY_FINAL_TYPE      5
+
 #define PRIVATE_KEY_REQUEST_HEAD    5           /* the length of the head */
-#define PRIVATE_KEY_RESPONSE_TYPE   1
 #define PRIVATE_KEY_RESPONSE_HEAD   1
+
+/** security protocol */
+#define NO_ENC_TYPE                 0
+#define IBE_TYPE                    1 
+#define AES_TYPE                    2
 
 #endif
 

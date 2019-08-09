@@ -13,6 +13,5 @@ link_directories(${PROJECT_LIB_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/src/include)
 
 # add_subdirectory (${CMAKE_SOURCE_DIR}/src/IBE) 
-add_subdirectory (${CMAKE_SOURCE_DIR}/src/crypto) 
+add_subdirectory (${CMAKE_SOURCE_DIR}/src) 
 add_subdirectory (${CMAKE_SOURCE_DIR}/src/test) 
-add_subdirectory (${CMAKE_SOURCE_DIR}/src/comm) 

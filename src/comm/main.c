@@ -165,9 +165,7 @@ FILE* open_log_file()
 }
 
 
-
-
-int socket_main(const char* entity_id, int id_len, int port) {
+int socket_main(const char* entity_id, int id_len, int port, int *sc) {
 	// 启动一个监听线程
 	char error_sig = 0;
 	pthread_t threads[NUM_THREADS];
@@ -189,7 +187,7 @@ int socket_main(const char* entity_id, int id_len, int port) {
         
         // user interface
 	while (-1 != args[0]) {
-		if(-1 == socket_interface_run(entity_id, id_len)) {
+		if(-1 == socket_interface_run(entity_id, id_len, int *sc)) {
 			args[0] = -1;
 		}
 	}

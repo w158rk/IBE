@@ -107,6 +107,16 @@ int gen_random_str(char *buff, size_t len/*len=32*/) {
     return 0;
 }
 
+char* cbc_iv_new(void) {
+    char *ret = (char *)malloc(AES_IV_LEN);
+    return ret;
+}
+
+char* cbc_key_new(void) {
+    char *ret = (char *)malloc(AES_KEY_LEN);
+    return ret;
+}
+
 int gen_random_iv(char *iv) {
     return gen_random_str(iv, 128/8);
 }

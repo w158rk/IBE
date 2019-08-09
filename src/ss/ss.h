@@ -8,7 +8,6 @@
 #ifndef SS_H 
 #define SS_H 
 
-#include <openssl/bn.h>
 #include <crypto.h>
 
 

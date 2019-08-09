@@ -6,7 +6,6 @@
  *      in both client and server
  */
 #include "base.h"
-#include "../crypto/crypto.h"
 
 
 int receive_ibe(unsigned char *m, size_t *m_len, 

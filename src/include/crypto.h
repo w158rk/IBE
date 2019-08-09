@@ -9,40 +9,46 @@
 
 #ifndef CRYPTO_H
 #define CRYPTO_H 
-# include <openssl/sm9.h>
+
+
+#include "utils.h"
+#include "ds.h"
+
+#include <openssl/bn.h>
+#include <openssl/ec.h>
 
 #define MPK_FILENAME "mpk.conf"
 
-int system_setup(const char* mpk_filename, const char* msk_filename);
+int ibe_encrypt(const unsigned char* data, size_t data_len, unsigned char* c_buf, size_t *c_len, 
+    IBEPublicParameters *mpk, const char *id, size_t id_len);
+int ibe_decrypt(const unsigned char* c_buf, size_t c_len, unsigned char* m_buff, size_t *m_len, 
+    IBEPrivateKey *sk);
 
-
-/**!
- * @brief extract the private key given the id 
- * @param[in] msk the master key of the system 
- * @param[id] the id 
- * @return the private key of the given id 
+/**
+ * @brief extract ibe private key 
+ * @return 1 if no errors , else 0
+ * @param[out] sk private key 
+ * @param[in] msk Master Secret
+ * @param[in] id the ID of the request launcher
+ * @param[in] id_len length of id
  */
-SM9PrivateKey* extract_private_key(SM9MasterSecret* msk, const char* id);
+int ibe_extract(IBEPrivateKey *sk, 
+                IBEMasterSecret* msk, 
+                const char* id,
+                size_t id_len);
 
 
-
-int sm9_encrypt(const unsigned char* data, size_t data_len, unsigned char* c_buf, size_t *c_len, 
-    SM9PublicParameters *mpk, const char *id, size_t id_len);
-int sm9_decrypt(const unsigned char* c_buf, size_t c_len, unsigned char* m_buff, size_t *m_len, 
-    SM9PrivateKey *sk);
-
-int get_mpk_fp(const char* mpk_filename, SM9PublicParameters* mpk);
-int get_msk_fp(const char* msk_filename, SM9MasterSecret* msk);
-
-int get_sk_fp(const char* sk_filename, SM9PrivateKey* sk);
-int put_sk_fp(const char* sk_filename, SM9PrivateKey* sk);
-
-int get_sk_bio(BIO* bio, SM9PrivateKey* sk);
-int put_sk_bio(BIO* bio, SM9PrivateKey* sk);
+void ibe_sk_copy(IBEPrivateKey *dest, IBEPrivateKey *src);
 
 /*
  * cbc 
  */
+
+/* key lengths */
+#define AES_KEY_BITS            256 
+#define AES_KEY_LEN             (AES_KEY_BITS/8)
+#define AES_IV_BITS             128
+#define AES_IV_LEN              (AES_IV_BITS/8)
 
 int put_iv_fp(const char* filename, const char* iv, size_t len);
 int get_iv_fp(const char* filename, char* iv, size_t len);
@@ -52,6 +58,9 @@ int cbc_encrypt(unsigned char *m, size_t m_len, unsigned char *key,
     unsigned char *iv, unsigned char *c, size_t* c_len);
 int gen_random_iv(char *iv);
 int gen_random_key(char *key);
+
+char *cbc_iv_new(void);
+char *cbc_key_new(void);
 
 /*
  * secret sharing 
@@ -141,7 +150,13 @@ int SS_lagrange_value(BIGNUM *value, BIGNUM **poly_list, unsigned int length,
                         unsigned int i, BIGNUM* x, BIGNUM *p);
 
 /**
- * @todo addition of two points on the curve 
+ * @brief add two point
+ * 
+ * @return 1 if no error, 0 else
+ *  
+ * @param[out]  point    inupt address of a NULL point 
+ * @param[in]   left 
+ * @param[in]   right   
  */ 
 
 /*!
