@@ -9,6 +9,7 @@
 #define CTX_H 
 
 #include <config.h>
+#include <crypto.h>
 
 
 unsigned char user_id[MAX_ID_LEN];

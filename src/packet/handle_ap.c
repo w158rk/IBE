@@ -35,20 +35,44 @@ int handle_sk_request(PacketCTX *ctx) {
     int rtn = 0;
 
     AppPacket *packet = ctx->payload.appPacket;
+    #ifdef DEBUG 
+    fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, packet->payload);
+    #endif
     char *head = packet->head;
-    
+    char *payload = packet->payload;
+
     /* It may cause some problem for not using the network order */
-    int id_len = *(int *)(head + 4);  
-    IBEPrivateKey *sk = NULL;
-    IBEMasterSecret *msk = NULL;
-    if (get_msk_fp(MSK_FILE, msk) == 0) {
+    int payload_len = *(int *)(head + 4);  
+    int id_len = strlen(payload+AES_KEY_LEN);
+
+    IBEMasterSecret msk = NULL;
+    IBEPrivateKey sk = NULL;
+
+    if (get_msk_fp(MSK_FILENAME, &msk) == 0) {
         ERROR(" you don't have the access to msk file");
         goto end;
     }
-    if ( 0 ==ibe_extract(sk, msk, packet->payload, (size_t)id_len)) {
+
+    // there is a but that sucks 
+    // it seems that the function get_msk_fp would change the value of packet->payload 
+    // i don't know why, may be some magic things
+
+    #ifdef DEBUG 
+    fprintf("[%s : %d] extract finished\n", __FILE__, __LINE__);
+    #endif
+
+    if ( 0 == ibe_extract(&sk, &msk, payload+AES_KEY_LEN, (size_t)id_len)) {
         ERROR(" cannot extract the private key");
         goto end;
     }
+
+    #ifdef DEBUG 
+    fprintf(stderr, "[%s : %d] extract finished\n", __FILE__, __LINE__);
+    #endif
+    // TODO 
+    // finish extracting the requested private key 
+    // the next step is to send the key to the client 
+    // the following code is not checked
 
     PacketCTX send_ctx;
     AppPacket send_packet;
@@ -62,8 +86,9 @@ int handle_sk_request(PacketCTX *ctx) {
 
     send_ctx.phase = SEND_APP_PACKET;
     send_ctx.payload.appPacket = &send_packet;
+    send_ctx.aes_key = packet->payload + id_len;
 
-    if(0 == send(send_ctx)) {
+    if(0 == packet_send(&send_ctx)) {
         ERROR("send the packet error");
         goto end;
     }
@@ -71,8 +96,8 @@ int handle_sk_request(PacketCTX *ctx) {
     rtn = 1;
 
 end:
-    free(*sk);
-    free(*msk);
+    free(sk);
+    free(msk);
     return rtn;
 
 }
@@ -136,6 +161,10 @@ int handle_ap(PacketCTX *ctx) {
 
     /* analyze the head */
     int type = *(int *)head;
+
+    #ifdef DEBUG 
+    fprintf(stderr, "[%s : %d]type : %d\n", __FILE__, __LINE__, type);
+    #endif
 
     switch (type)
     {

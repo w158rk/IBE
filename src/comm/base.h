@@ -37,26 +37,25 @@
 /*****************************************************
  * 协议相关参数
  * ***************************************************/
-#define CRYPTO_IBE 					  	0
-#define CRYPTO_AES 						1
-#define CRYPTO_HEAD_LEN 				24
+// #define CRYPTO_IBE 					  	0
+// #define CRYPTO_AES 						1
+// #define CRYPTO_HEAD_LEN 				24
 /*  
  * IBE parameters
  */
-#define IBE_HEAD_LEN                    5
+// #define IBE_HEAD_LEN                    5
 /*
  * AES parameteres 
  */
-#define AES_HEAD_LEN                    21
-#define AES_IV_LEN 					    16 
+// #define AES_HEAD_LEN                    21
 /*
  *通信参数
  */
 // #define SUCCESS                       0
 // #define FAILURE                       1
-#define ESTABLISH_CONNECTION_REQUEST  2
-#define ESTABLISH_CONNECTION_RESPONSE 3
-#define ESTABLISH_CONNECTION_ACK      4
+// #define ESTABLISH_CONNECTION_REQUEST  2
+// #define ESTABLISH_CONNECTION_RESPONSE 3
+// #define ESTABLISH_CONNECTION_ACK      4
 
 
 /*****************************************************
@@ -80,7 +79,7 @@ int     Accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 int create_listening_socket(int listen_port);
 int connect_socket_server(char* ip_addr, int port, FILE** read_file, FILE** write_file);
 int disconnect_socket_server(FILE* read_file, FILE* write_file);
-int run_listen_core(const char* server_id, FILE* read_file, FILE* write_file, FILE* log_file);
+int run_listen_core(const char* entity_id,int entity_id_len, FILE* read_file, FILE* write_file, FILE* log_file);
 void *socket_listener_run(void *args);
 void sig_chld(int signo);
 

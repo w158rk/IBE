@@ -27,14 +27,16 @@ int socket_interface_run(const char* entity_id, int id_len) {
 void *socket_listener_run(void *args)
 {
 	char *error_sig = (char *)args;
-	char entity_id[MAX_ID_LEN];
-	memcpy(entity_id, (char *)args+8, MAX_ID_LEN);
+
+	int *entity_id_len = *(int *)(args+8);
+	char *entity_id = (char *)malloc(entity_id_len);
+	memcpy(entity_id, (char *)args+12, entity_id_len);
 
 	int listen_fd, connect_fd;
 	struct sockaddr_in client_addr;
 	socklen_t client_len;
 
-	int *p = (int *)args+1;			// 读取监听端口
+	int *p = (int *)(args+4);			// 读取监听端口
 	int listen_port = *p;
 
 	if((listen_fd = create_listening_socket(listen_port)) == -1)
@@ -95,7 +97,7 @@ void *socket_listener_run(void *args)
 				fprintf(stdout, "establish client server socket connection\n");
 				#endif
 
-				if(run_listen_core(entity_id, read_file, write_file, open_log_file()) == -1)
+				if(run_listen_core(entity_id, entity_id_len, read_file, write_file, open_log_file()) == -1)
 				{
 					// 业务
 					fprintf(stderr, "server core has error\n");
@@ -135,6 +137,7 @@ void *socket_listener_run(void *args)
 		fclose(log_file);
 	}
 
+	free(entity_id);
 	*error_sig = -1;
 }
 
@@ -165,19 +168,18 @@ FILE* open_log_file()
 }
 
 
-int socket_main(const char* entity_id, int id_len, int port, int *sc) {
+int socket_main(const char* entity_id, int id_len, int port) {
 	// 启动一个监听线程
 	char error_sig = 0;
 	pthread_t threads[NUM_THREADS];
 
 	// 函数参数
-	char args[MAX_ID_LEN+8];			// 对齐
-	args[0] = error_sig;
+	char *args = (char *)malloc(12 + id_len);
+	*(int *)args = error_sig;
+	*(int *)(args+4) = port;
+	*(int *)(args+8) = id_len;
 
-    int *p = (int *)args + 1;
-    *p = port;
-
-	memcpy(args+8, entity_id, MAX_ID_LEN);
+	memcpy(args+12, entity_id, id_len);
 	
 	int listen_rc = pthread_create(&threads[0], NULL, socket_listener_run, (void *)args);
 	if(listen_rc) {
@@ -187,7 +189,7 @@ int socket_main(const char* entity_id, int id_len, int port, int *sc) {
         
         // user interface
 	while (-1 != args[0]) {
-		if(-1 == socket_interface_run(entity_id, id_len, int *sc)) {
+		if(-1 == socket_interface_run(entity_id, id_len)) {
 			args[0] = -1;
 		}
 	}

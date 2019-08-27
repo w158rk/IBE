@@ -46,9 +46,15 @@ end:
 
 int get_msk_fp(const char* msk_filename, IBEMasterSecret* msk) {
 
+    int ret = 0;
     FILE *msk_fp = fopen(msk_filename, "rb");
     SM9MasterSecret *sm9_msk = NULL;
-    
+
+    #ifdef DEBUG 
+    fprintf(stderr, "*msk_filename : %ld\n", msk_filename);
+    fprintf(stderr, "*msk : %ld\n", *msk);
+    #endif
+
     if (!d2i_SM9MasterSecret_fp(msk_fp, &sm9_msk)) {
 		ERR_print_errors_fp(stderr);
         goto end;
@@ -56,9 +62,13 @@ int get_msk_fp(const char* msk_filename, IBEMasterSecret* msk) {
 
     fclose(msk_fp);
 
+    #ifdef DEBUG 
+    fprintf(stderr, "*msk : %ld\n", *msk);
+    #endif
     int rtn = i2d_SM9MasterSecret(sm9_msk, msk);
     #ifdef DEBUG 
     fprintf(stderr, "length of master secret : %d\n", rtn);
+    fprintf(stderr, "*msk : %ld\n", *msk);
     #endif
 
     if(!rtn) {
@@ -66,13 +76,12 @@ int get_msk_fp(const char* msk_filename, IBEMasterSecret* msk) {
         goto end;
     }
 
-    SM9MasterSecret_free(sm9_msk);
-    return 1;
+    ret = 1;
 
 end:
     fclose(msk_fp);
     SM9MasterSecret_free(sm9_msk);
-    return 0;
+    return ret;
 }
 
 int put_sk_fp(const char* sk_filename, IBEPrivateKey* sk) {
@@ -110,16 +119,17 @@ end:
 
 int get_sk_fp(const char* sk_filename, IBEPrivateKey* sk) {
     SM9PrivateKey *sm9_sk = NULL;
+    #ifdef DEBUG 
+    printf("%s\n", sk_filename);
+    #endif
     FILE *sk_fp = fopen(sk_filename, "rb");
     if (!d2i_SM9PrivateKey_fp(sk_fp, &sm9_sk)) {
 		ERR_print_errors_fp(stderr);
         goto end;
     }
 
-    fclose(sk_fp);
-
     #ifdef DEBUG 
-    i2d_SM9PrivateKey_fp(stderr, sm9_sk);
+    // i2d_SM9PrivateKey_fp(stderr, sm9_sk);
     #endif
 
     i2d_SM9PrivateKey(sm9_sk, sk);

@@ -19,10 +19,7 @@ int send_sp(PacketCTX *ctx)
         goto end;
     }
 
-
-
-
-    ctx->phase = SEND_SEC_PACKET;
+    ctx->phase = SEND_DONE;
     rtn = 1;
 end:
     return rtn;

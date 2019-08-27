@@ -59,12 +59,11 @@ enum state {
     RECV_SEC_PACKET,
 };
 
-typedef struct {
+typedef struct packet_ctx{
     enum state phase;
     union payload2 {
         AppPacket *appPacket;
         SecPacket *secPacket;
-        char *data;
     } payload;
     
     char *src_id;
@@ -76,6 +75,9 @@ typedef struct {
     IBEPrivateKey *sk;  
 
     unsigned char *aes_key;
+
+    FILE *read_file;
+    FILE *write_file;
 } PacketCTX;
 
 #endif

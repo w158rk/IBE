@@ -17,7 +17,6 @@
 #include <openssl/bn.h>
 #include <openssl/ec.h>
 
-#define MPK_FILENAME "mpk.conf"
 
 int ibe_encrypt(const unsigned char* data, size_t data_len, unsigned char* c_buf, size_t *c_len, 
     IBEPublicParameters *mpk, const char *id, size_t id_len);

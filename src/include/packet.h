@@ -28,4 +28,17 @@ int send_ap(PacketCTX *ctx);
  * @param[in] ctx
  */
 int send_sign(PacketCTX *);
+
+int send_enc(PacketCTX *);
+
+int send_sp(PacketCTX *);
+
+int handle_ap(PacketCTX *);
+int handle_sp(PacketCTX *);
+int handle_dec(PacketCTX *);
+int handle_verify(PacketCTX *);
+
+int packet_send(PacketCTX *ctx);
+int packet_handle(PacketCTX *ctx);
+
 #endif

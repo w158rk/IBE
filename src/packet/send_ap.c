@@ -38,6 +38,10 @@ int send_ap(PacketCTX *ctx)
             send_type = NO_ENC_TYPE;
     }
 
+    #ifdef DEBUG 
+    fprintf(stderr, "send type : %d\n", send_type);
+    #endif
+
     SecPacket *send_packet = (SecPacket *)malloc(sizeof(SecPacket));  
     
     *(int *)(send_packet->head) = send_type;
