@@ -71,8 +71,8 @@ typedef struct {
 	uint32_t rk[SMS4_NUM_ROUNDS];
 } sms4_key_t;
 
-void sms4_set_encrypt_key(sms4_key_t *key, const unsigned char *user_key);
-void sms4_set_decrypt_key(sms4_key_t *key, const unsigned char *user_key);
+void sms4_set_encrypt_key(sms4_key_t *key, const unsigned char *user_key);	//生成加密密钥
+void sms4_set_decrypt_key(sms4_key_t *key, const unsigned char *user_key);	//生成解密密钥
 void sms4_encrypt(const unsigned char *in, unsigned char *out, const sms4_key_t *key);
 #define sms4_decrypt(in,out,key)  sms4_encrypt(in,out,key)
 
@@ -81,7 +81,7 @@ void sms4_encrypt_8blocks(const unsigned char *in, unsigned char *out, const sms
 void sms4_encrypt_16blocks(const unsigned char *in, unsigned char *out, const sms4_key_t *key);
 
 void sms4_ecb_encrypt(const unsigned char *in, unsigned char *out,
-	const sms4_key_t *key, int enc);
+	const sms4_key_t *key, int enc);	//（输入字符，输出字符，加密密钥，长度）
 void sms4_cbc_encrypt(const unsigned char *in, unsigned char *out,
 	size_t len, const sms4_key_t *key, unsigned char *iv, int enc);
 void sms4_cfb128_encrypt(const unsigned char *in, unsigned char *out,

@@ -27,22 +27,22 @@ IBEPrivateKey sk_read;
 
 int test_set_up() {
     printf("[test] set up function\n");
-    return sys_setup(MPK_FILENAME, MSK_FILENAME);
+    return sys_setup(MPK_FILENAME, MSK_FILENAME);   //系统建立得到mpk.conf，msk_conf
 }
 
 int test_get_public_parameters() {
     printf("[test] get pulic mpk from file\n");
-    return get_mpk_fp(MPK_FILENAME, &mpk);
+    return get_mpk_fp(MPK_FILENAME, &mpk);  //获取sP存放在mpk.conf中
 }
 
 int test_get_master_secret() {
     printf("[test] get msk from file\n");
-    return get_msk_fp(MSK_FILENAME, &msk);    
+    return get_msk_fp(MSK_FILENAME, &msk);      //获取s存放在msk.conf中
 }
 
 int test_extract_private_key() {
     printf("[test] extract private key\n");
-    if (0 == ibe_extract(&sk, &msk, SERVER_ID, SERVER_ID_LEN)) 
+    if (0 == ibe_extract(&sk, &msk, SERVER_ID, SERVER_ID_LEN))  //生成私钥存放在sk中
         return -1;
     return 0;
 }
@@ -51,7 +51,7 @@ int test_get_private_key() {
     printf("[test] get private key\n");
     size_t data_len = strlen(data);
 
-    if(-1 == get_sk_fp(sk_filename, &sk_read)) 
+    if(-1 == get_sk_fp(sk_filename, &sk_read))  //从sk_Server.conf读取私钥放入sk_read中
         return -1;    
 
     // 用读取的密钥解密一次结果
@@ -68,13 +68,13 @@ int test_get_private_key() {
 
 int test_put_private_key() {
     printf("[test] put private key\n");
-    return put_sk_fp(sk_filename, &sk);
+    return put_sk_fp(sk_filename, &sk); //将sk输出在sk_Server.conf中
 }
 
 int test_sm9_encrypt() {
     printf("[test] encrypt\n");
     size_t data_len = strlen(data);
-    return ibe_encrypt(data, data_len, c_buf, &c_len, &mpk, SERVER_ID, SERVER_ID_LEN);
+    return ibe_encrypt(data, data_len, c_buf, &c_len, &mpk, SERVER_ID, SERVER_ID_LEN);  //ibe加密算法
 }
 
 int test_sm9_decrypt() {
@@ -82,7 +82,7 @@ int test_sm9_decrypt() {
     size_t data_len = strlen(data);
 
     out_len = BUFFER_SIZE;             // 坑！ 这个必须选个大一些的值，不然会出现buff太小的错
-    int ret = ibe_decrypt(c_buf, c_len, out, &out_len, &sk);
+    int ret = ibe_decrypt(c_buf, c_len, out, &out_len, &sk);    //解密算法
     printf("\t%s\n", data);
     printf("\t%s\n", out);
     
@@ -104,14 +104,14 @@ end:
 int main(int argc, char *argv[]) {
 
     if(-1 == test_set_up()) goto end; 
-    if(-1 == test_get_public_parameters()) goto end;
-    if(-1 == test_get_master_secret()) goto end; 
-    if(-1 == test_extract_private_key()) goto end; 
-    if(-1 == test_sm9_encrypt()) goto end; 
-    if(-1 == test_sm9_decrypt()) goto end; 
+    if(-1 == test_get_public_parameters()) goto end;    //获取sP，并输出文件
+    if(-1 == test_get_master_secret()) goto end;    //获取s，并输出文件
+    if(-1 == test_extract_private_key()) goto end;  //获取sk
+    if(-1 == test_sm9_encrypt()) goto end;  //加密
+    if(-1 == test_sm9_decrypt()) goto end;  //解密 
     
-    if(-1 == test_put_private_key()) goto end; 
-    if(-1 == test_get_private_key()) goto end; 
+    if(-1 == test_put_private_key()) goto end;  //输出sk于文件中 
+    if(-1 == test_get_private_key()) goto end;  //从文件中读取sk
 
     printf("[test] pass \n");
     return 0; 
