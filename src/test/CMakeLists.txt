@@ -7,21 +7,21 @@ if(UNIX)
     link_directories(${CMAKE_SOURCE_DIR}/src/IBE ${CMAKE_SOURCE_DIR}/src/Library/UNIX)
 endif(UNIX)
 
-include_directories (${PROJECT_INCLUDE_DIR} ../crypto)
+include_directories (${PROJECT_INCLUDE_DIR} ../crypto)  #链接库在../crypto中
 
 # add the executable
 
-add_executable (sm9test sm9test.c)
-target_link_libraries (sm9test ibe crypto ssl)
-add_executable (clienttest clienttest.c)
-target_link_libraries (clienttest ibe crypto ssl pthread)
-add_executable (servertest servertest.c)
-target_link_libraries (servertest ibe crypto ssl pthread)
+add_executable (sm9test sm9test.c)  #添加可执行文件sm9test.c生成sm9test
+target_link_libraries (sm9test ibe crypto ssl)  将sm9test与ibe，ctypto，ssl库文件链接
+add_executable (clienttest clienttest.c)    #添加可执行文件clienttest.c生成clienttest
+target_link_libraries (clienttest ibe crypto ssl pthread)   #与库文件链接
+add_executable (servertest servertest.c)    #添加可执行文件servertest.c生成servertest
+target_link_libraries (servertest ibe crypto ssl pthread)   #与库文件链接
 # add_executable (cbctest cbctest.c)
 # target_link_libraries (cbctest ibe crypto ssl)
 
-add_executable (cryptotest crypto.c)
-target_link_libraries (cryptotest ibe crypto ssl)
+add_executable (cryptotest crypto.c)    #添加可执行文件crypto.c生成cryptotest
+target_link_libraries (cryptotest ibe crypto ssl)   #与库文件链接
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(cryptotest PUBLIC DEBUG)
 endif(CMAKE_BUILD_TYPE MATCHES Debug)
