@@ -7,6 +7,7 @@
 
 #include<packet.h>
 #include <string.h>
+// #define DEBUG
 
 int send_ap(PacketCTX *ctx)
 {
@@ -41,7 +42,7 @@ int send_ap(PacketCTX *ctx)
     #ifdef DEBUG 
     fprintf(stderr, "send type : %d\n", send_type);
     #endif
-
+    //生成send_packet
     SecPacket *send_packet = (SecPacket *)malloc(sizeof(SecPacket));  
     
     *(int *)(send_packet->head) = send_type;

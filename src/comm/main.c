@@ -97,6 +97,7 @@ void *socket_listener_run(void *args)
 				fprintf(stdout, "establish client server socket connection\n");
 				#endif
 
+				/*处理监听事件*/
 				if(run_listen_core(entity_id, entity_id_len, read_file, write_file, open_log_file()) == -1)
 				{
 					// 业务
@@ -181,7 +182,7 @@ int socket_main(const char* entity_id, int id_len, int port) {
 
 	memcpy(args+12, entity_id, id_len);
 	
-	int listen_rc = pthread_create(&threads[0], NULL, socket_listener_run, (void *)args);
+	int listen_rc = pthread_create(&threads[0], NULL, socket_listener_run, (void *)args);		//如果监听到则执行socket_listener_run
 	if(listen_rc) {
 		fprintf(stderr, "create listening thread fail\n");
 		return -1;

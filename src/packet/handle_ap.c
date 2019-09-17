@@ -9,6 +9,7 @@
 #include <crypto.h>
 #include <sys.h>
 #include <string.h>
+// #define DEBUG
 
 int handle_m(PacketCTX *ctx)
 {
@@ -39,11 +40,16 @@ int handle_sk_request(PacketCTX *ctx) {
     fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, packet->payload);
     #endif
     char *head = packet->head;
-    char *payload = packet->payload;
+    unsigned char *payload = packet->payload;        //获取的payload为client的SM4_key加上id
 
     /* It may cause some problem for not using the network order */
-    int payload_len = *(int *)(head + 4);  
-    int id_len = strlen(payload+AES_KEY_LEN);
+    //int payload_len = *(int *)(head + 4);
+    int payload_len = strlen(payload);
+    #ifdef DEBUG 
+    fprintf(stderr, "payload: %x-\n", payload);
+    fprintf(stderr, "payload_len: %d\n", payload_len);
+    #endif
+    int id_len = strlen(payload+SM4_KEY_LEN);       //计算id的长度
 
     IBEMasterSecret msk = NULL;
     IBEPrivateKey sk = NULL;
@@ -51,20 +57,25 @@ int handle_sk_request(PacketCTX *ctx) {
     if (get_msk_fp(MSK_FILENAME, &msk) == 0) {
         ERROR(" you don't have the access to msk file");
         goto end;
-    }
+    }       //从文件中读取s
 
     // there is a but that sucks 
     // it seems that the function get_msk_fp would change the value of packet->payload 
     // i don't know why, may be some magic things
 
     #ifdef DEBUG 
+    fprintf(stderr, "id_len is: %d\n", id_len);
     fprintf("[%s : %d] extract finished\n", __FILE__, __LINE__);
+    fprintf(stderr, "&msk : %ld \n", msk);
+    fprintf(stderr, "id: %s", payload + SM4_KEY_LEN);
+    fprintf(stderr, "payload1: %x\n", payload);
     #endif
 
-    if ( 0 == ibe_extract(&sk, &msk, payload+AES_KEY_LEN, (size_t)id_len)) {
+    /*生成私钥sk*/
+    if ( 0 == ibe_extract(&sk, &msk, payload+SM4_KEY_LEN, (size_t)id_len)) {
         ERROR(" cannot extract the private key");
         goto end;
-    }
+    }       
 
     #ifdef DEBUG 
     fprintf(stderr, "[%s : %d] extract finished\n", __FILE__, __LINE__);
@@ -78,15 +89,24 @@ int handle_sk_request(PacketCTX *ctx) {
     AppPacket send_packet;
 
     *(int *)(send_packet.head) = PRIVATE_KEY_RESPONSE_TYPE;
-    *(int *)(send_packet.head+4) = IBE_SK_LEN;
-
+    *(int *)(send_packet.head+4) = IBE_SK_LEN;      //头部存放了标示和私钥长度
     char *p = (char *)malloc(IBE_SK_LEN);
-    memcpy(p, *sk, IBE_SK_LEN);
-    send_packet.payload = p;
-
+    memcpy(p, sk, IBE_SK_LEN);
+    send_packet.payload = p;        //payload中存放私钥
     send_ctx.phase = SEND_APP_PACKET;
     send_ctx.payload.appPacket = &send_packet;
-    send_ctx.aes_key = packet->payload + id_len;
+     #ifdef DEBUG 
+    fprintf(stderr, "payload2: %x\n", payload);
+    #endif
+    //char ch[16];
+    strncpy(send_ctx.sm4_key, payload, 16);
+    //send_ctx.sm4_key = ch;
+
+    #ifdef DEBUG
+    fprintf(stderr, "payload3: %s\n", payload);
+    fprintf(stderr, "send_ctx.sm4_key): %s\n", send_ctx.sm4_key);
+    //fprintf(stderr, "sm4_key: %x\n", send_ctx.sm4_key);
+    #endif
 
     if(0 == packet_send(&send_ctx)) {
         ERROR("send the packet error");

@@ -14,8 +14,9 @@ History: ...
 #include <ctx.h>
 #include <crypto.h>
 #include <packet.h>
+#include <openssl/sm4.h>
 #include <sys.h>
-// #define __DEBUG__
+#define DEBUG
 
 
 /* 
@@ -30,33 +31,45 @@ int run_get_private_key(const char* id, int id_len) {
 
 	/* arrange the private key request message */
 	size_t actual_id_len = ((id_len+4)/4) * 4;		// the upper integer of (id_len+1)
-	size_t m_len = (size_t)(actual_id_len + AES_KEY_LEN);
+	size_t m_len = (size_t)(actual_id_len + SM4_KEY_LEN);
 	char *payload = (char *)malloc(m_len);
-	memset(payload, 0, m_len);
+	memset(payload, 0, m_len);		//初始化payload长度为id的长度加上SM4密钥的长度
 
 	AppPacket packet; 
 	/* set the head */
-	*(int *)(packet.head) = PRIVATE_KEY_REQUEST_TYPE;
-	*(int *)(packet.head + 4) = m_len;
+	*(int *)(packet.head) = PRIVATE_KEY_REQUEST_TYPE;		//AppPacket.head的第一位为1（标志位，标志为申请私钥）
+	*(int *)(packet.head + 4) = m_len;		//从AppPacket.head的第4位开始存放payload的长度
 
-	
-	/* generate and copy the aes key */
+	/* generate and copy the aes key 
 	char *p = payload;
 	char key[AES_KEY_LEN];
 	gen_random_key(key);
 	memcpy(p, key, AES_KEY_LEN);
-	packet.payload = payload;
+	packet.payload = payload;*/
 
-	/* copy the id */
-	p += AES_KEY_LEN;
-	memcpy(p, id, (size_t)id_len);
+	/* generate and copy the sm4 key */
+	char *p = payload;
+	unsigned char key[SM4_KEY_LEN];
+	set_key(key);		//生成16位的key
+	memcpy(p, key, SM4_KEY_LEN);		//把key复制到p中
+	packet.payload = payload;		//AppPacket.payload存放sm4 key
 
 	#ifdef DEBUG 
-	fprintf(stderr, payload);
+	fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, payload);
+	#endif
+
+	/* copy the id */
+	p += SM4_KEY_LEN;		
+	memcpy(p, id, (size_t)id_len);		//将id放在payload中
+
+
+	#ifdef DEBUG 
+	fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, payload);
 	#endif
 	/* set the context */
-	memcpy(aes_key, key, AES_KEY_LEN);
+	memcpy(sm4_key, key, SM4_KEY_LEN);		//改变sm4_key中的内容为新生成的key
 
+	/*组织包*/
 	PacketCTX ctx;
 
 	ctx.phase = SEND_APP_PACKET;
@@ -70,12 +83,12 @@ int run_get_private_key(const char* id, int id_len) {
 	// to get the mpk into the ctx
 
 	IBEPublicParameters mpk = NULL;
-	get_mpk_fp(MPK_FILENAME, &mpk);
+	get_mpk_fp(MPK_FILENAME, &mpk);		//从文件中读出sP的值
 	
 	#ifdef DEBUG 
 	fprintf(stderr, "[%s : %d] phase : %d\n", __FILE__, __LINE__, ctx.phase);
 	#endif
-	ctx.mpk = &mpk;
+	ctx.mpk = &mpk;		//将sP放入包中
 	#ifdef DEBUG 
 	fprintf(stderr, "[%s : %d] phase : %d\n", __FILE__, __LINE__, ctx.phase);
 	#endif

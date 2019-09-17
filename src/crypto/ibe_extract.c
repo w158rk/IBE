@@ -5,7 +5,7 @@
  * @brief ibe extract private key
  */
 
-#undef DEBUG
+// #define DEBUG
 #ifdef DEBUG 
 #include<stdio.h>
 #endif

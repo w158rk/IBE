@@ -8,6 +8,7 @@
 #include<packet.h>
 #include <crypto.h>
 #include <string.h>
+// #define DEBUG
 
 int send_enc(PacketCTX *ctx)
 {
@@ -42,7 +43,7 @@ int send_enc(PacketCTX *ctx)
         #ifdef DEBUG 
         fprintf(stderr, "[%s:%d] IBE ENC\n", __FILE__, __LINE__);
         #endif
-
+        //IBE加密
         if (!ibe_encrypt(data, (size_t)length+APP_HEAD_LEN, 
                     cipher, &cipher_len, 
                     ctx->mpk, ctx->dest_id, ctx->dest_id_len))
@@ -63,11 +64,13 @@ int send_enc(PacketCTX *ctx)
         break;
     
     case AES_TYPE:
-        
+        #ifdef DEBUG
+        printf("here is AES_TYPE");
+        #endif
         iv = cbc_iv_new();
         if (!gen_random_iv(iv) ||
             !cbc_encrypt(data, (size_t)length+APP_HEAD_LEN, 
-                    ctx->aes_key, iv, cipher, &cipher_len)) 
+                    ctx->sm4_key, iv, cipher, &cipher_len)) 
         {
             ERROR("encrypt failed");
             goto end;

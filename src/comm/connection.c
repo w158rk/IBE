@@ -11,8 +11,10 @@ History: ...
 
 #include "base.h"
 #include <packet.h>
+// #define DEBUG
 static long int current_client_id;
 
+/*读取包的内容和处理包的过程*/
 int run_listen_core(const char* entity_id, int entity_id_len, 
 					FILE* read_file, FILE* write_file, FILE* log_file)
 {

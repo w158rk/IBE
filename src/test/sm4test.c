@@ -4,10 +4,18 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define DEBUG
+
 int main()
 {
     unsigned char key[16];
     set_key(key);//随机生成key
+	#ifdef DEBUG
+	for(int i=0;i<16;i++)
+	{
+		printf("%x-", key[i]);
+	}
+	#endif
 	unsigned char input[100000];
 	unsigned char output[100000];
 	sm4_context ctx;

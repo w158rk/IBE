@@ -67,6 +67,10 @@ void sm4_crypt_cbc( sm4_context *ctx,
                      unsigned char iv[16],
                      unsigned char *input,
                      unsigned char *output );
+
+void set_key(unsigned char *key);
+int choice1(unsigned char *input);
+int choice2(unsigned char *input);
  
 #ifdef __cplusplus
 }
