@@ -1,6 +1,6 @@
 #include <packet.h>
-
-#ifdef DEBUG 
+// # define DEBUG
+#ifdef DEBUG
 #include <stdio.h>
 #endif
 
@@ -15,11 +15,11 @@ int packet_send(PacketCTX* ctx) {
         case SEND_APP_PACKET:
             flag = send_ap(ctx);
             break;
-        case SEND_ENC:
-            flag = send_enc(ctx);
-            break;
         case SEND_SIGN:
             flag = send_sign(ctx);
+            break;
+        case SEND_ENC:
+            flag = send_enc(ctx);
             break;
         case SEND_SEC_PACKET:
             flag = send_sp(ctx);

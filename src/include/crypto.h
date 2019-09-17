@@ -48,6 +48,8 @@ void ibe_sk_copy(IBEPrivateKey *dest, IBEPrivateKey *src);
 #define AES_KEY_LEN             (AES_KEY_BITS/8)
 #define AES_IV_BITS             128
 #define AES_IV_LEN              (AES_IV_BITS/8)
+#define SM4_KEY_BITS            128
+#define SM4_KEY_LEN             (SM4_KEY_BITS/8)
 
 int put_iv_fp(const char* filename, const char* iv, size_t len);
 int get_iv_fp(const char* filename, char* iv, size_t len);

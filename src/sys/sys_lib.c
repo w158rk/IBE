@@ -5,6 +5,8 @@
  * @date August 7th, 2019
  */
 
+// #define DEBUG
+
 #ifdef DEBUG 
 #include <stdio.h>
 #endif

@@ -1,4 +1,5 @@
 #include <packet.h>
+// #define DEBUG
 
 int packet_handle(PacketCTX* ctx) {
     int flag = 1;
@@ -11,11 +12,11 @@ int packet_handle(PacketCTX* ctx) {
         case RECV_APP_PACKET:
             flag = handle_ap(ctx);
             break;
-        case RECV_DEC:
-            flag = handle_dec(ctx);
-            break;
         case RECV_VERIFY:
             flag = handle_verify(ctx);
+            break;
+        case RECV_DEC:
+            flag = handle_dec(ctx);
             break;
         case RECV_SEC_PACKET:
             flag = handle_sp(ctx);
