@@ -71,7 +71,7 @@ int handle_dec(PacketCTX *ctx) {
         // add the app packet to the payload of the sec packet 
         p_sec_packet->payload.appPacket = &app_packet;
         break;
-    case AES_TYPE:
+    case SM4_TYPE:
         break;
     default:
         break;

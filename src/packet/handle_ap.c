@@ -125,6 +125,8 @@ end:
 
 int handle_sk_response(PacketCTX *ctx) {
 
+    fprintf(stderr, "begin to handle sk");
+
     int rtn = 0;
     AppPacket *packet = ctx->payload.appPacket;
     char *head = packet->head;

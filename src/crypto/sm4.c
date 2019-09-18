@@ -358,8 +358,7 @@ int choice1(unsigned char *input){
     int N;
 	scanf("\n");
 	fgets((char*)input, 100000, stdin);       //设置可输入最大的长度为100000
-	//fgets((char*)input, sizeof(input), stdin);��һ�ֶ�ȡ��ʽ������������
-	for(N=0;input[N] != '\0';N++)//�ж��ַ������ȣ�����������ֹͣ
+	for(N=0;input[N] != '\0';N++)
         ;
     //N--;
 	return N;
