@@ -9,7 +9,7 @@
 #include <crypto.h>
 #include <sys.h>
 #include <string.h>
-// #define DEBUG
+#define DEBUG
 
 int handle_m(PacketCTX *ctx)
 {
@@ -114,7 +114,6 @@ int handle_sk_request(PacketCTX *ctx) {
     }
 
     rtn = 1;
-
 end:
     free(sk);
     free(msk);
@@ -190,39 +189,37 @@ int handle_ap(PacketCTX *ctx) {
 
     switch (type)
     {
-    case PLAIN_MESSAGE_TYPE:
-        handle_m(ctx);
-        break;
-    
-    case PRIVATE_KEY_REQUEST_TYPE:
-        handle_sk_request(ctx);
-        break;
-    
-    case PRIVATE_KEY_RESPONSE_TYPE:
-        handle_sk_response(ctx);
-        break;
-    
-    case SESSION_KEY_REQUEST_TYPE:
-        handle_session_request(ctx);
-        break;
+        case PLAIN_MESSAGE_TYPE:
+            handle_m(ctx);
+            break;
+        
+        case PRIVATE_KEY_REQUEST_TYPE:
+            handle_sk_request(ctx);
+            break;
+        
+        case PRIVATE_KEY_RESPONSE_TYPE:
+            handle_sk_response(ctx);
+            break;
+        
+        case SESSION_KEY_REQUEST_TYPE:
+            handle_session_request(ctx);
+            break;
 
-    case SESSION_KEY_ACK_TYPE:
-        handle_session_ack(ctx);
-        break;
+        case SESSION_KEY_ACK_TYPE:
+            handle_session_ack(ctx);
+            break;
 
-    case SESSION_KEY_FINAL_TYPE:
-        handle_session_final(ctx);
-        break;
-    
-    default:
-        ERROR("the packet type is invalid");
-        goto end;
-        break;
+        case SESSION_KEY_FINAL_TYPE:
+            handle_session_final(ctx);
+            break;
+        
+        default:
+            ERROR("the packet type is invalid");
+            goto end;
+            break;
     }
-
     ctx->phase = SEND_DONE;
     rtn = 1;
-
 end:
     return rtn;
 }

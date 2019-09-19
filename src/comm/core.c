@@ -97,17 +97,17 @@ int run_get_private_key(const char* id, int id_len) {
 		ERROR("wrong when make the packet to send");
 		goto end;
 	}
-
 	// send the packet through the socket 
 	// 1. send the head 
-	SecPacket *sec_packet = ctx.payload.secPacket;
+
+	/*SecPacket *sec_packet = ctx.payload.secPacket;
 	Write(fileno(write_file), sec_packet->head, SEC_HEAD_LEN);
 	// 2. send the payload
 	int len = *(int *)(sec_packet->head+4);
 	#ifdef DEBUG 
 	fprintf(stderr, "[%s:%d] length : %d\n", __FILE__, __LINE__, len);
 	#endif
-	Write(fileno(write_file), sec_packet->payload.data, len);
+	Write(fileno(write_file), sec_packet->payload.data, len);*/
 
 	ret = 1;
 

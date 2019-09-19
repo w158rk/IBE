@@ -18,7 +18,6 @@ int send_sp(PacketCTX *ctx)
         ERROR("call wrong function");
         goto end;
     }
-
     ctx->phase = SEND_DONE;
     rtn = 1;
 end:

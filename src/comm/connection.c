@@ -22,7 +22,7 @@ int run_listen_core(const char* entity_id, int entity_id_len,
 	current_client_id = -1;
 
 	do
-	{	
+	{
 		/* now I have got the crypto type, so what I should do is to get the plain text
 		 * from the packet 
 		 * */
