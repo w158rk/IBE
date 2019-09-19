@@ -31,9 +31,11 @@ int packet_send(PacketCTX* ctx) {
     // 1. send the head 
 	SecPacket *sec_packet = ctx->payload.secPacket;
 
-    fprintf(stderr,"%x", sec_packet->head);
+    fprintf(stderr,"%x\n", sec_packet->head);
 
-	if(write(fileno(write_file), sec_packet->head, SEC_HEAD_LEN) != SEC_HEAD_LEN)
+    fprintf(stderr,"%d\n", ctx->write_file);
+
+	if(Write(fileno(ctx->write_file), sec_packet->head, SEC_HEAD_LEN) != SEC_HEAD_LEN)
     {
         fprintf(stderr,"error in write file");
     }
@@ -43,7 +45,7 @@ int packet_send(PacketCTX* ctx) {
 	#ifdef DEBUG 
 	fprintf(stderr, "[%s:%d] length : %d\n", __FILE__, __LINE__, len);
 	#endif
-	write(fileno(write_file), sec_packet->payload.data, len);
+	Write(fileno(write_file), sec_packet->payload.data, len);
 end :
     return flag;
 

@@ -9,6 +9,7 @@
 #include <crypto.h>
 #include <sys.h>
 #include <string.h>
+#include <ctx.h>
 #define DEBUG
 
 int handle_m(PacketCTX *ctx)
@@ -95,6 +96,8 @@ int handle_sk_request(PacketCTX *ctx) {
     send_packet.payload = p;        //payload中存放私钥
     send_ctx.phase = SEND_APP_PACKET;
     send_ctx.payload.appPacket = &send_packet;
+    send_ctx.write_file = write_file;
+    send_ctx.read_file = read_file;
      #ifdef DEBUG 
     fprintf(stderr, "payload2: %x\n", payload);
     #endif
