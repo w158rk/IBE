@@ -5,7 +5,7 @@ int packet_handle(PacketCTX* ctx) {
     int flag = 1;
     while(ctx->phase != RECV_DONE && flag!=0) {
         #ifdef DEBUG 
-        fprintf(stderr, "phase : %d\n", ctx->phase);
+        fprintf(stderr, "handle phase : %d\n", ctx->phase);
         #endif
         switch (ctx->phase)
         {

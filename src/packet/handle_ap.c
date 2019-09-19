@@ -96,8 +96,8 @@ int handle_sk_request(PacketCTX *ctx) {
     send_packet.payload = p;        //payload中存放私钥
     send_ctx.phase = SEND_APP_PACKET;
     send_ctx.payload.appPacket = &send_packet;
-    send_ctx.write_file = write_file;
-    send_ctx.read_file = read_file;
+    send_ctx.write_file = ctx -> write_file;
+    send_ctx.read_file = ctx -> read_file;
      #ifdef DEBUG 
     fprintf(stderr, "payload2: %x\n", payload);
     #endif
@@ -140,11 +140,13 @@ int handle_sk_response(PacketCTX *ctx) {
     }
 
     int i;
-    printf("your private key is (please store it if necessary) : ");
+    printf("your private key is (please store it if necessary) : \n");
+    printf("length : %d\n", length);
     for(i=0; i<length; i++) {
         if(i%4==0) printf(" ");
         if(i%16==0) printf("\n");
-        printf("%02x", packet->payload[i] & 0xff);
+        printf("i : %d\n", i);
+        // printf("%02x", packet->payload[i] & 0xff);
     }
     printf("\n");
 
@@ -221,7 +223,7 @@ int handle_ap(PacketCTX *ctx) {
             goto end;
             break;
     }
-    ctx->phase = SEND_DONE;
+    ctx->phase = RECV_DONE;
     rtn = 1;
 end:
     return rtn;

@@ -26,6 +26,9 @@ int run_listen_core(const char* entity_id, int entity_id_len,
 		/* now I have got the crypto type, so what I should do is to get the plain text
 		 * from the packet 
 		 * */
+		#ifdef DEBUG 
+		fprintf(stderr, "listening...\n");
+		#endif
 		char buffer[BUFFER_SIZE];
 
 		// read the data stream and reorganize it as a security packet

@@ -44,8 +44,9 @@ int packet_send(PacketCTX* ctx) {
 	int len = *(int *)(sec_packet->head+4);
 	#ifdef DEBUG 
 	fprintf(stderr, "[%s:%d] length : %d\n", __FILE__, __LINE__, len);
+	fprintf(stderr, "send to : %lx\n", ctx->write_file);
 	#endif
-	Write(fileno(write_file), sec_packet->payload.data, len);
+	Write(fileno(ctx->write_file), sec_packet->payload.data, len);
 end :
     return flag;
 

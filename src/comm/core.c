@@ -28,7 +28,22 @@ int run_get_private_key(const char* id, int id_len) {
 	int ret = 0;
 	/* connect to the server first */
 	connect_socket_server(SERVER_IP_ADDRESS, SERVER_LISTEN_PORT, &read_file, &write_file);
+	
+	#ifdef DEBUG
+	fprintf(stderr, "[%s:%d] mark\n", __FILE__, __LINE__);
+	fprintf(stderr, "[%s:%d] read from %lx\n", __FILE__, __LINE__, read_file);
+	fprintf(stderr, "[%s:%d] write to %lx\n", __FILE__, __LINE__, write_file);	
+	fprintf(stderr, "[%s:%d] %ld\n", __FILE__, __LINE__, sizeof(write_file));	
+	#endif
+	
+	if(file_main(id, id_len, read_file, write_file) == -1) {
+		fprintf(stderr, "[%s:%d] something went wrong\n", __FILE__, __LINE__);
+		return -1;
+	}
 
+	#ifdef DEBUG 
+	fprintf(stderr, "[%s:%d] mark\n", __FILE__, __LINE__);
+	#endif
 	/* arrange the private key request message */
 	size_t actual_id_len = ((id_len+4)/4) * 4;		// the upper integer of (id_len+1)
 	size_t m_len = (size_t)(actual_id_len + SM4_KEY_LEN);

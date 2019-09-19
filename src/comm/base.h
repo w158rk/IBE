@@ -80,7 +80,7 @@ int create_listening_socket(int listen_port);
 int connect_socket_server(char* ip_addr, int port, FILE** read_file, FILE** write_file);
 int disconnect_socket_server(FILE* read_file, FILE* write_file);
 int run_listen_core(const char* entity_id,int entity_id_len, FILE* read_file, FILE* write_file, FILE* log_file);
-void *socket_listener_run(void *args);
+int file_main(const char* entity_id, int id_len, FILE *read_file, FILE* write_file);
 void sig_chld(int signo);
 
 /****************************************************************
