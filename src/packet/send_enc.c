@@ -22,6 +22,7 @@ int send_enc(PacketCTX *ctx)
     }
 
     SecPacket *sec_packet = ctx->payload.secPacket;
+    //fprintf(stderr,"sk: %s\n",sec_packet->payload.appPacket->payload);
     AppPacket *app_packet = sec_packet->payload.appPacket;
     int length = *(int *)(app_packet->head+4);
 

@@ -1,11 +1,15 @@
 #include <packet.h>
+#include <stdio.h>
 #include <crypto.h>
 #include <sys.h>
 #include <string.h>
+#include <openssl/sm4.h>
+#define DEBUG
 
 int handle_dec(PacketCTX *ctx) {
 
     AppPacket app_packet;
+    AppPacket *p_sk_packet = ctx->payload.secPacket->payload.appPacket;
     SecPacket *p_sec_packet = ctx->payload.secPacket;
 
     int ret = 0;
@@ -72,7 +76,51 @@ int handle_dec(PacketCTX *ctx) {
         p_sec_packet->payload.appPacket = &app_packet;
         break;
     case SM4_TYPE:
+    {
+        /* 获取sm4_key */
+        unsigned char key[SM4_KEY_LEN];
+        /*int filename_len = id_len + 10;
+        char *filename = (char *)malloc(filename_len);
+        filename[0] = 's';
+        filename[1] = 'm';
+        filename[2] = '4';
+        filename[3] = '_';
+        memcpy(filename+4, id, id_len);
+        filename[filename_len-6] = '.'; 
+        filename[filename_len-5] = 'c'; 
+        filename[filename_len-4] = 'o'; 
+        filename[filename_len-3] = 'n'; 
+        filename[filename_len-2] = 'f';
+        filename[filename_len-1] = '\0';*/
+        FILE *fp;
+        if((fp=fopen("sm4_Client.conf","rb+"))==NULL)
+        {
+            printf("file cannot open \n");  
+        }
+        get_key(key, fp);
+        #ifdef DEBUG
+        printf("从文件中读出key:");
+        for(int t=0;t<16;t++)
+            printf("%02x ",key[t]);
+        printf("\n");
+        #endif
+        fclose(fp);
+
+        sm4_context sm4ctx;
+        sm4_setkey_dec(&sm4ctx,key);
+        int N = strlen(p_sk_packet->payload);
+        fprintf(stderr, "len is %d\n",N);
+	    /*sm4_crypt_ecb(&sm4ctx,0,N,app_packet.payload,app_packet.payload);
+        #ifdef DEBUG
+        printf("解密得到：");
+	    for(int i=0;i<N;i++)
+		    printf("%s",app_packet.payload);
+	    printf("\n");
+        #endif*/
+
         break;
+    }
+        
     default:
         break;
     }

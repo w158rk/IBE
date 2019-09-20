@@ -8,6 +8,7 @@
 
 int packet_send(PacketCTX* ctx) {
     int flag = 1;
+    //fprintf(stderr, "sk: %s\n",ctx->payload.appPacket->payload);
     while(ctx->phase != SEND_DONE && flag!=0) {
         #ifdef DEBUG 
         fprintf(stderr, "phase : %d\n", ctx->phase);
@@ -30,6 +31,8 @@ int packet_send(PacketCTX* ctx) {
     }
     // 1. send the head 
 	SecPacket *sec_packet = ctx->payload.secPacket;
+    //AppPacket *app_packet = ctx->payload.appPacket;
+    //fprintf(stderr, "sk: %s",ctx->payload.appPacket->payload);
 
     fprintf(stderr,"%x\n", sec_packet->head);
 

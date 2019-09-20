@@ -80,6 +80,7 @@ int handle_sk_request(PacketCTX *ctx) {
 
     #ifdef DEBUG 
     fprintf(stderr, "[%s : %d] extract finished\n", __FILE__, __LINE__);
+    //fprintf(stderr,"sk is:%s ", sk);
     #endif
     // TODO 
     // finish extracting the requested private key 
@@ -96,6 +97,10 @@ int handle_sk_request(PacketCTX *ctx) {
     send_packet.payload = p;        //payload中存放私钥
     send_ctx.phase = SEND_APP_PACKET;
     send_ctx.payload.appPacket = &send_packet;
+    #ifdef DEBUG
+    int N = strlen(send_ctx.payload.appPacket->payload);
+    fprintf(stderr,"len is: %d\n",N);
+    #endif
     send_ctx.write_file = ctx -> write_file;
     send_ctx.read_file = ctx -> read_file;
      #ifdef DEBUG 
