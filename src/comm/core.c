@@ -16,7 +16,7 @@ History: ...
 #include <packet.h>
 #include <openssl/sm4.h>
 #include <sys.h>
-// #define DEBUG
+#define DEBUG
 
 
 /* 
@@ -55,17 +55,46 @@ int run_get_private_key(const char* id, int id_len) {
 	*(int *)(packet.head) = PRIVATE_KEY_REQUEST_TYPE;		//AppPacket.head的第一位为1（标志位，标志为申请私钥）
 	*(int *)(packet.head + 4) = m_len;		//从AppPacket.head的第4位开始存放payload的长度
 
-	/* generate and copy the aes key 
-	char *p = payload;
-	char key[AES_KEY_LEN];
-	gen_random_key(key);
-	memcpy(p, key, AES_KEY_LEN);
-	packet.payload = payload;*/
-
 	/* generate and copy the sm4 key */
 	char *p = payload;
+	int filename_len = id_len + 10;
+    char *filename = (char *)malloc(filename_len);
+    filename[0] = 's';
+    filename[1] = 'm';
+    filename[2] = '4';
+	filename[3] = '_';
+    memcpy(filename+4, id, id_len);
+    filename[filename_len-6] = '.'; 
+    filename[filename_len-5] = 'c'; 
+    filename[filename_len-4] = 'o'; 
+    filename[filename_len-3] = 'n'; 
+    filename[filename_len-2] = 'f';
+    filename[filename_len-1] = '\0';
+	#ifdef DEBUG
+	fprintf(stderr, "filename is:%s\n", filename);
+	#endif
+	FILE *fp;
+	if((fp=fopen(filename,"wb+"))==NULL)
+    {
+        printf("file cannot open \n");
+        
+    }
 	unsigned char key[SM4_KEY_LEN];
-	set_key(key);		//生成16位的key
+	set_key(key,fp);		//生成16位的key
+	fclose(fp);
+	#ifdef DEBUG
+	FILE *fp2;
+    if((fp2=fopen(filename,"rb+"))==NULL)
+    {
+        printf("file cannot open \n");  
+    }
+	get_key(key, fp2);
+	printf("从文件中读出key:");
+	for(int t=0;t<16;t++)
+		printf("%02x ",key[t]);
+	printf("\n");
+    fclose(fp2);
+	#endif
 	memcpy(p, key, SM4_KEY_LEN);		//把key复制到p中
 	packet.payload = payload;		//AppPacket.payload存放sm4 key
 

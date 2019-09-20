@@ -1,6 +1,9 @@
 /**
  * \file sm4.h
  */
+
+#include <stdio.h>
+
 #ifndef XYSSL_SM4_H
 #define XYSSL_SM4_H
  
@@ -68,7 +71,8 @@ void sm4_crypt_cbc( sm4_context *ctx,
                      unsigned char *input,
                      unsigned char *output );
 
-void set_key(unsigned char *key);
+void set_key(unsigned char *key, FILE* filename);
+void get_key(unsigned char *key, FILE* filename);
 int choice1(unsigned char *input);
 int choice2(unsigned char *input);
  
