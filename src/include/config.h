@@ -46,7 +46,7 @@
 /** security protocol */
 #define NO_ENC_TYPE                 0
 #define IBE_TYPE                    1 
-#define AES_TYPE                    2
+#define SM4_TYPE                    2
 
 #endif
 

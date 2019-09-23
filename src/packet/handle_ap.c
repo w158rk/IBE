@@ -9,6 +9,7 @@
 #include <crypto.h>
 #include <sys.h>
 #include <string.h>
+#include <ctx.h>
 // #define DEBUG
 
 int handle_m(PacketCTX *ctx)
@@ -79,6 +80,7 @@ int handle_sk_request(PacketCTX *ctx) {
 
     #ifdef DEBUG 
     fprintf(stderr, "[%s : %d] extract finished\n", __FILE__, __LINE__);
+    fprintf(stderr,"sk is:%s ", sk);
     #endif
     // TODO 
     // finish extracting the requested private key 
@@ -95,6 +97,12 @@ int handle_sk_request(PacketCTX *ctx) {
     send_packet.payload = p;        //payload中存放私钥
     send_ctx.phase = SEND_APP_PACKET;
     send_ctx.payload.appPacket = &send_packet;
+    #ifdef DEBUG
+    int N = strlen(send_ctx.payload.appPacket->payload);
+    fprintf(stderr,"len is: %d\n",N);
+    #endif
+    send_ctx.write_file = ctx -> write_file;
+    send_ctx.read_file = ctx -> read_file;
      #ifdef DEBUG 
     fprintf(stderr, "payload2: %x\n", payload);
     #endif
@@ -114,7 +122,6 @@ int handle_sk_request(PacketCTX *ctx) {
     }
 
     rtn = 1;
-
 end:
     free(sk);
     free(msk);
@@ -124,6 +131,12 @@ end:
 
 
 int handle_sk_response(PacketCTX *ctx) {
+
+    fprintf(stderr, "begin to handle sk");
+
+    #ifdef DEBUG
+
+    #endif
 
     int rtn = 0;
     AppPacket *packet = ctx->payload.appPacket;
@@ -136,11 +149,13 @@ int handle_sk_response(PacketCTX *ctx) {
     }
 
     int i;
-    printf("your private key is (please store it if necessary) : ");
+    printf("your private key is (please store it if necessary) : \n");
+    printf("length : %d\n", length);
     for(i=0; i<length; i++) {
         if(i%4==0) printf(" ");
         if(i%16==0) printf("\n");
-        printf("%02x", packet->payload[i] & 0xff);
+        printf("i : %d\n", i);
+        // printf("%02x", packet->payload[i] & 0xff);
     }
     printf("\n");
 
@@ -188,39 +203,37 @@ int handle_ap(PacketCTX *ctx) {
 
     switch (type)
     {
-    case PLAIN_MESSAGE_TYPE:
-        handle_m(ctx);
-        break;
-    
-    case PRIVATE_KEY_REQUEST_TYPE:
-        handle_sk_request(ctx);
-        break;
-    
-    case PRIVATE_KEY_RESPONSE_TYPE:
-        handle_sk_response(ctx);
-        break;
-    
-    case SESSION_KEY_REQUEST_TYPE:
-        handle_session_request(ctx);
-        break;
+        case PLAIN_MESSAGE_TYPE:
+            handle_m(ctx);
+            break;
+        
+        case PRIVATE_KEY_REQUEST_TYPE:
+            handle_sk_request(ctx);
+            break;
+        
+        case PRIVATE_KEY_RESPONSE_TYPE:
+            handle_sk_response(ctx);
+            break;
+        
+        case SESSION_KEY_REQUEST_TYPE:
+            handle_session_request(ctx);
+            break;
 
-    case SESSION_KEY_ACK_TYPE:
-        handle_session_ack(ctx);
-        break;
+        case SESSION_KEY_ACK_TYPE:
+            handle_session_ack(ctx);
+            break;
 
-    case SESSION_KEY_FINAL_TYPE:
-        handle_session_final(ctx);
-        break;
-    
-    default:
-        ERROR("the packet type is invalid");
-        goto end;
-        break;
+        case SESSION_KEY_FINAL_TYPE:
+            handle_session_final(ctx);
+            break;
+        
+        default:
+            ERROR("the packet type is invalid");
+            goto end;
+            break;
     }
-
-    ctx->phase = SEND_DONE;
+    ctx->phase = RECV_DONE;
     rtn = 1;
-
 end:
     return rtn;
 }

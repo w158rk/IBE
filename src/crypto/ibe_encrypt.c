@@ -41,6 +41,8 @@ int ibe_encrypt(const unsigned char* data, size_t data_len, unsigned char* c_buf
     
     }
 
+    fprintf(stderr, "已加密！\n");
+
     return 1;
 
 end:

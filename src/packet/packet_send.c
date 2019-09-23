@@ -1,11 +1,14 @@
 #include <packet.h>
-// # define DEBUG
+#include <ctx.h>
+//#define DEBUG
 #ifdef DEBUG
 #include <stdio.h>
+#include <unistd.h>
 #endif
 
 int packet_send(PacketCTX* ctx) {
     int flag = 1;
+    //fprintf(stderr, "sk: %s\n",ctx->payload.appPacket->payload);
     while(ctx->phase != SEND_DONE && flag!=0) {
         #ifdef DEBUG 
         fprintf(stderr, "phase : %d\n", ctx->phase);
@@ -26,7 +29,27 @@ int packet_send(PacketCTX* ctx) {
             break;
         }
     }
+    // 1. send the head 
+	SecPacket *sec_packet = ctx->payload.secPacket;
+    //AppPacket *app_packet = ctx->payload.appPacket;
+    //fprintf(stderr, "sk: %s",ctx->payload.appPacket->payload);
+    #ifdef DEBUG
+    fprintf(stderr,"%x\n", sec_packet->head);
 
+    fprintf(stderr,"%d\n", ctx->write_file);
+    #endif
+
+	if(Write(fileno(ctx->write_file), sec_packet->head, SEC_HEAD_LEN) != SEC_HEAD_LEN)
+    {
+        fprintf(stderr,"error in write file");
+    }
+	// 2. send the payload
+	int len = *(int *)(sec_packet->head+4);
+	#ifdef DEBUG 
+	fprintf(stderr, "[%s:%d] length : %d\n", __FILE__, __LINE__, len);
+	fprintf(stderr, "send to : %lx\n", ctx->write_file);
+	#endif
+	Write(fileno(ctx->write_file), sec_packet->payload.data, len);
 end :
     return flag;
 

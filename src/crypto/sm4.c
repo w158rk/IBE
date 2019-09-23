@@ -344,22 +344,41 @@ void sm4_crypt_cbc( sm4_context *ctx,
     }
 }
 
-//随机生成初始的key
-void set_key(unsigned char *key){
+void set_key(unsigned char *key, FILE* filename){
     srand(time(NULL));
+    #ifdef DEBUG 
+	printf("随机生成的key:");
+    #endif
+
 	for(int i=0;i<16;i++){
 	  int a= rand() % 255;
-      key[i]=(char)a;
+      key[i]=(unsigned char)a;
+      #ifdef DEBUG 
+      printf("%02x ",key[i]);
+      #endif
 	}
+    
+	for(int t=0;t<16;t++)
+		fprintf(filename, "%02x ", key[t]);
+    
 	
+}
+
+void get_key(unsigned char *key, FILE* filename){
+	unsigned char str[17];
+    int t;
+	for(t=0;t<16;t++){
+		fscanf(filename,"%02x",&str[t]);
+	}
+	for(t=0;t<16;t++)
+		key[t]=str[t];
 }
 //不指定长度输入
 int choice1(unsigned char *input){
     int N;
 	scanf("\n");
 	fgets((char*)input, 100000, stdin);       //设置可输入最大的长度为100000
-	//fgets((char*)input, sizeof(input), stdin);��һ�ֶ�ȡ��ʽ������������
-	for(N=0;input[N] != '\0';N++)//�ж��ַ������ȣ�����������ֹͣ
+	for(N=0;input[N] != '\0';N++)
         ;
     //N--;
 	return N;
