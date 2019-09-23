@@ -10,7 +10,7 @@
 #include <sys.h>
 #include <string.h>
 #include <ctx.h>
-#define DEBUG
+// #define DEBUG
 
 int handle_m(PacketCTX *ctx)
 {
@@ -80,7 +80,7 @@ int handle_sk_request(PacketCTX *ctx) {
 
     #ifdef DEBUG 
     fprintf(stderr, "[%s : %d] extract finished\n", __FILE__, __LINE__);
-    //fprintf(stderr,"sk is:%s ", sk);
+    fprintf(stderr,"sk is:%s ", sk);
     #endif
     // TODO 
     // finish extracting the requested private key 
@@ -133,6 +133,10 @@ end:
 int handle_sk_response(PacketCTX *ctx) {
 
     fprintf(stderr, "begin to handle sk");
+
+    #ifdef DEBUG
+
+    #endif
 
     int rtn = 0;
     AppPacket *packet = ctx->payload.appPacket;

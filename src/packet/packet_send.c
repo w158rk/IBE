@@ -1,6 +1,6 @@
 #include <packet.h>
 #include <ctx.h>
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #include <stdio.h>
 #include <unistd.h>
@@ -33,17 +33,17 @@ int packet_send(PacketCTX* ctx) {
 	SecPacket *sec_packet = ctx->payload.secPacket;
     //AppPacket *app_packet = ctx->payload.appPacket;
     //fprintf(stderr, "sk: %s",ctx->payload.appPacket->payload);
-
+    #ifdef DEBUG
     fprintf(stderr,"%x\n", sec_packet->head);
 
     fprintf(stderr,"%d\n", ctx->write_file);
+    #endif
 
 	if(Write(fileno(ctx->write_file), sec_packet->head, SEC_HEAD_LEN) != SEC_HEAD_LEN)
     {
         fprintf(stderr,"error in write file");
     }
 	// 2. send the payload
-    fprintf(stderr,"here");
 	int len = *(int *)(sec_packet->head+4);
 	#ifdef DEBUG 
 	fprintf(stderr, "[%s:%d] length : %d\n", __FILE__, __LINE__, len);

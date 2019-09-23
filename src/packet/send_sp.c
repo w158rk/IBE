@@ -18,6 +18,9 @@ int send_sp(PacketCTX *ctx)
         ERROR("call wrong function");
         goto end;
     }
+    #ifdef DEBUG
+    fprintf(stderr,"enc_sk is :%s\n",ctx->payload.secPacket->payload.data);
+    #endif
     ctx->phase = SEND_DONE;
     rtn = 1;
 end:

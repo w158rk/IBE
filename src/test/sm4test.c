@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define DEBUG
+// #define DEBUG
 
 int main()
 {

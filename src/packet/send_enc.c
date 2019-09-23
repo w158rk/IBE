@@ -9,7 +9,7 @@
 #include<openssl/sm4.h>
 #include <crypto.h>
 #include <string.h>
-// #define DEBUG
+//#define DEBUG
 
 int send_enc(PacketCTX *ctx)
 {
@@ -22,7 +22,8 @@ int send_enc(PacketCTX *ctx)
     }
 
     SecPacket *sec_packet = ctx->payload.secPacket;
-    //fprintf(stderr,"sk: %s\n",sec_packet->payload.appPacket->payload);
+    //fprintf(stderr,"sk1 is :%s\n",ctx->payload.secPacket->payload.appPacket->payload);
+    //fprintf(stderr,"sk2 is :%s\n",sec_packet->payload.appPacket->payload);
     AppPacket *app_packet = sec_packet->payload.appPacket;
     int length = *(int *)(app_packet->head+4);
 
@@ -38,65 +39,78 @@ int send_enc(PacketCTX *ctx)
     char *cipher = (char *)malloc(BUFFER_SIZE);
     size_t cipher_len = BUFFER_SIZE;
     char *iv = NULL;
+    //fprintf(stderr,"sk is :%s\n",ctx->payload.secPacket->payload.appPacket->payload);
 
     switch (type)
     {
-    case IBE_TYPE:
-        #ifdef DEBUG 
-        fprintf(stderr, "[%s:%d] IBE ENC\n", __FILE__, __LINE__);
-        #endif
-        //IBE加密
-        if (!ibe_encrypt(data, (size_t)length+APP_HEAD_LEN, 
-                    cipher, &cipher_len, 
-                    ctx->mpk, ctx->dest_id, ctx->dest_id_len))
+        case IBE_TYPE:
         {
-            ERROR("encrypt failed");
-            goto end;
+            #ifdef DEBUG 
+            fprintf(stderr, "[%s:%d] IBE ENC\n", __FILE__, __LINE__);
+            #endif
+            //IBE??
+            if (!ibe_encrypt(data, (size_t)length+APP_HEAD_LEN, 
+                        cipher, &cipher_len, 
+                        ctx->mpk, ctx->dest_id, ctx->dest_id_len))
+            {
+                ERROR("encrypt failed");
+                goto end;
+            }
+
+            #ifdef DEBUG 
+            fprintf(stderr, "[%s:%d] type : %d\n", __FILE__, __LINE__, type);
+            #endif
+
+            sec_packet->payload.data = (char *)malloc(cipher_len);
+            memcpy(sec_packet->payload.data, cipher, cipher_len);
+                
+            // length without header 
+            *(int *)(sec_packet->head+4) = (int)cipher_len;
+            //fprintf(stderr,"sk is :%s\n",ctx->payload.secPacket->payload.appPacket->payload);
+            break;
         }
-
-        #ifdef DEBUG 
-        fprintf(stderr, "[%s:%d] type : %d\n", __FILE__, __LINE__, type);
-        #endif
-
-        sec_packet->payload.data = (char *)malloc(cipher_len);
-        memcpy(sec_packet->payload.data, cipher, cipher_len);
-        
-        // length without header 
-        *(int *)(sec_packet->head+4) = (int)cipher_len;
-        break;
     
-    case SM4_TYPE:
-    {
-        #ifdef DEBUG
-        printf("here is AES_TYPE");
-        #endif
-        
-        /*iv = cbc_iv_new();
-        if (!gen_random_iv(iv) ||
-            !cbc_encrypt(data, (size_t)length+APP_HEAD_LEN, 
-                    ctx->sm4_key, iv, cipher, &cipher_len)) 
+        case SM4_TYPE:
         {
-            ERROR("encrypt failed");
-            goto end;
-        }*/
+            #ifdef DEBUG
+            printf("here is SM4_TYPE");
+            #endif
+            
+            /*iv = cbc_iv_new();
+            if (!gen_random_iv(iv) ||
+                !cbc_encrypt(data, (size_t)length+APP_HEAD_LEN, 
+                        ctx->sm4_key, iv, cipher, &cipher_len)) 
+            {
+                ERROR("encrypt failed");
+                goto end;
+            }*/
+            char *sk_data = (char *)malloc(IBE_SK_LEN);
+            memcpy(sk_data, ctx->payload.secPacket->payload.appPacket->payload, IBE_SK_LEN);
+            #ifdef DEBUG
+            fprintf(stderr, "sk is:%s\n", sk_data);
+            fprintf(stderr, "sm4_key is:%s\n", ctx->sm4_key);
+            #endif
+            sm4_context sm4ctx;
+            sm4_setkey_enc(&sm4ctx,ctx->sm4_key);
+            sm4_crypt_ecb(&sm4ctx,1,IBE_SK_LEN,sk_data,cipher);
+            #ifdef DEBUG
+            fprintf(stderr, "cipher is:%s\n",cipher);
+            #endif
+            int length = strlen(cipher);
+            sec_packet->payload.data = (char *)malloc(length);
+            memcpy(sec_packet->payload.data, cipher, length);
+            #ifdef DEBUG
+            fprintf(stderr, "the last sk is :%s\n", ctx->payload.secPacket->payload.data);
+            #endif
 
-
-        sm4_context sm4ctx;
-        sm4_setkey_enc(&sm4ctx,ctx->sm4_key);
-        int N = strlen(data);
-	    sm4_crypt_ecb(&sm4ctx,1,N,data,cipher);
-        #ifdef DEBUG
-	    fprintf(stderr, "?AES?????%s",cipher);
-        #endif
-
-        break;
-    }
+            break;
+        }
         
     
     default:
         break;
     }
-
+    //fprintf(stderr,"sk is :%s\n",ctx->payload.secPacket->payload.appPacket->payload);
 
     ctx->phase = SEND_SEC_PACKET;
     rtn = 1;
