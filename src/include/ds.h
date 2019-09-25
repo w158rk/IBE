@@ -26,6 +26,7 @@ typedef char    *IBEMasterSecret;
 #define APP_HEAD_LEN    8
 #define SEC_HEAD_LEN    24
 #define SIGN_LEN        32
+#define MES_LEN         10000
 
 typedef struct {
     char head[APP_HEAD_LEN];

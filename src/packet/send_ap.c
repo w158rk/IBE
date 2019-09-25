@@ -34,6 +34,9 @@ int send_ap(PacketCTX *ctx)
         case SESSION_KEY_ACK_TYPE:
             send_type = IBE_TYPE;
             break;
+        case IBE_MES_TYPE:
+            send_type = IBE_TYPE;
+            break;
 
         default:
             send_type = NO_ENC_TYPE;
@@ -46,6 +49,7 @@ int send_ap(PacketCTX *ctx)
     SecPacket *send_packet = (SecPacket *)malloc(sizeof(SecPacket));  
     
     *(int *)(send_packet->head) = send_type;
+    fprintf("send type is:%d\n", send_type);
     send_packet->payload.appPacket = packet;
     ctx->payload.secPacket = send_packet;
     //fprintf(stderr,"sk: %s\n",ctx->payload.secPacket->payload.appPacket->payload);

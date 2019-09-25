@@ -39,6 +39,7 @@
 #define SESSION_KEY_REQUEST_TYPE    3
 #define SESSION_KEY_ACK_TYPE        4
 #define SESSION_KEY_FINAL_TYPE      5
+#define IBE_MES_TYPE                6
 
 #define PRIVATE_KEY_REQUEST_HEAD    5           /* the length of the head */
 #define PRIVATE_KEY_RESPONSE_HEAD   1

@@ -45,7 +45,6 @@ int ibe_decrypt(const unsigned char* c_buf, size_t c_len, unsigned char* m_buff,
     }
 
     SM9PrivateKey_free(sm9_sk);
-    fprintf(stderr, "已解密！\n");
     return 1;
 
 end:

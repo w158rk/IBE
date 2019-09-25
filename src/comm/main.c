@@ -7,6 +7,7 @@ int socket_interface_run(const char* entity_id, int id_len) {
 	printf("What do you want to do? %s\n", entity_id);
 	printf("Choose from :\n");
 	printf("\t1. Extract your Private Key\n");
+	printf("\t2. Send message\n");
 	
 	int choise;
 	scanf("%d", &choise);
@@ -16,6 +17,12 @@ int socket_interface_run(const char* entity_id, int id_len) {
 			if (-1 == run_get_private_key(entity_id, id_len)) {
 				return -1;
 			}			
+			break;
+		case 2:
+			if(-1 == run_send_message(entity_id, id_len))
+			{
+				return -1;
+			}
 			break;
 		default:
 			break;

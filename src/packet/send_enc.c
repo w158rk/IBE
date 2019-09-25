@@ -33,13 +33,11 @@ int send_enc(PacketCTX *ctx)
 
     char *data = (char *)malloc(length + APP_HEAD_LEN);
     memcpy(data, app_packet->head, APP_HEAD_LEN);
-    memcpy(data+APP_HEAD_LEN, app_packet->payload, length);
+    memcpy(data+APP_HEAD_LEN, app_packet->payload, length);     //data为haed+payload的内容
 
     int type = *(int *)(sec_packet->head);
     char *cipher = (char *)malloc(BUFFER_SIZE);
     size_t cipher_len = BUFFER_SIZE;
-    char *iv = NULL;
-    //fprintf(stderr,"sk is :%s\n",ctx->payload.secPacket->payload.appPacket->payload);
 
     switch (type)
     {

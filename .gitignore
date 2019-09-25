@@ -26,5 +26,6 @@ U_*
 V_*
 __pycache__/
 *.conf 
+*.txt
 *.pyc
 docs/

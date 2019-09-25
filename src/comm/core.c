@@ -25,7 +25,7 @@ History: ...
 
 int run_get_private_key(const char* id, int id_len) {
 
-	int ret = 0;
+	int ret = -1;
 	/* connect to the server first */
 	connect_socket_server(SERVER_IP_ADDRESS, SERVER_LISTEN_PORT, &read_file, &write_file);
 	
@@ -157,6 +157,82 @@ int run_get_private_key(const char* id, int id_len) {
 
 end:
 	free(payload);
+	return ret;
+
+}
+
+int run_send_message(const char* id, int id_len)
+{
+	int ret =-1;
+	connect_socket_server(SERVER_IP_ADDRESS, SERVER_LISTEN_PORT, &read_file, &write_file);
+	if(file_main(id, id_len, read_file, write_file) == -1) {
+		fprintf(stderr, "[%s:%d] something went wrong\n", __FILE__, __LINE__);
+		return -1;
+	}
+	//size_t actual_id_len = ((id_len+4)/4) * 4;		// the upper integer of (id_len+1)
+	/* 需要加密的文件放在id_message.txt中 */
+	int filename_message_len = id_len + 13;
+	char *filename_message = (char *)malloc(filename_message_len);
+	memcpy(filename_message, id, id_len);
+	const char meg[13] = "_message.txt";
+	memcpy(filename_message+id_len, meg, 14);
+	#ifdef DEBUG
+	fprintf(stderr, "%s\n", filename_message);
+	#endif
+	
+	/* 读取信息 */
+	FILE *fp;
+	if((fp=fopen(filename_message,"rb+"))==NULL)
+    {
+        printf("file_massge cannot open \n");
+		goto end;
+    }
+	char *message = (char *)malloc(MES_LEN);
+	if(!fread(message, sizeof(char), MES_LEN, fp))
+	{
+		printf("error in read file \n");
+		goto end;
+	}
+	fclose(fp);
+	int len = strlen(message);
+	#ifdef DEBUG
+	fprintf(stderr, "the message is:%s\n", message);
+	fprintf(stderr, "the length of message is:%d\n", len);
+	#endif
+
+	/* 组织包 */
+
+	AppPacket packet; 
+	/* set the head */
+	*(int *)(packet.head) = IBE_MES_TYPE;		//设置标志位
+	*(int *)(packet.head + 4) = len;
+	packet.payload = message;
+
+	PacketCTX ctx;
+
+	ctx.phase = SEND_APP_PACKET;
+	ctx.payload.appPacket = &packet;
+	ctx.read_file = read_file;
+	ctx.write_file = write_file;
+	ctx.dest_id = SERVER_ID;
+	ctx.dest_id_len = SERVER_ID_LEN;
+
+	IBEPublicParameters mpk = NULL;
+	get_mpk_fp(MPK_FILENAME, &mpk);
+
+	ctx.mpk = &mpk;		//将sP放入包中
+	#ifdef DEBUG 
+	fprintf(stderr, "[%s : %d] phase : %d\n", __FILE__, __LINE__, ctx.phase);
+	#endif
+
+	if(0 == packet_send(&ctx)) {
+		ERROR("wrong when make the packet to send");
+		goto end;
+	}
+
+	ret = 1;
+
+end:
 	return ret;
 
 }

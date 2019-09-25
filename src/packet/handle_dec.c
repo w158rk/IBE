@@ -4,7 +4,7 @@
 #include <sys.h>
 #include <string.h>
 #include <openssl/sm4.h>
-// #define DEBUG
+//#define DEBUG
 
 int handle_dec(PacketCTX *ctx) {
 
@@ -63,12 +63,12 @@ int handle_dec(PacketCTX *ctx) {
         #endif
 
         // make the app packet 
-        memcpy(app_packet.head, m, APP_HEAD_LEN);
+        memcpy(app_packet.head, m, APP_HEAD_LEN);       //head中放入解密前8位的内容
         payload_len = *(int *)(m+4);                // get the length of the payload 
 
         char *payload = (char *)malloc(payload_len);
         memcpy(payload, m+APP_HEAD_LEN, payload_len);
-        app_packet.payload = payload;
+        app_packet.payload = payload;       //payload中放入解密后8位的内容
 
         #ifdef DEBUG 
         fprintf(stderr, "payload length : %d\n", payload_len);

@@ -181,6 +181,35 @@ int handle_session_final(PacketCTX *ctx) {
 
 }
 
+int handle_message(PacketCTX *ctx)
+{
+    int rnt = -1;
+    AppPacket *packet = ctx->payload.appPacket;
+    char *head = packet->head;
+    int length = *(int *)(head+4);
+    #ifdef DEBUG
+    fprintf(stderr, "message is:%s\n",packet->payload);
+    fprintf(stderr,"the length is:%d", length);
+    #endif
+    char *message = (char *)malloc(length);
+    strncpy(message, packet->payload, length);
+    message[length]='\0';
+    #ifdef DEBUG
+    fprintf(stderr, "message is:%s\n", message);
+    #endif
+    FILE *fp;
+    if((fp=fopen("dec_message.txt","wb+"))==NULL)
+    {
+        printf("file_massge cannot open \n");
+		goto end;
+    }
+    fwrite(message, sizeof(char), length+1, fp);
+    fclose(fp);
+    rnt=1;
+end:
+    return rnt;
+}
+
 
 int handle_ap(PacketCTX *ctx) {
 
@@ -225,6 +254,10 @@ int handle_ap(PacketCTX *ctx) {
 
         case SESSION_KEY_FINAL_TYPE:
             handle_session_final(ctx);
+            break;
+
+        case IBE_MES_TYPE:
+            handle_message(ctx);
             break;
         
         default:
