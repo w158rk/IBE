@@ -270,10 +270,17 @@ FILE* open_log_file()
 }
 
 
-int socket_main(const char* entity_id, int id_len, int port) {
+int socket_main(ID *id_name,  int port) {
 	// 启动一个监听线程
 	char error_sig = 0;
 	pthread_t threads[NUM_THREADS];
+
+	int id_len = strlen(id_name);
+	char *entity_id = (char *)malloc(id_len);
+	memcpy(entity_id, id_name->id, id_len);
+
+	fprintf(stderr, "id_len is:%d\n", id_len);
+	fprintf(stderr, "id is:%s\n", entity_id);
 
 	// 函数参数
 	char *args = (char *)malloc(12 + id_len);

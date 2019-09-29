@@ -81,4 +81,14 @@ typedef struct packet_ctx{
     FILE *write_file;
 } PacketCTX;
 
+typedef struct ID_STR{
+    char *id;
+    int length;
+    struct ID_STR *father_node;
+}ID;
+
+extern ID server;
+extern ID client;
+void ID_init();
+
 #endif

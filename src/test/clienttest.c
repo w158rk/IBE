@@ -2,6 +2,6 @@
 #include "comm.h"
 
 int main() {
-
-    socket_main(CLIENT_ID, CLIENT_ID_LEN, CLIENT_LISTEN_PORT);
+    ID_init();
+    socket_main(&client, CLIENT_LISTEN_PORT);
 }
