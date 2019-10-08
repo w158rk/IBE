@@ -51,8 +51,13 @@ int send_ap(PacketCTX *ctx)
     *(int *)(send_packet->head) = send_type;
     fprintf("send type is:%d\n", send_type);
     send_packet->payload.appPacket = packet;
+    #ifdef DEBUG
+    fprintf(stderr, "sk1 is: %s\n", send_packet->payload.appPacket->payload);
+    #endif
     ctx->payload.secPacket = send_packet;
-    //fprintf(stderr,"sk: %s\n",ctx->payload.secPacket->payload.appPacket->payload);
+    #ifdef DEBUG
+    fprintf(stderr, "sk2 is: %s\n", ctx->payload.secPacket->payload.appPacket->payload);
+    #endif
     ctx->phase = SEND_SIGN;
 
     rtn = 1;

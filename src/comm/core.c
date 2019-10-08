@@ -16,7 +16,7 @@ History: ...
 #include <packet.h>
 #include <openssl/sm4.h>
 #include <sys.h>
-// #define DEBUG
+#define DEBUG
 
 
 /* 
@@ -56,7 +56,7 @@ int run_get_private_key(const char* id, int id_len) {
 	*(int *)(packet.head + 4) = m_len;		//从AppPacket.head的第4位开始存放payload的长度
 
 	/* generate and copy the sm4 key */
-	char *p = payload;
+	unsigned char *p = payload;
 	int filename_len = id_len + 10;
     char *filename = (char *)malloc(filename_len);
     filename[0] = 's';
@@ -110,8 +110,24 @@ int run_get_private_key(const char* id, int id_len) {
 	#ifdef DEBUG 
 	fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, payload);
 	#endif
+
+	char *sm4_key= (char *)malloc(SM4_KEY_LEN);
+	strncpy(sm4_key, payload, 16);
+	fprintf(stderr, "sm4_key is:%s\n", sm4_key);
+	for(int t=0;t<16;t++)
+		printf("%02x ",sm4_key[t]);
+	printf("\n");
+
 	/* set the context */
+	/*char *sm4_key= (char *)malloc(SM4_KEY_LEN);
 	memcpy(sm4_key, key, SM4_KEY_LEN);		//改变sm4_key中的内容为新生成的key
+	#ifdef DEBUG
+	printf("here is sm4_key\n");
+	for(int t=0;t<16;t++)
+		printf("%02x ",sm4_key[t]);
+	printf("\n");
+	#endif*/
+
 
 	/*组织包*/
 	PacketCTX ctx;
@@ -122,6 +138,14 @@ int run_get_private_key(const char* id, int id_len) {
 	ctx.write_file = write_file;
 	ctx.dest_id = SERVER_ID;
 	ctx.dest_id_len = SERVER_ID_LEN;
+	memcpy(ctx.sm4_key, key, SM4_KEY_LEN);
+	#ifdef DEBUG
+	fprintf(stderr, "send sm4_key is:\n");
+	fprintf(stderr, "payload is %s\n", ctx.payload.appPacket->payload);
+	for(int t=0;t<16;t++)
+		printf("%02x ",ctx.payload.appPacket->payload[t]);
+	printf("\n");
+	#endif
 
 	// this code is a little wierd, but it works 
 	// to get the mpk into the ctx
@@ -141,17 +165,6 @@ int run_get_private_key(const char* id, int id_len) {
 		ERROR("wrong when make the packet to send");
 		goto end;
 	}
-	// send the packet through the socket 
-	// 1. send the head 
-
-	/*SecPacket *sec_packet = ctx.payload.secPacket;
-	Write(fileno(write_file), sec_packet->head, SEC_HEAD_LEN);
-	// 2. send the payload
-	int len = *(int *)(sec_packet->head+4);
-	#ifdef DEBUG 
-	fprintf(stderr, "[%s:%d] length : %d\n", __FILE__, __LINE__, len);
-	#endif
-	Write(fileno(write_file), sec_packet->payload.data, len);*/
 
 	ret = 1;
 

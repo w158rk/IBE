@@ -10,7 +10,7 @@
 #include <sys.h>
 #include <string.h>
 #include <ctx.h>
-// #define DEBUG
+#define DEBUG
 
 int handle_m(PacketCTX *ctx)
 {
@@ -105,9 +105,24 @@ int handle_sk_request(PacketCTX *ctx) {
     send_ctx.read_file = ctx -> read_file;
      #ifdef DEBUG 
     fprintf(stderr, "payload2: %x\n", payload);
+    for(int t=0;t<16;t++)
+		printf("%02x ",payload[t]);
+	printf("\n");
     #endif
     //char ch[16];
-    strncpy(send_ctx.sm4_key, payload, 16);
+    char *sm4_key= (char *)malloc(SM4_KEY_LEN);
+	strncpy(sm4_key, payload, 16);
+	fprintf(stderr, "sm4_key is:%s\n", sm4_key);
+	for(int t=0;t<16;t++)
+		printf("%02x ",sm4_key[t]);
+	printf("\n");
+
+    send_ctx.key= sm4_key;
+
+    /*strncpy(send_ctx.sm4_key, payload, 16);
+    for(int t=0;t<16;t++)
+		printf("%02x ",send_ctx.sm4_key[t]);
+	printf("\n");*/
     //send_ctx.sm4_key = ch;
 
     #ifdef DEBUG

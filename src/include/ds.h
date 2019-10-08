@@ -75,7 +75,9 @@ typedef struct packet_ctx{
     IBEPublicParameters *mpk;
     IBEPrivateKey *sk;  
 
-    unsigned char *sm4_key[16];
+   char *sm4_key[16];
+
+   char * key;
 
     FILE *read_file;
     FILE *write_file;
