@@ -1,6 +1,6 @@
 #include <pthread.h>
 #include "base.h"
-#include "comm.h"
+#include "func.h"
 
 int socket_interface_run(const char* entity_id, int id_len) {
 	
@@ -240,33 +240,6 @@ void *file_listener_run(void *args)
 
 	free(entity_id);
 	*error_sig = -1;
-}
-
-
-void sig_chld(int signo)
-{
-	pid_t pid;
-	int stat;
-	
-	while((pid = waitpid(-1, &stat, WNOHANG)) > 0)
-	{
-		#ifdef __DEBUG__
-		printf("child %d terminated\n", pid);
-		#endif
-	}
-	
-	return;
-}
-
-FILE* open_log_file()
-{
-	FILE* log_file;
-	if((log_file = fopen(SYSTEM_LOG, "a")) == NULL)
-	{
-		fprintf(stderr, "can't open log file: %s\n", strerror(errno));
-	}
-	
-	return log_file;
 }
 
 

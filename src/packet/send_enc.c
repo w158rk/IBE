@@ -82,7 +82,9 @@ int send_enc(PacketCTX *ctx)
                 ERROR("encrypt failed");
                 goto end;
             }*/
-            char *sk_data = (char *)malloc(IBE_SK_LEN);
+            int length = IBE_SK_LEN;
+            char *sk_data = (char *)malloc(length);
+            memcpy(sk_data, ctx->payload.secPacket->payload.appPacket->head, APP_HEAD_LEN);
             memcpy(sk_data, ctx->payload.secPacket->payload.appPacket->payload, IBE_SK_LEN);
             #ifdef DEBUG
             fprintf(stderr, "sk is:%s\n", sk_data);
@@ -90,11 +92,14 @@ int send_enc(PacketCTX *ctx)
             #endif
             sm4_context sm4ctx;
             sm4_setkey_enc(&sm4ctx,ctx->sm4_key);
-            sm4_crypt_ecb(&sm4ctx,1,IBE_SK_LEN,sk_data,cipher);
+            sm4_crypt_ecb(&sm4ctx,1,length,sk_data,cipher);
             #ifdef DEBUG
             fprintf(stderr, "cipher is:%s\n",cipher);
             #endif
-            int length = strlen(cipher);
+            #ifdef DEBUG
+            fprintf(stderr, "[%s:%d] cipher length is:%d\n", __FILE__, __LINE__, length);
+            #endif
+            
             sec_packet->payload.data = (char *)malloc(length);
             memcpy(sec_packet->payload.data, cipher, length);
             #ifdef DEBUG
