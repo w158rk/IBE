@@ -75,11 +75,22 @@ typedef struct packet_ctx{
     IBEPublicParameters *mpk;
     IBEPrivateKey *sk;  
 
-    unsigned char *sm4_key[16];
-    unsigned char *key;
+   char *sm4_key[16];
+
+   char * key;
 
     FILE *read_file;
     FILE *write_file;
 } PacketCTX;
+
+typedef struct ID_STR{
+    char *id;
+    int length;
+    struct ID_STR *father_node;
+}ID;
+
+extern ID server;
+extern ID client;
+void ID_init();
 
 #endif

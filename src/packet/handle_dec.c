@@ -4,7 +4,7 @@
 #include <sys.h>
 #include <string.h>
 #include <openssl/sm4.h>
-//#define DEBUG
+#define DEBUG
 
 int handle_dec(PacketCTX *ctx) {
 

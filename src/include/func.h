@@ -6,6 +6,8 @@
  * @brief This file includes the complex functions
  */
 
+#include <ds.h>
+
 #ifndef  FUNC_H
 #define FUNC_H
 
@@ -29,6 +31,6 @@ int run_get_private_key(const char* id, int id_len);
  */
 int socket_interface_run(const char* entity_id, int id_len);
 
-int socket_main(const char* entity_id, int id_len, int port);
+int socket_main(ID *id_name,  int port);
 
 #endif
