@@ -107,12 +107,12 @@ int handle_sk_request(PacketCTX *ctx) {
     fprintf(stderr, "payload2: %x\n", payload);
     #endif
     //char ch[16];
-    strncpy(send_ctx.sm4_key, payload, 16);
+    strncpy(send_ctx.key, payload, 16);
     //send_ctx.sm4_key = ch;
 
     #ifdef DEBUG
     fprintf(stderr, "payload3: %s\n", payload);
-    fprintf(stderr, "send_ctx.sm4_key): %s\n", send_ctx.sm4_key);
+    fprintf(stderr, "send_ctx.sm4_key): %s\n", send_ctx.key);
     //fprintf(stderr, "sm4_key: %x\n", send_ctx.sm4_key);
     #endif
 

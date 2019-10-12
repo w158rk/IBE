@@ -9,7 +9,7 @@
 #include<openssl/sm4.h>
 #include <crypto.h>
 #include <string.h>
-//#define DEBUG
+#define DEBUG
 
 int send_enc(PacketCTX *ctx)
 {
@@ -84,14 +84,16 @@ int send_enc(PacketCTX *ctx)
             }*/
             int length = IBE_SK_LEN;
             char *sk_data = (char *)malloc(length);
-            memcpy(sk_data, ctx->payload.secPacket->payload.appPacket->head, APP_HEAD_LEN);
+            //memcpy(sk_data, ctx->payload.secPacket->payload.appPacket->head, APP_HEAD_LEN);
             memcpy(sk_data, ctx->payload.secPacket->payload.appPacket->payload, IBE_SK_LEN);
             #ifdef DEBUG
             fprintf(stderr, "sk is:%s\n", sk_data);
-            fprintf(stderr, "sm4_key is:%s\n", ctx->sm4_key);
+            for(int t=0;t<16;t++)
+		        printf("%02x ",ctx->key[t]);
+	        printf("\n");
             #endif
             sm4_context sm4ctx;
-            sm4_setkey_enc(&sm4ctx,ctx->sm4_key);
+            sm4_setkey_enc(&sm4ctx,ctx->key);
             sm4_crypt_ecb(&sm4ctx,1,length,sk_data,cipher);
             #ifdef DEBUG
             fprintf(stderr, "cipher is:%s\n",cipher);
