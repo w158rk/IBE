@@ -95,7 +95,7 @@ int handle_dec(PacketCTX *ctx) {
         fprintf(stderr, "len is %d\n",N);
         #endif
         unsigned char *sk = (unsigned char *)malloc(IBE_SK_LEN);
-	    sm4_crypt_ecb(&sm4ctx,0,313,p_sec_packet->payload.data,sk);
+	    sm4_crypt_ecb(&sm4ctx, 0, IBE_SK_LEN, p_sec_packet->payload.data,sk);
         #ifdef DEBUG
         fprintf(stderr, "id为：%s\n",ctx->dest_id);
 		fprintf(stderr, "解密得到sk：%s\n",sk);

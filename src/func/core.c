@@ -76,7 +76,6 @@ int run_get_private_key(const char* id, int id_len) {
 	if((fp=fopen(filename,"wb+"))==NULL)
     {
         printf("file cannot open \n");
-        
     }
 	unsigned char key[SM4_KEY_LEN];
 	set_key(key,fp);		//生成16位的key
@@ -98,9 +97,11 @@ int run_get_private_key(const char* id, int id_len) {
 	#endif
 
 	strncpy(sm4key, payload, 16);
+	#ifdef DEBUG
 	for(int t=0;t<16;t++)
 		printf("%02x ",sm4key[t]);
 	printf("\n");
+	#endif
 
 	/*组织包*/
 	PacketCTX ctx;
@@ -111,7 +112,7 @@ int run_get_private_key(const char* id, int id_len) {
 	ctx.write_file = write_file;
 	ctx.dest_id = SERVER_ID;
 	ctx.dest_id_len = SERVER_ID_LEN;
-	memcpy(ctx.sm4_key, key, SM4_KEY_LEN);
+	//memcpy(ctx.sm4_key, key, SM4_KEY_LEN);
 	#ifdef DEBUG
 	fprintf(stderr, "send sm4_key is:\n");
 	fprintf(stderr, "payload is %s\n", ctx.payload.appPacket->payload);

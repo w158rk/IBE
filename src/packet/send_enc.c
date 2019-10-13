@@ -22,7 +22,9 @@ int send_enc(PacketCTX *ctx)
     }
 
     SecPacket *sec_packet = ctx->payload.secPacket;
+    #ifdef DEBUD
     fprintf(stderr,"sk1 is :%s\n",ctx->payload.secPacket->payload.appPacket->payload);
+    #endif
     AppPacket *app_packet = sec_packet->payload.appPacket;
     int length = *(int *)(app_packet->head+4);
 
@@ -32,7 +34,7 @@ int send_enc(PacketCTX *ctx)
 
     char *data = (char *)malloc(length + APP_HEAD_LEN);
     memcpy(data, app_packet->head, APP_HEAD_LEN);
-    memcpy(data+APP_HEAD_LEN, app_packet->payload, length);     //data为haed+payload的内容
+    memcpy(data+APP_HEAD_LEN, app_packet->payload, length); 
 
     int type = *(int *)(sec_packet->head);
     //unsigned char cipher[100000];
@@ -46,7 +48,7 @@ int send_enc(PacketCTX *ctx)
             #ifdef DEBUG 
             fprintf(stderr, "[%s:%d] IBE ENC\n", __FILE__, __LINE__);
             #endif
-            //IBE??
+            //IBE
             if (!ibe_encrypt(data, (size_t)length+APP_HEAD_LEN, 
                         cipher, &cipher_len, 
                         ctx->mpk, ctx->dest_id, ctx->dest_id_len))
@@ -71,37 +73,34 @@ int send_enc(PacketCTX *ctx)
         case SM4_TYPE:
         {
             int length_sk = strlen(sec_packet->payload.appPacket->payload);
-            int out_len = 0;
 
             char *sk_data = (char *)malloc(IBE_SK_LEN);
-            fprintf(stderr, "sk is: %s\n", sec_packet->payload.appPacket->payload);
-            memcpy(sk_data, sec_packet->payload.appPacket->payload, IBE_SK_LEN);
             #ifdef DEBUG
-            fprintf(stderr, "sk is:%s\n", sk_data);
+            fprintf(stderr, "sk is: %s\n", sec_packet->payload.appPacket->payload);
             #endif
+            memcpy(sk_data, sec_packet->payload.appPacket->payload, IBE_SK_LEN);
 
             char *output = (char *)malloc(BUFFER_SIZE);
             sm4_context sm4ctx;
             unsigned char *key = (unsigned char *)malloc(16);
 
+            #ifdef DEBUG
             for(int t=0;t<16;t++)
                 printf("%02x ",ctx->key[t]);
             printf("\n");
-            int N = strlen(sk_data);
-            
-            sm4_setkey_enc(&sm4ctx,ctx->key);
-            sm4_crypt_ecb(&sm4ctx,1,313, sk_data,cipher);
-            #ifdef DEBUG
-            fprintf(stderr, "sk is:%s\n", sk_data);
-            fprintf(stderr, "sk_length is:%d   \n", length_sk);
-            fprintf(stderr, "cipher is:%s\n",cipher);
             #endif
             
+            sm4_setkey_enc(&sm4ctx,ctx->key);
+            sm4_crypt_ecb(&sm4ctx, 1, IBE_SK_LEN, sk_data, cipher);
+             #ifdef DEBUG
+             fprintf(stderr, "sk_length is:%d\n", length_sk);
+            fprintf(stderr, "cipher is:%s\n",cipher);
             sm4_setkey_dec(&sm4ctx, ctx->key);
-            sm4_crypt_ecb(&sm4ctx,0,313,cipher, output);
+            sm4_crypt_ecb(&sm4ctx,0,IBE_SK_LEN,cipher, output);
             fprintf(stderr, "output is:%s\n", output);
-            out_len = strlen(output);
+            int out_len = strlen(output);
             fprintf(stderr, "out_len is %d\n", out_len);
+            #endif
              
             sec_packet->payload.data = (char *)malloc(BUFFER_SIZE);
             memcpy(sec_packet->payload.data, cipher, BUFFER_SIZE);
