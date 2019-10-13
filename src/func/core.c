@@ -15,7 +15,7 @@ History: ...
 #include <packet.h>
 #include <openssl/sm4.h>
 #include <sys.h>
-#define DEBUG
+//#define DEBUG
 
 
 /* 
@@ -81,19 +81,6 @@ int run_get_private_key(const char* id, int id_len) {
 	unsigned char key[SM4_KEY_LEN];
 	set_key(key,fp);		//生成16位的key
 	fclose(fp);
-	#ifdef DEBUG
-	FILE *fp2;
-    if((fp2=fopen(filename,"rb+"))==NULL)
-    {
-        printf("file cannot open \n");  
-    }
-	get_key(key, fp2);
-	printf("从文件中读出key:");
-	for(int t=0;t<16;t++)
-		printf("%02x ",key[t]);
-	printf("\n");
-    fclose(fp2);
-	#endif
 	memcpy(p, key, SM4_KEY_LEN);		//把key复制到p中
 	packet.payload = payload;		//AppPacket.payload存放sm4 key
 
@@ -110,23 +97,10 @@ int run_get_private_key(const char* id, int id_len) {
 	fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, payload);
 	#endif
 
-	char *sm4_key= (char *)malloc(SM4_KEY_LEN);
-	strncpy(sm4_key, payload, 16);
-	fprintf(stderr, "sm4_key is:%s\n", sm4_key);
+	strncpy(sm4key, payload, 16);
 	for(int t=0;t<16;t++)
-		printf("%02x ",sm4_key[t]);
+		printf("%02x ",sm4key[t]);
 	printf("\n");
-
-	/* set the context */
-	/*char *sm4_key= (char *)malloc(SM4_KEY_LEN);
-	memcpy(sm4_key, key, SM4_KEY_LEN);		//改变sm4_key中的内容为新生成的key
-	#ifdef DEBUG
-	printf("here is sm4_key\n");
-	for(int t=0;t<16;t++)
-		printf("%02x ",sm4_key[t]);
-	printf("\n");
-	#endif*/
-
 
 	/*组织包*/
 	PacketCTX ctx;
@@ -177,6 +151,7 @@ int run_send_message(const char* id, int id_len)
 {
 	int ret =-1;
 	connect_socket_server(SERVER_IP_ADDRESS, SERVER_LISTEN_PORT, &read_file, &write_file);
+	//connect_socket_server(CLIENT_IP_ADDRESS, CLIENT_LISTEN_PORT, &read_file, &write_file);
 	if(file_main(id, id_len, read_file, write_file) == -1) {
 		fprintf(stderr, "[%s:%d] something went wrong\n", __FILE__, __LINE__);
 		return -1;

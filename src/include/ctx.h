@@ -14,7 +14,7 @@
 
 unsigned char user_id[MAX_ID_LEN];
 unsigned char aes_key[AES_KEY_LEN];
-unsigned char sm4_key[SM4_KEY_LEN];
+char sm4key[SM4_KEY_LEN];
 
 FILE *read_file;
 FILE *write_file; 

@@ -82,6 +82,7 @@ int handle_sk_request(PacketCTX *ctx) {
     fprintf(stderr, "[%s : %d] extract finished\n", __FILE__, __LINE__);
     fprintf(stderr,"sk is:%s ", sk);
     #endif
+
     // TODO 
     // finish extracting the requested private key 
     // the next step is to send the key to the client 
