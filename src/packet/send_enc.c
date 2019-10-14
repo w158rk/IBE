@@ -101,12 +101,15 @@ int send_enc(PacketCTX *ctx)
             int out_len = strlen(output);
             fprintf(stderr, "out_len is %d\n", out_len);
             #endif
-             
+            //SecPacket *send_sec;
             sec_packet->payload.data = (char *)malloc(BUFFER_SIZE);
             memcpy(sec_packet->payload.data, cipher, BUFFER_SIZE);
+            *(int *)(sec_packet->payload.appPacket->head) = PRIVATE_KEY_RESPONSE_TYPE;
+            
             #ifdef DEBUG
             fprintf(stderr, "the last sk is :%s\n", ctx->payload.secPacket->payload.data);
             #endif
+
 
             break;
         }
