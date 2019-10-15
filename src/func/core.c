@@ -148,10 +148,11 @@ end:
 
 }
 
-int run_send_message(const char* id, int id_len)
+int run_send_message(const char* id, int id_len, char* ip, int port, char* dest_id)
 {
 	int ret =-1;
-	connect_socket_server(SERVER_IP_ADDRESS, SERVER_LISTEN_PORT, &read_file, &write_file);
+	//connect_socket_server(SERVER_IP_ADDRESS, SERVER_LISTEN_PORT, &read_file, &write_file);
+	connect_socket_server(ip, port,  &read_file, &write_file);
 	//connect_socket_server(CLIENT_IP_ADDRESS, CLIENT_LISTEN_PORT, &read_file, &write_file);
 	if(file_main(id, id_len, read_file, write_file) == -1) {
 		fprintf(stderr, "[%s:%d] something went wrong\n", __FILE__, __LINE__);
@@ -202,8 +203,10 @@ int run_send_message(const char* id, int id_len)
 	ctx.payload.appPacket = &packet;
 	ctx.read_file = read_file;
 	ctx.write_file = write_file;
-	ctx.dest_id = SERVER_ID;
-	ctx.dest_id_len = SERVER_ID_LEN;
+	/*ctx.dest_id = SERVER_ID;
+	ctx.dest_id_len = SERVER_ID_LEN;*/
+	ctx.dest_id = dest_id;
+	ctx.dest_id_len = strlen(dest_id);
 
 	IBEPublicParameters mpk = NULL;
 	get_mpk_fp(MPK_FILENAME, &mpk);

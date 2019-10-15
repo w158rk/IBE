@@ -37,6 +37,7 @@ typedef struct {
     char head[SEC_HEAD_LEN];
     union payload1 {
         char *data;
+        char *sk_data;
         AppPacket *appPacket;
     } payload;
     char signature[SIGN_LEN];

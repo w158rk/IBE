@@ -77,11 +77,19 @@ int handle_sk_request(PacketCTX *ctx) {
         ERROR(" cannot extract the private key");
         goto end;
     }       
-
+    fprintf(stderr, "sk is: %s\n", sk);
     #ifdef DEBUG 
     fprintf(stderr, "[%s : %d] extract finished\n", __FILE__, __LINE__);
     fprintf(stderr,"sk is:%s ", sk);
     #endif
+
+    /*FILE *fp;
+    if((fp=fopen("skClient.conf","wb+"))==NULL)
+    {
+        printf("file cannot open \n");  
+    }
+    fprintf(fp, "%s", sk);
+    fclose(fp);*/
 
     // TODO 
     // finish extracting the requested private key 
@@ -142,34 +150,39 @@ end:
 
 
 int handle_sk_response(PacketCTX *ctx) {
-
-    fprintf(stderr, "begin to handle sk");
-
-    #ifdef DEBUG
-
-    #endif
-
     int rtn = 0;
-    AppPacket *packet = ctx->payload.appPacket;
-    char *head = packet->head;
 
-    int length = *(int *)(head+4);
-    if(length != IBE_SK_LEN) {
-        ERROR("the length of the private key is wrong");
-        goto end;
+    FILE *fp;
+    int filename_len = ctx->dest_id_len + 9;
+    char *filename = (char *)malloc(filename_len);
+    filename[0] = 's';
+    filename[1] = 'k';
+    filename[2] = '_';
+    memcpy(filename + 3, ctx->dest_id, ctx->dest_id_len);
+    filename[filename_len-6] = '.'; 
+    filename[filename_len-5] = 'c'; 
+    filename[filename_len-4] = 'o'; 
+    filename[filename_len-3] = 'n'; 
+    filename[filename_len-2] = 'f';
+    filename[filename_len-1] = '\0';
+    #ifdef DEBUG
+    fprintf(stderr, "sk_filename is%s\n", filename2);
+    #endif
+    if((fp=fopen(filename,"rb+"))==NULL)
+    {
+        printf("file cannot open \n");  
     }
-
-    int i;
-    printf("your private key is (please store it if necessary) : \n");
-    printf("length : %d\n", length);
-    for(i=0; i<length; i++) {
-        if(i%4==0) printf(" ");
-        if(i%16==0) printf("\n");
-        printf("i : %d\n", i);
-        // printf("%02x", packet->payload[i] & 0xff);
-    }
-    printf("\n");
-
+    int i=0;
+    char sk[100000],temp[10000];
+    while(fgets(temp,1001,fp)){
+		for(int j=0;temp[j]!='\0';i++,j++){
+			sk[i]=temp[j];
+		}
+	}
+	sk[i]='\0';
+    fclose(fp);
+    fprintf(stderr, "The private key is:%s\n", sk);
+    
     rtn = 1;
 
 end:
@@ -216,6 +229,7 @@ int handle_message(PacketCTX *ctx)
     }
     fwrite(message, sizeof(char), length+1, fp);
     fclose(fp);
+    fprintf(stderr, "receive message done\n");
     rnt=1;
 end:
     return rnt;
@@ -237,9 +251,9 @@ int handle_ap(PacketCTX *ctx) {
     /* analyze the head */
     int type = *(int *)head;
 
-    //#ifdef DEBUG 
+    #ifdef DEBUG 
     fprintf(stderr, "[%s : %d]type : %d\n", __FILE__, __LINE__, type);
-    //#endif
+    #endif
 
     switch (type)
     {

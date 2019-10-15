@@ -149,7 +149,8 @@ int connect_socket_server(char* ip_addr, int port, FILE** read_file, FILE** writ
 
 	bzero(&server_addr, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(SERVER_LISTEN_PORT);
+	//server_addr.sin_port = htons(SERVER_LISTEN_PORT);
+	server_addr.sin_port = htons(port);
 	inet_pton(AF_INET, ip_addr, &server_addr.sin_addr);
 	
 	if(connect(socket_fd, (SA *) &server_addr, sizeof(server_addr)) == -1)

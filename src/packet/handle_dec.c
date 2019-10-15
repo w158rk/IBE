@@ -12,7 +12,7 @@ int handle_dec(PacketCTX *ctx) {
     AppPacket app_packet;
     AppPacket *p_sk_packet = ctx->payload.secPacket->payload.appPacket;
     #ifdef DEBUG
-    fprintf(stderr, "enc_sk is%s\n", ctx->payload.secPacket->payload.data);
+    fprintf(stderr, "enc_sk is%s\n", ctx->payload.secPacket->payload.sk_data);
     #endif
     SecPacket *p_sec_packet = ctx->payload.secPacket;
 
@@ -59,7 +59,8 @@ int handle_dec(PacketCTX *ctx) {
         };
 
         #ifdef DEBUG 
-        fprintf(stderr, "message length : %d\n", m_len);
+        fprintf(stderr, "filename is%s\n", filename);
+        fprintf(stderr, "message length : %d\n", m_len); 
         fprintf(stderr, "type : %d\n", *(int *)m);
         #endif
 
@@ -95,12 +96,13 @@ int handle_dec(PacketCTX *ctx) {
         fprintf(stderr, "len is %d\n",N);
         #endif
         unsigned char *sk = (unsigned char *)malloc(IBE_SK_LEN);
-	    sm4_crypt_ecb(&sm4ctx, 0, IBE_SK_LEN, p_sec_packet->payload.data,sk);
+	    sm4_crypt_ecb(&sm4ctx, 0, IBE_SK_LEN, p_sec_packet->payload.sk_data,sk);
         #ifdef DEBUG
         fprintf(stderr, "id为：%s\n",ctx->dest_id);
 		fprintf(stderr, "解密得到sk：%s\n",sk);
         fprintf(stderr, "私钥的长度为：%d\n",strlen(p_sec_packet->payload.data));
         #endif
+        
         int filename_len2 = ctx->dest_id_len + 9;
         char *filename2 = (char *)malloc(filename_len2);
         filename2[0] = 's';
@@ -116,15 +118,16 @@ int handle_dec(PacketCTX *ctx) {
         #ifdef DEBUG
         fprintf(stderr, "sk_filename is%s\n", filename2);
         #endif
-
         FILE *fp2;
         if((fp2=fopen(filename2,"wb+"))==NULL)
         {
             printf("file cannot open \n");  
         }
-	    fprintf(fp2, "%s", sk);
+        fprintf(fp2, "%s", sk);
         fclose(fp2);
         fprintf(stderr,"私钥生成文件完成\n");
+
+        *(int *)(p_sec_packet->payload.appPacket->head) = PRIVATE_KEY_RESPONSE_TYPE;
 
         break;
     }

@@ -47,7 +47,8 @@ int send_enc(PacketCTX *ctx)
         {
             #ifdef DEBUG 
             fprintf(stderr, "[%s:%d] IBE ENC\n", __FILE__, __LINE__);
-            #endif
+            fprintf(stderr, "dest id is:%s\n", ctx->dest_id);
+            #endif  
             //IBE
             if (!ibe_encrypt(data, (size_t)length+APP_HEAD_LEN, 
                         cipher, &cipher_len, 
@@ -92,8 +93,9 @@ int send_enc(PacketCTX *ctx)
             
             sm4_setkey_enc(&sm4ctx,ctx->key);
             sm4_crypt_ecb(&sm4ctx, 1, IBE_SK_LEN, sk_data, cipher);
-             #ifdef DEBUG
-             fprintf(stderr, "sk_length is:%d\n", length_sk);
+            
+            #ifdef DEBUG
+            fprintf(stderr, "sk_length is:%d\n", length_sk);
             fprintf(stderr, "cipher is:%s\n",cipher);
             sm4_setkey_dec(&sm4ctx, ctx->key);
             sm4_crypt_ecb(&sm4ctx,0,IBE_SK_LEN,cipher, output);
@@ -101,11 +103,14 @@ int send_enc(PacketCTX *ctx)
             int out_len = strlen(output);
             fprintf(stderr, "out_len is %d\n", out_len);
             #endif
-             
-            sec_packet->payload.data = (char *)malloc(BUFFER_SIZE);
-            memcpy(sec_packet->payload.data, cipher, BUFFER_SIZE);
+
+            sec_packet->payload.sk_data = (char *)malloc(BUFFER_SIZE);
+            memcpy(sec_packet->payload.sk_data, cipher, BUFFER_SIZE);
+            
+            //*(int *)(sec_packet->payload.appPacket->head) = PRIVATE_KEY_RESPONSE_TYPE;
+            
             #ifdef DEBUG
-            fprintf(stderr, "the last sk is :%s\n", ctx->payload.secPacket->payload.data);
+            fprintf(stderr, "the last sk is :%s\n", ctx->payload.secPacket->payload.sk_data);
             #endif
 
             break;

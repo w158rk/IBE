@@ -19,11 +19,18 @@ int socket_interface_run(const char* entity_id, int id_len) {
 			}			
 			break;
 		case 2:
-			if(-1 == run_send_message(entity_id, id_len))
+		{
+			printf("Please input whom you want to send to(IP_ADDRESS LISTEN_PORT ID)\n");
+			char ip_ad[20], dest_id[20];
+			int port;
+			scanf("%s %d %s",&ip_ad, &port, &dest_id);
+			fprintf(stderr, "ip is: %s  port is: %d  id is: %s\n", ip_ad, port, dest_id);
+			if(-1 == run_send_message(entity_id, id_len, ip_ad, port, dest_id))
 			{
 				return -1;
 			}
 			break;
+		}
 		default:
 			break;
 	}
