@@ -113,6 +113,7 @@ int send_enc(PacketCTX *ctx)
             fprintf(stderr, "the last sk is :%s\n", ctx->payload.secPacket->payload.sk_data);
             #endif
 
+
             break;
         }
         

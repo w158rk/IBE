@@ -77,11 +77,8 @@ int handle_sk_request(PacketCTX *ctx) {
         ERROR(" cannot extract the private key");
         goto end;
     }       
-    fprintf(stderr, "sk is: %s\n", sk);
-    #ifdef DEBUG 
     fprintf(stderr, "[%s : %d] extract finished\n", __FILE__, __LINE__);
     fprintf(stderr,"sk is:%s ", sk);
-    #endif
 
     /*FILE *fp;
     if((fp=fopen("skClient.conf","wb+"))==NULL)
