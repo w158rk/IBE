@@ -90,7 +90,7 @@ int handle_sk_request(PacketCTX *ctx) {
     char c_buf[BUFFER_SIZE] = {'\0'};
     size_t c_len;
     ibe_encrypt(data, data_len, c_buf, &c_len, &mpk, CLIENT_ID, CLIENT_ID_LEN);
-    fprintf(stderr, "cipher is: %s\n", c_buf);
+    //fprintf(stderr, "cipher is: %s\n", c_buf);
     size_t out_len = BUFFER_SIZE;   
     char out[BUFFER_SIZE] = {'\0'};
     ibe_decrypt(c_buf, c_len, out, &out_len, &sk);
@@ -185,7 +185,7 @@ int handle_sk_response(PacketCTX *ctx) {
     #ifdef DEBUG
     fprintf(stderr, "sk_filename is%s\n", filename2);
     #endif
-    if((fp=fopen(filename,"rb+"))==NULL)
+    /*if((fp=fopen(filename,"rb+"))==NULL)
     {
         printf("file cannot open \n");  
     }
@@ -197,8 +197,28 @@ int handle_sk_response(PacketCTX *ctx) {
 		}
 	}
 	sk[i]='\0';
-    fclose(fp);
+    fclose(fp);*/
+    IBEPrivateKey sk;
+    get_sk_fp(filename, &sk);
     fprintf(stderr, "The private key is:%s\n", sk);
+    char data[BUFFER_SIZE] = "This is a test text";
+    IBEPublicParameters mpk;
+    get_mpk_fp(MPK_FILENAME, &mpk);
+
+    size_t data_len = strlen(data);
+    char c_buf[BUFFER_SIZE] = {'\0'};
+    size_t c_len;
+    ibe_encrypt(data, data_len, c_buf, &c_len, &mpk, CLIENT_ID, CLIENT_ID_LEN);
+    //fprintf(stderr, "cipher is: %s\n", c_buf);
+    size_t out_len = BUFFER_SIZE;   
+    char out[BUFFER_SIZE] = {'\0'};
+    ibe_decrypt(c_buf, c_len, out, &out_len, &sk);
+    //fprintf(stderr,"Here\n");
+    //fprintf(stderr, "out is%s\n", out);
+    if(data_len!=out_len || memcmp(data, out, out_len)!=0)
+    {
+        fprintf(stderr, "sk is wrong\n");
+    }
     
     rtn = 1;
 

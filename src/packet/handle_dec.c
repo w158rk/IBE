@@ -25,8 +25,8 @@ int handle_dec(PacketCTX *ctx) {
 
     char *filename = NULL;
     int filename_len = 0;
-    //IBEPrivateKey sk = NULL;
-    char *sk = (char *)malloc(IBE_SK_LEN);
+    IBEPrivateKey sk = NULL;
+    //char *sk = (char *)malloc(IBE_SK_LEN);
 
     int crypto_type = *(int *)(p_sec_packet->head);
     #ifdef DEBUG 
@@ -53,7 +53,7 @@ int handle_dec(PacketCTX *ctx) {
         filename[filename_len-2] = 'f';
         filename[filename_len-1] = '\0';
         fprintf(stderr, "filename is: %s\n", filename);
-        FILE *fp;
+        /*FILE *fp;
         if((fp=fopen(filename,"rb+"))==NULL)
         {
             printf("file cannot open \n");  
@@ -66,11 +66,28 @@ int handle_dec(PacketCTX *ctx) {
             }
         }
         sk[i]='\0';
-        fclose(fp);
-        //get_sk_fp(filename, &sk);
+        fclose(fp);*/
+        ;
         //fprintf(stderr, "sk is: %s\n", sk);
        // fprintf(stderr, "cipher is: %s\n", p_sec_packet->payload.data);
-        if (!ibe_decrypt(p_sec_packet->payload.data, c_len, m, &m_len, &sk))
+       /*char data[BUFFER_SIZE] = "This is a test text";
+        IBEPublicParameters mpk;
+        get_mpk_fp(MPK_FILENAME, &mpk);
+
+        size_t data_len = strlen(data);
+        char c_buf[BUFFER_SIZE] = {'\0'};
+        size_t c_len;
+        ibe_encrypt(data, data_len, c_buf, &c_len, &mpk, CLIENT_ID, CLIENT_ID_LEN);
+        fprintf(stderr, "cipher is: %s\n", c_buf);
+        size_t out_len = BUFFER_SIZE;   
+        char out[BUFFER_SIZE] = {'\0'};
+        ibe_decrypt(c_buf, c_len, out, &out_len, &sk);
+        fprintf(stderr, "out is%s\n", out);
+        if(data_len!=out_len || memcmp(data, out, out_len)!=0)
+        {
+            fprintf(stderr, "extract sk fail %s\n");
+        }*/
+        if (!get_sk_fp(filename, &sk)||!ibe_decrypt(p_sec_packet->payload.data, c_len, m, &m_len, &sk))
         {
             ERROR("decrypt fail");
             goto end;
