@@ -15,18 +15,18 @@ History: ...
 #include <packet.h>
 #include <openssl/sm4.h>
 #include <sys.h>
-#define DEBUG
+//#define DEBUG
 
 
 /* 
  * internal functions
  */ 
 
-int run_get_private_key(const char* id, int id_len) {
+int run_get_private_key(const char* id, int id_len, ID *father_node) {
 
 	int ret = -1;
 	/* connect to the server first */
-	connect_socket_server(SERVER_IP_ADDRESS, SERVER_LISTEN_PORT, &read_file, &write_file);
+	connect_socket_server(father_node->ip, father_node->port, &read_file, &write_file);
 	
 	#ifdef DEBUG
 	fprintf(stderr, "[%s:%d] mark\n", __FILE__, __LINE__);
@@ -91,7 +91,6 @@ int run_get_private_key(const char* id, int id_len) {
 	p += SM4_KEY_LEN;		
 	memcpy(p, id, (size_t)id_len);		//将id放在payload中
 
-
 	#ifdef DEBUG 
 	fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, payload);
 	#endif
@@ -110,8 +109,8 @@ int run_get_private_key(const char* id, int id_len) {
 	ctx.payload.appPacket = &packet;
 	ctx.read_file = read_file;
 	ctx.write_file = write_file;
-	ctx.dest_id = SERVER_ID;
-	ctx.dest_id_len = SERVER_ID_LEN;
+	ctx.dest_id = father_node->id;
+	ctx.dest_id_len = strlen(father_node->id);
 	//memcpy(ctx.sm4_key, key, SM4_KEY_LEN);
 	#ifdef DEBUG
 	fprintf(stderr, "send sm4_key is:\n");

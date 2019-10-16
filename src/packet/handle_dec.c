@@ -162,7 +162,7 @@ int handle_dec(PacketCTX *ctx) {
         }
         fprintf(fp2, "%s", sk);
         fclose(fp2);
-        fprintf(stderr,"私钥生成文件完成\n");
+        fprintf(stderr,"sk_file generate\n");
 
         *(int *)(p_sec_packet->payload.appPacket->head) = PRIVATE_KEY_RESPONSE_TYPE;
 

@@ -9,7 +9,9 @@ void ID_init()
 {
     server.id = SERVER_ID;
     server.length = 1;
-    server.father_node = &server;
+    server.ip = SERVER_IP_ADDRESS;
+    server.port =SERVER_LISTEN_PORT;
+    //server.father_node = &server;
     client.id = CLIENT_ID;
     client.length = 2;
     client.father_node = &server;

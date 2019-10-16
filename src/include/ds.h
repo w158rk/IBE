@@ -86,7 +86,9 @@ typedef struct packet_ctx{
 
 typedef struct ID_STR{
     char *id;
+    char *ip;
     int length;
+    int port;
     struct ID_STR *father_node;
 }ID;
 

@@ -19,7 +19,7 @@
  * @param[in] id ID of the user who are to apply for the private key 
  * @param[in] id_len the length of the ID
  */
-int run_get_private_key(const char* id, int id_len);
+int run_get_private_key(const char* id, int id_len, ID *father_node);
 
 
 /**!
@@ -29,7 +29,7 @@ int run_get_private_key(const char* id, int id_len);
  * @param id_len the length of the id 
  * @return -1 when something wrong, 0 when no errors
  */
-int socket_interface_run(const char* entity_id, int id_len);
+int socket_interface_run(ID *id_name);
 
 int socket_main(ID *id_name,  int port);
 

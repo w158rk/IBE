@@ -2,19 +2,20 @@
 #include "base.h"
 #include "func.h"
 
-int socket_interface_run(const char* entity_id, int id_len) {
+int socket_interface_run(ID *id_name) {
 	
-	printf("What do you want to do? %s\n", entity_id);
+	printf("What do you want to do? %s\n", id_name->id);
 	printf("Choose from :\n");
 	printf("\t1. Extract your Private Key\n");
 	printf("\t2. Send message\n");
 	
 	int choise;
+	int id_len = strlen(id_name->id);
 	scanf("%d", &choise);
 	switch (choise) {
 		case 1/* constant-expression */:
 			/* code */
-			if (-1 == run_get_private_key(entity_id, id_len)) {
+			if (-1 == run_get_private_key(id_name->id, id_len, id_name->father_node)) {
 				return -1;
 			}			
 			break;
@@ -25,7 +26,7 @@ int socket_interface_run(const char* entity_id, int id_len) {
 			int port;
 			scanf("%s %d %s",&ip_ad, &port, &dest_id);
 			fprintf(stderr, "ip is: %s  port is: %d  id is: %s\n", ip_ad, port, dest_id);
-			if(-1 == run_send_message(entity_id, id_len, ip_ad, port, dest_id))
+			if(-1 == run_send_message(id_name->id, id_len, ip_ad, port, dest_id))
 			{
 				return -1;
 			}
@@ -305,7 +306,7 @@ int socket_main(ID *id_name,  int port) {
         
         // user interface
 	while (-1 != args[0]) {
-		if(-1 == socket_interface_run(entity_id, id_len)) {
+		if(-1 == socket_interface_run(id_name)) {
 			args[0] = -1;
 		}
 	}
