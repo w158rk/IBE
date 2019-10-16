@@ -15,7 +15,7 @@ History: ...
 #include <packet.h>
 #include <openssl/sm4.h>
 #include <sys.h>
-//#define DEBUG
+#define DEBUG
 
 
 /* 

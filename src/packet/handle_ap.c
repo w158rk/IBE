@@ -79,6 +79,26 @@ int handle_sk_request(PacketCTX *ctx) {
     }       
     fprintf(stderr, "[%s : %d] extract finished\n", __FILE__, __LINE__);
     fprintf(stderr,"sk is:%s ", sk);
+    /*int sk_len = strlen(sk);
+    fprintf(stderr, "sk length is :%s\n", sk);*/
+
+    char data[BUFFER_SIZE] = "This is a test text";
+   IBEPublicParameters mpk;
+   get_mpk_fp(MPK_FILENAME, &mpk);
+
+    size_t data_len = strlen(data);
+    char c_buf[BUFFER_SIZE] = {'\0'};
+    size_t c_len;
+    ibe_encrypt(data, data_len, c_buf, &c_len, &mpk, CLIENT_ID, CLIENT_ID_LEN);
+    fprintf(stderr, "cipher is: %s\n", c_buf);
+    size_t out_len = BUFFER_SIZE;   
+    char out[BUFFER_SIZE] = {'\0'};
+    ibe_decrypt(c_buf, c_len, out, &out_len, &sk);
+    //fprintf(stderr, "out is%s\n", out);
+   if(data_len!=out_len || memcmp(data, out, out_len)!=0)
+   {
+       fprintf(stderr, "extract sk fail %s\n");
+   }
 
     /*FILE *fp;
     if((fp=fopen("skClient.conf","wb+"))==NULL)

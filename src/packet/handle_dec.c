@@ -25,7 +25,8 @@ int handle_dec(PacketCTX *ctx) {
 
     char *filename = NULL;
     int filename_len = 0;
-    IBEPrivateKey sk = NULL;
+    //IBEPrivateKey sk = NULL;
+    char *sk = (char *)malloc(IBE_SK_LEN);
 
     int crypto_type = *(int *)(p_sec_packet->head);
     #ifdef DEBUG 
@@ -51,17 +52,36 @@ int handle_dec(PacketCTX *ctx) {
         filename[filename_len-3] = 'n'; 
         filename[filename_len-2] = 'f';
         filename[filename_len-1] = '\0';
-        if (!get_sk_fp(filename, &sk) 
-            ||!ibe_decrypt(p_sec_packet->payload.data, c_len, m, &m_len, &sk))
+        fprintf(stderr, "filename is: %s\n", filename);
+        FILE *fp;
+        if((fp=fopen(filename,"rb+"))==NULL)
+        {
+            printf("file cannot open \n");  
+        }
+        int i=0;
+        char sk[100000],temp[10000];
+        while(fgets(temp,1001,fp)){
+            for(int j=0;temp[j]!='\0';i++,j++){
+                sk[i]=temp[j];
+            }
+        }
+        sk[i]='\0';
+        fclose(fp);
+        //get_sk_fp(filename, &sk);
+        //fprintf(stderr, "sk is: %s\n", sk);
+       // fprintf(stderr, "cipher is: %s\n", p_sec_packet->payload.data);
+        if (!ibe_decrypt(p_sec_packet->payload.data, c_len, m, &m_len, &sk))
         {
             ERROR("decrypt fail");
             goto end;
         };
 
+        //fprintf(stderr, "message : %s\n", m);
+
         #ifdef DEBUG 
         fprintf(stderr, "filename is%s\n", filename);
         fprintf(stderr, "message length : %d\n", m_len); 
-        fprintf(stderr, "type : %d\n", *(int *)m);
+        fprintf(stderr, "message : %d\n", *(int *)m);
         #endif
 
         // make the app packet 
