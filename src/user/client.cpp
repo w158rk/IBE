@@ -1,7 +1,7 @@
-#include<app.hpp>
+#include<user.hpp>
 #include<iostream>
 
-using namespace app;
+using namespace user;
 
 Client::Client(std::string ip_address, int port, ID* id)
     :User(ip_address, port, id)

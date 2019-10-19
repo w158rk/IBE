@@ -22,7 +22,9 @@ namespace interface
     {
 
     public:
-        virtual int send(int fd, const void *vptr, size_t n) = 0;
+        virtual int send(const void *vptr, size_t n) = 0;
+        virtual int connect_to_server(char* ip_addr, int port) = 0;
+        
         virtual void socket_main() = 0;
         virtual void file_main() = 0;
 
@@ -38,6 +40,10 @@ namespace interface
         virtual std::string get_ip_address() = 0;
         virtual int get_port() = 0;
 
+        virtual int run_send_message(char *dest_ip, 
+				        			int dest_port,
+						        	ID *dest_id) = 0;
+
         virtual ~IUser() = default;
 
     };
@@ -46,7 +52,7 @@ namespace interface
     {
 
     public:
-        int virtual run() = 0;
+        void virtual run() = 0;
         virtual ~IUI() = default;
     };
     

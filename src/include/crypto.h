@@ -18,9 +18,9 @@
 #include <openssl/ec.h>
 
 
-int ibe_encrypt(const unsigned char* data, size_t data_len, unsigned char* c_buf, size_t *c_len, 
+int ibe_encrypt(const  char* data, size_t data_len,  char* c_buf, size_t *c_len, 
     IBEPublicParameters *mpk, const char *id, size_t id_len);
-int ibe_decrypt(const unsigned char* c_buf, size_t c_len, unsigned char* m_buff, size_t *m_len, 
+int ibe_decrypt(const  char* c_buf, size_t c_len,  char* m_buff, size_t *m_len, 
     IBEPrivateKey *sk);
 
 /**
@@ -62,7 +62,7 @@ int gen_random_key(char *key);
 
 char *cbc_iv_new(void);
 char *cbc_key_new(void);
-
+void set_key(unsigned char *key, FILE* filename);
 /*
  * secret sharing 
  *

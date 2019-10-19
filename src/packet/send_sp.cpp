@@ -5,21 +5,17 @@
  * @brief convert the sec packet into char array
  */
 
-#include<packet.h>
-#include <crypto.h>
-#include <string.h>
+#include<packet.hpp>
 
-int send_sp(PacketCTX *ctx)
+using namespace packet;
+
+void Packet::send_sp()
 {
-    int rtn = 0;
 
+    PacketCTX *ctx = get_ctx();
     if(ctx->phase != SEND_SEC_PACKET) {
 
         ERROR("call wrong function");
-        goto end;
     }
     ctx->phase = SEND_DONE;
-    rtn = 1;
-end:
-    return rtn;
 }

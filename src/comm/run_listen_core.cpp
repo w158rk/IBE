@@ -90,10 +90,7 @@ int Comm::run_listen_core()
 
 		ctx->phase = RECV_SEC_PACKET;
 		ctx->payload.secPacket = p_packet;
-		ctx->read_file = m_read_file;
-		ctx->write_file = m_write_file;
-		ctx->dest_id = entity_id_cstr;				// the id of the runner itself 
-		ctx->dest_id_len = entity_id_len;
+		ctx->dest_id = entity_id;				// the id of the runner itself 
 
 		if(m_packet_ptr->packet_handle(ctx) == -1)
 		{

@@ -5,16 +5,13 @@
  * @brief add signature to the sec packet
  */
 
-#include<packet.h>
-#include <string.h>
+#include<packet.hpp>
 
-int send_sign(PacketCTX *ctx)
+using namespace packet;
+
+void Packet::send_sign()
 {
-    int rtn = 0;
-
+    PacketCTX *ctx = get_ctx();
     ctx->phase = SEND_ENC;
 
-    rtn = 1;
-end:
-    return rtn;
 }

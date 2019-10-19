@@ -43,11 +43,13 @@ void comm::Comm::file_listener_run()
 		}
 
 		//disconnect client socket is duplex, so read_file and write_file is the same file
-		if(fclose(read_file) == EOF)
+		if(fclose(m_read_file) == EOF)
 		{
 			fprintf(stderr, "close the read file occurs an error\n");
 			child_server_status = -1;
 		}
+		m_fread_file = false;
+		m_fwrite_file = false;
 
 	}
 
@@ -66,7 +68,7 @@ void comm::Comm::socket_listener_run()
 	socklen_t client_len;
 
 	// create the socket 
-	int listen_port = m_user_ptr->get_port();
+	int listen_port = get_user_ptr()->get_port();
 	if((listen_fd = create_listening_socket(listen_port)) == -1)
 	{
 		fprintf(stderr, "can't create listening socket\n");

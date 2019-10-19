@@ -5,17 +5,22 @@
  * @brief send the packet in the App Packet level
  */
 
-#include<packet.h>
-#include <string.h>
-// #define DEBUG
 
-int send_ap(PacketCTX *ctx)
+extern "C" {
+#include <string.h>
+}
+// #define DEBUG
+#include<config.h>
+#include<packet.hpp>
+using namespace packet;
+
+void Packet::send_ap()
 {
-    int rtn = 0;
+    PacketCTX *ctx = get_ctx();
 
     if(ctx->phase != SEND_APP_PACKET) {
         ERROR("call wrong function");
-        goto end;
+        throw std::exception();
     }
 
     AppPacket *packet = ctx->payload.appPacket;
@@ -49,7 +54,7 @@ int send_ap(PacketCTX *ctx)
     SecPacket *send_packet = (SecPacket *)malloc(sizeof(SecPacket));  
     
     *(int *)(send_packet->head) = send_type;
-    fprintf("send type is:%d\n", send_type);
+    fprintf(stderr, "send type is:%d\n", send_type);
     send_packet->payload.appPacket = packet;
     #ifdef DEBUG
     fprintf(stderr, "sk1 is: %s\n", send_packet->payload.appPacket->payload);
@@ -60,11 +65,5 @@ int send_ap(PacketCTX *ctx)
     #endif
     ctx->phase = SEND_SIGN;
 
-    rtn = 1;
-
-end:
-    if(rtn==0) {
-        free(send_packet);
-    }
-    return rtn;
+    free(send_packet);
 }

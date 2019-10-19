@@ -7,7 +7,7 @@ namespace ui {
     public:
         UInterface();
         ~UInterface() = default;
-        int run();
+        void run();
 
         GET_AND_SET(interface::IUser * , user_ptr)
 

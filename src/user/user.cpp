@@ -1,11 +1,11 @@
 #include<iostream>
-#include<app.hpp>
+#include<user.hpp>
 
 extern "C" {
     #include<comm.h>
 }
 
-using namespace app;
+using namespace user;
 
 User::User(std::string ip_address, int port, ID* id)
 {

@@ -8,42 +8,61 @@ Date: 2019-06-16
 History: ...
 *****************************************************************************/
 
+#include <user.hpp>
+#include <iostream>
+#include <config.h>
 
-#include <func.h>
-#include <ctx.h>
-#include <crypto.h>
-#include <packet.h>
-#include <openssl/sm4.h>
-#include <sys.h>
-//#define DEBUG
+extern "C" {
+	#include <crypto.h>
+	#include <string.h>
+	#include <sys.h>
+}
+
+
+using namespace user;
 
 
 /* 
  * internal functions
  */ 
 
-int run_get_private_key(const char* id, int id_len, ID *father_node) {
+int Client::run_get_private_key(char *server_ip, 
+								int server_port,
+								ID *server_id)
+{
+	if(server_id == nullptr) {
+		server_id = get_id()->father_node;
+	}
 
 	int ret = -1;
+	
 	/* connect to the server first */
-	connect_socket_server(father_node->ip, father_node->port, &read_file, &write_file);
+	interface::IComm *comm = get_comm_ptr();
+	comm->connect_to_server(server_ip, server_port);
 	
 	#ifdef DEBUG
 	fprintf(stderr, "[%s:%d] mark\n", __FILE__, __LINE__);
-	fprintf(stderr, "[%s:%d] read from %lx\n", __FILE__, __LINE__, read_file);
-	fprintf(stderr, "[%s:%d] write to %lx\n", __FILE__, __LINE__, write_file);	
-	fprintf(stderr, "[%s:%d] %ld\n", __FILE__, __LINE__, sizeof(write_file));	
+	// fprintf(stderr, "[%s:%d] read from %lx\n", __FILE__, __LINE__, m_read_file);
+	// fprintf(stderr, "[%s:%d] write to %lx\n", __FILE__, __LINE__, m_write_file);	
 	#endif
 	
-	if(file_main(id, id_len, read_file, write_file) == -1) {
-		fprintf(stderr, "[%s:%d] something went wrong\n", __FILE__, __LINE__);
-		return -1;
+	try
+	{
+		comm->file_main();
 	}
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+		throw e;
+	}
+	
 
 	#ifdef DEBUG 
 	fprintf(stderr, "[%s:%d] mark\n", __FILE__, __LINE__);
 	#endif
 	/* arrange the private key request message */
+	char *id = get_id()->id;
+	size_t id_len = get_id()->length;		// the upper integer of (id_len+1)
 	size_t actual_id_len = ((id_len+4)/4) * 4;		// the upper integer of (id_len+1)
 	size_t m_len = (size_t)(actual_id_len + SM4_KEY_LEN);
 	char *payload = (char *)malloc(m_len);
@@ -55,7 +74,7 @@ int run_get_private_key(const char* id, int id_len, ID *father_node) {
 	*(int *)(packet.head + 4) = m_len;		//从AppPacket.head的第4位开始存放payload的长度
 
 	/* generate and copy the sm4 key */
-	unsigned char *p = payload;
+	char *p = payload;
 	int filename_len = id_len + 10;
     char *filename = (char *)malloc(filename_len);
     filename[0] = 's';
@@ -95,7 +114,8 @@ int run_get_private_key(const char* id, int id_len, ID *father_node) {
 	fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, payload);
 	#endif
 
-	strncpy(sm4key, payload, 16);
+	char sm4key[SM4_KEY_LEN];
+	memcpy(sm4key, payload, 16);
 	#ifdef DEBUG
 	for(int t=0;t<16;t++)
 		printf("%02x ",sm4key[t]);
@@ -107,11 +127,8 @@ int run_get_private_key(const char* id, int id_len, ID *father_node) {
 
 	ctx.phase = SEND_APP_PACKET;
 	ctx.payload.appPacket = &packet;
-	ctx.read_file = read_file;
-	ctx.write_file = write_file;
-	ctx.dest_id = father_node->id;
-	ctx.dest_id_len = strlen(father_node->id);
-	//memcpy(ctx.sm4_key, key, SM4_KEY_LEN);
+	ctx.dest_id = server_id;
+
 	#ifdef DEBUG
 	fprintf(stderr, "send sm4_key is:\n");
 	fprintf(stderr, "payload is %s\n", ctx.payload.appPacket->payload);
@@ -134,7 +151,7 @@ int run_get_private_key(const char* id, int id_len, ID *father_node) {
 	fprintf(stderr, "[%s : %d] phase : %d\n", __FILE__, __LINE__, ctx.phase);
 	#endif
 
-	if(0 == packet_send(&ctx)) {
+	if(0 == get_packet_ptr()->packet_send(&ctx)) {
 		ERROR("wrong when make the packet to send");
 		goto end;
 	}
@@ -147,23 +164,30 @@ end:
 
 }
 
-int run_send_message(const char* id, int id_len, char* ip, int port, char* dest_id)
+int User::run_send_message(char *dest_ip, 
+					int dest_port,
+					ID *dest_id)
 {
 	int ret =-1;
-	//connect_socket_server(SERVER_IP_ADDRESS, SERVER_LISTEN_PORT, &read_file, &write_file);
-	connect_socket_server(ip, port,  &read_file, &write_file);
-	//connect_socket_server(CLIENT_IP_ADDRESS, CLIENT_LISTEN_PORT, &read_file, &write_file);
-	if(file_main(id, id_len, read_file, write_file) == -1) {
-		fprintf(stderr, "[%s:%d] something went wrong\n", __FILE__, __LINE__);
-		return -1;
+
+	interface::IComm *comm = get_comm_ptr();
+	comm->connect_to_server(dest_ip, dest_port);
+	try
+	{
+		comm->file_main();
 	}
-	//size_t actual_id_len = ((id_len+4)/4) * 4;		// the upper integer of (id_len+1)
+	catch(const std::exception& e)
+	{
+		std::cerr << e.what() << '\n';
+		throw e;
+	}
+
 	/* 需要加密的文件放在id_message.txt中 */
-	int filename_message_len = id_len + 13;
+	int filename_message_len = dest_id->length + 13;
 	char *filename_message = (char *)malloc(filename_message_len);
-	memcpy(filename_message, id, id_len);
-	const char meg[13] = "_message.txt";
-	memcpy(filename_message+id_len, meg, 14);
+	memcpy(filename_message, dest_id->id, dest_id->length);
+	memcpy(filename_message+dest_id->length, "_message.txt", 14);
+
 	#ifdef DEBUG
 	fprintf(stderr, "%s\n", filename_message);
 	#endif
@@ -173,13 +197,13 @@ int run_send_message(const char* id, int id_len, char* ip, int port, char* dest_
 	if((fp=fopen(filename_message,"rb+"))==NULL)
     {
         printf("file_massge cannot open \n");
-		goto end;
+		throw std::exception();
     }
 	char *message = (char *)malloc(MES_LEN);
 	if(!fread(message, sizeof(char), MES_LEN, fp))
 	{
 		printf("error in read file \n");
-		goto end;
+		throw std::exception();
 	}
 	fclose(fp);
 	int len = strlen(message);
@@ -200,12 +224,9 @@ int run_send_message(const char* id, int id_len, char* ip, int port, char* dest_
 
 	ctx.phase = SEND_APP_PACKET;
 	ctx.payload.appPacket = &packet;
-	ctx.read_file = read_file;
-	ctx.write_file = write_file;
 	/*ctx.dest_id = SERVER_ID;
 	ctx.dest_id_len = SERVER_ID_LEN;*/
 	ctx.dest_id = dest_id;
-	ctx.dest_id_len = strlen(dest_id);
 
 	IBEPublicParameters mpk = NULL;
 	get_mpk_fp(MPK_FILENAME, &mpk);
@@ -215,7 +236,7 @@ int run_send_message(const char* id, int id_len, char* ip, int port, char* dest_
 	fprintf(stderr, "[%s : %d] phase : %d\n", __FILE__, __LINE__, ctx.phase);
 	#endif
 
-	if(0 == packet_send(&ctx)) {
+	if(0 == get_packet_ptr()->packet_send(&ctx)) {
 		ERROR("wrong when make the packet to send");
 		goto end;
 	}

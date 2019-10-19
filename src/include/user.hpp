@@ -1,12 +1,12 @@
-#ifndef APP_H
-#define APP_H
+#ifndef USER__H
+#define USER__H
 
 #include<string>
 #include<ds.h>
 #include<interface.hpp>
 #include<utils.h>
 
-namespace app {
+namespace user {
 
     class User : interface::IUser
     {
@@ -25,6 +25,10 @@ namespace app {
         GET_AND_SET(int, port)
         GET_AND_SET(ID*, id)
         GET_AND_SET(char *, err_sig)
+
+        int run_send_message(char *dest_ip, 
+							int dest_port,
+							ID *dest_id);
 
     private :
         DECLARE_MEMBER(interface::IComm *, comm_ptr)
@@ -56,6 +60,12 @@ namespace app {
 
         Client(std::string ip_address, int port, ID* id);
         ~Client();
+
+        int run_get_private_key(char *server_ip, 
+								int server_port,
+								ID *server_id=nullptr);
+
+
 
     };
 

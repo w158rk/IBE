@@ -28,6 +28,14 @@ typedef char    *IBEMasterSecret;
 #define SIGN_LEN        32
 #define MES_LEN         10000
 
+typedef struct ID_STR{
+    char *id;
+    char *ip;
+    int length;
+    int port;
+    struct ID_STR *father_node;
+}ID;
+
 typedef struct {
     char head[APP_HEAD_LEN];
     char *payload;
@@ -68,10 +76,8 @@ typedef struct packet_ctx{
         SecPacket *secPacket;
     } payload;
     
-    char *src_id;
-    size_t src_id_len;
-    char *dest_id;
-    size_t dest_id_len;
+    ID *src_id;
+    ID *dest_id;
     
     IBEPublicParameters *mpk;
     IBEPrivateKey *sk;  
@@ -80,17 +86,10 @@ typedef struct packet_ctx{
 
    char * key;
 
-    FILE *read_file;
-    FILE *write_file;
+    // FILE *read_file;
+    // FILE *write_file;
 } PacketCTX;
 
-typedef struct ID_STR{
-    char *id;
-    char *ip;
-    int length;
-    int port;
-    struct ID_STR *father_node;
-}ID;
 
 extern ID server;
 extern ID client;

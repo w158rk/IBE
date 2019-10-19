@@ -10,7 +10,7 @@
 #include <openssl/sm9.h>
 #include <openssl/bio.h>
 
-int ibe_decrypt(const unsigned char* c_buf, size_t c_len, unsigned char* m_buff, size_t *m_len, 
+int ibe_decrypt(const char* c_buf, size_t c_len, char* m_buff, size_t *m_len, 
     IBEPrivateKey *sk)
 {
     SM9PrivateKey *sm9_sk = NULL;

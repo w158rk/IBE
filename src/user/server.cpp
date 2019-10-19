@@ -1,6 +1,6 @@
-#include<app.hpp>
+#include<user.hpp>
 
-using namespace app;
+using namespace user;
 
 Server::Server(std::string ip_address, int port, ID* id)
     :User(ip_address, port, id)

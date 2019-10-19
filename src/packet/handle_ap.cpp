@@ -2,28 +2,33 @@
  * @file handle_ap.c 
  * @author Wang Ruikai 
  * @date August 8th, 2019 
- * @brief handle the packet in the App Packet phase
+ * @brief handle the p in the App Packet phase
  */
 
-#include <packet.h>
-#include <crypto.h>
-#include <sys.h>
-#include <string.h>
-#include <ctx.h>
-//#define DEBUG
+extern "C" {
+    #include <crypto.h>
+    #include <sys.h>
+    #include <string.h>
+    #include <config.h>
+}
 
-int handle_m(PacketCTX *ctx)
+#include <packet.hpp>
+//#define DEBUG
+using namespace packet;
+
+int handle_m(Packet *target)
 {
     int rtn = 0;
 
-    AppPacket *packet = ctx->payload.appPacket;
-    char *head = packet->head;
+    PacketCTX *ctx = target->get_ctx();
+    AppPacket *p = ctx->payload.appPacket;
+    char *head = p->head;
     int length = *(int *)(head + 4);
     
     /*@todo forbid the overflow, but it may cause some other problem */
-    packet->payload[length] = '\0';     
+    p->payload[length] = '\0';     
 
-    printf("receive message : %s\n", packet->payload);
+    printf("receive message : %s\n", p->payload);
     rtn = 1;
 
 end:
@@ -32,16 +37,17 @@ end:
 }
 
 
-int handle_sk_request(PacketCTX *ctx) {
+int handle_sk_request(Packet *target) {
 
     int rtn = 0;
+    PacketCTX *ctx = target->get_ctx();
 
-    AppPacket *packet = ctx->payload.appPacket;
+    AppPacket *p = ctx->payload.appPacket;
     #ifdef DEBUG 
-    fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, packet->payload);
+    fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, p->payload);
     #endif
-    char *head = packet->head;
-    unsigned char *payload = packet->payload;        //获取的payload为client的SM4_key加上id
+    char *head = p->head;
+    char *payload = p->payload;        //获取的payload为client的SM4_key加上id
 
     /* It may cause some problem for not using the network order */
     //int payload_len = *(int *)(head + 4);
@@ -57,16 +63,16 @@ int handle_sk_request(PacketCTX *ctx) {
 
     if (get_msk_fp(MSK_FILENAME, &msk) == 0) {
         ERROR(" you don't have the access to msk file");
-        goto end;
+        throw std::exception();
     }       //从文件中读取s
 
     // there is a but that sucks 
-    // it seems that the function get_msk_fp would change the value of packet->payload 
+    // it seems that the function get_msk_fp would change the value of p->payload 
     // i don't know why, may be some magic things
 
     #ifdef DEBUG 
     fprintf(stderr, "id_len is: %d\n", id_len);
-    fprintf("[%s : %d] extract finished\n", __FILE__, __LINE__);
+    fprintf(stderr, "[%s : %d] extract finished\n", __FILE__, __LINE__);
     fprintf(stderr, "&msk : %ld \n", msk);
     fprintf(stderr, "id: %s", payload + SM4_KEY_LEN);
     fprintf(stderr, "payload1: %x\n", payload);
@@ -75,12 +81,8 @@ int handle_sk_request(PacketCTX *ctx) {
     /*生成私钥sk*/
     if ( 0 == ibe_extract(&sk, &msk, payload+SM4_KEY_LEN, (size_t)id_len)) {
         ERROR(" cannot extract the private key");
-        goto end;
+        throw std::exception();
     }       
-    fprintf(stderr, "[%s : %d] extract finished\n", __FILE__, __LINE__);
-    fprintf(stderr,"sk is:%s ", sk);
-    /*int sk_len = strlen(sk);
-    fprintf(stderr, "sk length is :%s\n", sk);*/
 
     char data[BUFFER_SIZE] = "This is a test text";
    IBEPublicParameters mpk;
@@ -90,23 +92,13 @@ int handle_sk_request(PacketCTX *ctx) {
     char c_buf[BUFFER_SIZE] = {'\0'};
     size_t c_len;
     ibe_encrypt(data, data_len, c_buf, &c_len, &mpk, CLIENT_ID, CLIENT_ID_LEN);
-    //fprintf(stderr, "cipher is: %s\n", c_buf);
     size_t out_len = BUFFER_SIZE;   
     char out[BUFFER_SIZE] = {'\0'};
     ibe_decrypt(c_buf, c_len, out, &out_len, &sk);
-    //fprintf(stderr, "out is%s\n", out);
    if(data_len!=out_len || memcmp(data, out, out_len)!=0)
    {
        fprintf(stderr, "extract sk fail %s\n");
    }
-
-    /*FILE *fp;
-    if((fp=fopen("skClient.conf","wb+"))==NULL)
-    {
-        printf("file cannot open \n");  
-    }
-    fprintf(fp, "%s", sk);
-    fclose(fp);*/
 
     // TODO 
     // finish extracting the requested private key 
@@ -118,17 +110,15 @@ int handle_sk_request(PacketCTX *ctx) {
 
     *(int *)(send_packet.head) = PRIVATE_KEY_RESPONSE_TYPE;
     *(int *)(send_packet.head+4) = IBE_SK_LEN;      //头部存放了标示和私钥长度
-    char *p = (char *)malloc(IBE_SK_LEN);
-    memcpy(p, sk, IBE_SK_LEN);
-    send_packet.payload = p;        //payload中存放私钥
+    char *ptr = (char *)malloc(IBE_SK_LEN);
+    memcpy(ptr, sk, IBE_SK_LEN);
+    send_packet.payload = ptr;        //payload中存放私钥
     send_ctx.phase = SEND_APP_PACKET;
     send_ctx.payload.appPacket = &send_packet;
     #ifdef DEBUG
     int N = strlen(send_ctx.payload.appPacket->payload);
     fprintf(stderr,"len is: %d\n",N);
     #endif
-    send_ctx.write_file = ctx -> write_file;
-    send_ctx.read_file = ctx -> read_file;
      #ifdef DEBUG 
     fprintf(stderr, "payload2: %x\n", payload);
     for(int t=0;t<16;t++)
@@ -136,7 +126,7 @@ int handle_sk_request(PacketCTX *ctx) {
 	printf("\n");
     #endif
     char *sm4_key= (char *)malloc(SM4_KEY_LEN);
-	strncpy(sm4_key, payload, 16);
+	memcpy(sm4_key, payload, 16);
     #ifdef DEBUG
 	fprintf(stderr, "sm4_key is:%s\n", sm4_key);
 	for(int t=0;t<16;t++)
@@ -152,8 +142,8 @@ int handle_sk_request(PacketCTX *ctx) {
     //fprintf(stderr, "sm4_key: %x\n", send_ctx.sm4_key);
     #endif
 
-    if(0 == packet_send(&send_ctx)) {
-        ERROR("send the packet error");
+    if(0 == target->packet_send(&send_ctx)) {
+        ERROR("send the p error");
         goto end;
     }
 
@@ -166,16 +156,19 @@ end:
 }
 
 
-int handle_sk_response(PacketCTX *ctx) {
+int handle_sk_response(Packet *target) {
     int rtn = 0;
 
+    PacketCTX *ctx = target->get_ctx();
+    ID *dest_id = ctx->dest_id;
+
     FILE *fp;
-    int filename_len = ctx->dest_id_len + 9;
+    int filename_len = ctx->dest_id->length + 9;
     char *filename = (char *)malloc(filename_len);
     filename[0] = 's';
     filename[1] = 'k';
     filename[2] = '_';
-    memcpy(filename + 3, ctx->dest_id, ctx->dest_id_len);
+    memcpy(filename + 3, ctx->dest_id, ctx->dest_id->length);
     filename[filename_len-6] = '.'; 
     filename[filename_len-5] = 'c'; 
     filename[filename_len-4] = 'o'; 
@@ -228,32 +221,33 @@ end:
 }
 
 
-int handle_session_request(PacketCTX *ctx) {
+int handle_session_request(Packet *target) {
     
 }
 
 
-int handle_session_ack(PacketCTX *ctx) {
+int handle_session_ack(Packet *target) {
 
 }
 
 
-int handle_session_final(PacketCTX *ctx) {
+int handle_session_final(Packet *target) {
 
 }
 
-int handle_message(PacketCTX *ctx)
+int handle_message(Packet *target)
 {
+    PacketCTX *ctx = target->get_ctx();
     int rnt = -1;
-    AppPacket *packet = ctx->payload.appPacket;
-    char *head = packet->head;
+    AppPacket *p = ctx->payload.appPacket;
+    char *head = p->head;
     int length = *(int *)(head+4);
     #ifdef DEBUG
-    fprintf(stderr, "message is:%s\n",packet->payload);
+    fprintf(stderr, "message is:%s\n",p->payload);
     fprintf(stderr,"the length is:%d", length);
     #endif
     char *message = (char *)malloc(length);
-    strncpy(message, packet->payload, length);
+    strncpy(message, p->payload, length);
     message[length]='\0';
     #ifdef DEBUG
     fprintf(stderr, "message is:%s\n", message);
@@ -273,17 +267,17 @@ end:
 }
 
 
-int handle_ap(PacketCTX *ctx) {
+void Packet::handle_ap() {
 
     int rtn = 0;
 
-    if(ctx->phase != RECV_APP_PACKET) {
+    if(get_ctx()->phase != RECV_APP_PACKET) {
         ERROR("call wrong function");
-        goto end;
+        throw std::exception();
     }
 
-    AppPacket *packet = ctx->payload.appPacket;
-    char *head = packet->head;
+    AppPacket *p = get_ctx()->payload.appPacket;
+    char *head = p->head;
 
     /* analyze the head */
     int type = *(int *)head;
@@ -295,40 +289,39 @@ int handle_ap(PacketCTX *ctx) {
     switch (type)
     {
         case PLAIN_MESSAGE_TYPE:
-            handle_m(ctx);
+            handle_m(this);
             break;
         
         case PRIVATE_KEY_REQUEST_TYPE:
-            handle_sk_request(ctx);
+            handle_sk_request(this);
             break;
         
         case PRIVATE_KEY_RESPONSE_TYPE:
-            handle_sk_response(ctx);
+            handle_sk_response(this);
             break;
         
         case SESSION_KEY_REQUEST_TYPE:
-            handle_session_request(ctx);
+            handle_session_request(this);
             break;
 
         case SESSION_KEY_ACK_TYPE:
-            handle_session_ack(ctx);
+            handle_session_ack(this);
             break;
 
         case SESSION_KEY_FINAL_TYPE:
-            handle_session_final(ctx);
+            handle_session_final(this);
             break;
 
         case IBE_MES_TYPE:
-            handle_message(ctx);
+            handle_message(this);
             break;
         
         default:
-            ERROR("the packet type is invalid");
-            goto end;
+            ERROR("the p type is invalid");
+            throw std::exception();
             break;
     }
-    ctx->phase = RECV_DONE;
+    
+    get_ctx()->phase = RECV_DONE;
     rtn = 1;
-end:
-    return rtn;
 }

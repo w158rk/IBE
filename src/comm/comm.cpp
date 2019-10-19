@@ -12,10 +12,8 @@ using namespace comm;
 Comm::Comm( interface::IPacket *packet_ptr,
             interface::IUser *user_ptr)
 {
-    m_packet_ptr = packet_ptr;
-    m_user_ptr = user_ptr;
-    m_fpacket_ptr = true;
-    m_fuser_ptr = true;
+    set_packet_ptr(packet_ptr);
+    set_user_ptr(user_ptr);
 }
 
 Comm::Comm( FILE *read_file, 
@@ -24,13 +22,21 @@ Comm::Comm( FILE *read_file,
             interface::IUser *user_ptr)
     :Comm(packet_ptr, user_ptr)
 {
-    m_read_file = read_file;
-    m_fread_file = true;
-    m_write_file = write_file;
-    m_fwrite_file = true;
+    set_read_file(read_file);
+    set_write_file(write_file);
 }
 
-int Comm::send(int fd, const void *vptr, size_t n)
+int Comm::connect_to_server(char* ip_addr, int port)
 {
-    Write(fd, vptr, n);    
+    if(-1 != connect_socket_server(ip_addr, port, &m_read_file, &m_write_file))
+    {
+        m_fread_file = true;
+        m_fwrite_file = true;
+    }
+}
+
+int Comm::send(const void *vptr, size_t n)
+{
+    FILE *write_file = get_write_file();
+    Write(fileno(write_file), vptr, n);    
 }

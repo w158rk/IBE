@@ -1,5 +1,6 @@
 #include "depend.h"
 #include "comm.h"
+#include <config.h>
 
 void sig_chld(int signo)
 {

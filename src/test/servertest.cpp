@@ -1,8 +1,12 @@
 #include<iostream>
-#include<app.hpp>
+
+#include<user.hpp>
 #include<comm.hpp>
 #include<ui.hpp>
+#include<packet.hpp>
+
 #include<config.h>
+
 
 int main() 
 {
@@ -11,10 +15,12 @@ int main()
     server_id.id = SERVER_ID;
     server_id.length = SERVER_ID_LEN;
 
-    app::Server server(std::string(SERVER_IP_ADDRESS), SERVER_LISTEN_PORT, &server_id);
+    user::Server server(std::string(SERVER_IP_ADDRESS), SERVER_LISTEN_PORT, &server_id);
     server.set_err_sig(&err_sig);
 
-    comm::Comm comm(nullptr, &(interface::IUser&)server);
+    packet::Packet *packet = new packet::Packet();
+
+    comm::Comm comm(packet, &(interface::IUser&)server);
     comm.set_err_sig(&err_sig);
     
     ui::UInterface* uinterface = new ui::UInterface();

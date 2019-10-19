@@ -14,7 +14,7 @@
 #include <openssl/sm9.h>
 #include <openssl/bio.h>
 
-int ibe_encrypt(const unsigned char* data, size_t data_len, unsigned char* c_buf, size_t *c_len, 
+int ibe_encrypt(const  char* data, size_t data_len,  char* c_buf, size_t *c_len, 
     IBEPublicParameters *mpk, const char *id, size_t id_len) 
 {
     SM9PublicParameters *sm9_mpk = NULL;

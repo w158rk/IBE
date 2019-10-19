@@ -20,9 +20,11 @@ namespace comm
                 interface::IUser *user_ptr);
         ~Comm() = default;
         
-        int send(int fd, const void *vptr, size_t n);
+        int connect_to_server(char* ip_addr, int port);
+        int send(const void *vptr, size_t n);
         void socket_main();
         void file_main();
+
 
         GET_AND_SET(FILE *, read_file)
         GET_AND_SET(FILE *, write_file)
