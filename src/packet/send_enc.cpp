@@ -33,7 +33,7 @@ void Packet::send_enc()
     int length = *(int *)(app_packet->head+4);
 
     #ifdef DEBUG 
-    fprintf(stderr, "packet length : %d\n", length);
+    fprintf(stderr, "app packet length : %d\n", length);
     #endif
 
     char *data = (char *)malloc(length + APP_HEAD_LEN);
@@ -42,6 +42,9 @@ void Packet::send_enc()
 
     int type = *(int *)(sec_packet->head);
     //unsigned char cipher[100000];
+    #ifdef DEBUG 
+    fprintf(stderr, "[%s:%d] type : %d\n", __FILE__, __LINE__, type);
+    #endif  
     char *cipher = (char *)malloc(BUFFER_SIZE);
     size_t cipher_len = BUFFER_SIZE;
 
@@ -51,7 +54,7 @@ void Packet::send_enc()
         {
             #ifdef DEBUG 
             fprintf(stderr, "[%s:%d] IBE ENC\n", __FILE__, __LINE__);
-            fprintf(stderr, "dest id is:%s\n", ctx->dest_id);
+            fprintf(stderr, "dest id is:%s\n", ctx->dest_id->id);
             #endif  
             //IBE
             if (!ibe_encrypt(data, (size_t)length+APP_HEAD_LEN, 
@@ -72,6 +75,9 @@ void Packet::send_enc()
             // length without header 
             *(int *)(sec_packet->head+4) = (int)cipher_len;
             //fprintf(stderr,"sk is :%s\n",ctx->payload.secPacket->payload.appPacket->payload);
+            #ifdef DEBUG 
+            fprintf(stderr, "[%s:%d] type : %d\n", __FILE__, __LINE__, *(int *)(sec_packet->head));
+            #endif  
             break;
         }
     
@@ -111,7 +117,7 @@ void Packet::send_enc()
             sec_packet->payload.sk_data = (char *)malloc(BUFFER_SIZE);
             memcpy(sec_packet->payload.sk_data, cipher, BUFFER_SIZE);
             
-            //*(int *)(sec_packet->payload.appPacket->head) = PRIVATE_KEY_RESPONSE_TYPE;
+            // *(int *)(sec_packet->payload.appPacket->head) = PRIVATE_KEY_RESPONSE_TYPE;
             
             #ifdef DEBUG
             fprintf(stderr, "the last sk is :%s\n", ctx->payload.secPacket->payload.sk_data);
@@ -127,6 +133,4 @@ void Packet::send_enc()
     }
 
     ctx->phase = SEND_SEC_PACKET;
-    free(data);
-    free(cipher);
 }

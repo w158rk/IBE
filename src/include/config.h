@@ -23,7 +23,7 @@
 #define SERVER_ID_LEN           6
 #define SERVER_IP_ADDRESS       "127.0.0.1"
 #define SERVER_LISTEN_PORT      5003
-#define SERVER_RUN_PORT         5004    
+#define SERVER_RUN_PORT         5004   
 
 #define CLIENT_ID              "Client"
 #define CLIENT_ID_LEN           6

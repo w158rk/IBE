@@ -65,5 +65,4 @@ void Packet::send_ap()
     #endif
     ctx->phase = SEND_SIGN;
 
-    free(send_packet);
 }

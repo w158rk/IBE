@@ -41,20 +41,23 @@ void Packet::packet_send()
 	SecPacket *sec_packet = ctx->payload.secPacket;
 
     #ifdef DEBUG
-    fprintf(stderr,"%x\n", sec_packet->head);
+    fprintf(stderr,"the first word of the sec head : %d\n", *(int *)(sec_packet->head));
     #endif
 
     int length = get_comm_ptr()->send(sec_packet->head, SEC_HEAD_LEN);
     if (length != SEC_HEAD_LEN) {
-        fprintf(stderr,"error in write file");
+        fprintf(stderr,"[%s:%d] error in write file\n", __FILE__, __LINE__);
         throw std::exception();
     }
     
 	// 2. send the payload
 	int len = *(int *)(sec_packet->head+4);
+    #ifdef DEBUG
+    fprintf(stderr,"[%s:%d] the length of the sec packet : %d\n", __FILE__, __LINE__, len);
+    #endif
     length = get_comm_ptr()->send(sec_packet->payload.data, len);
     if (length != len) {
-        fprintf(stderr,"error in write file");
+        fprintf(stderr,"[%s:%d] error in write file\n", __FILE__, __LINE__);
         throw std::exception();
     }
 

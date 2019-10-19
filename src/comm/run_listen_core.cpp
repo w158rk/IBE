@@ -43,9 +43,10 @@ int Comm::run_listen_core()
 		SecPacket *p_packet = (SecPacket *)malloc(sizeof(SecPacket));
 
 		// read the head
-		if(!fread(p_packet->head, sizeof(char), SEC_HEAD_LEN, m_read_file))
+		FILE *read_file = get_read_file();
+		if(!fread(p_packet->head, sizeof(char), SEC_HEAD_LEN, read_file))
 		{
-			if(feof(m_read_file))
+			if(feof(read_file))
 			{
 				fprintf(stdout, "client close its connection abruptly\n");
 				return 0;

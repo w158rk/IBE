@@ -8,7 +8,7 @@
 
 namespace user {
 
-    class User : interface::IUser
+    class User : public interface::IUser
     {
 
     public :
@@ -53,7 +53,7 @@ namespace user {
         ~Server();
     };
 
-    class Client : public User 
+    class Client : public User
     {
     
     public:

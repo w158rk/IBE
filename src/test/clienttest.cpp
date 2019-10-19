@@ -20,18 +20,23 @@ int main()
     client_id.father_node = &server_id;
 
     user::Client client(std::string(CLIENT_IP_ADDRESS), CLIENT_LISTEN_PORT, &client_id);
-    client.set_err_sig(&err_sig);
-
     packet::Packet *packet = new packet::Packet();
-
-    comm::Comm comm(packet, &(interface::IUser&)server);
-    comm.set_err_sig(&err_sig);
-    
+    comm::Comm comm(packet, dynamic_cast<interface::IUser *>(&client));
     ui::UInterface* uinterface = new ui::UInterface();
 
-    uinterface->set_user_ptr(&(interface::IUser&)server);
+
+    comm.set_err_sig(&err_sig);
+
+    uinterface->set_user_ptr(&(interface::IUser&)client);
+
+    packet->set_comm_ptr(&comm);
+    packet->set_ui_ptr(uinterface);
+    packet->set_user_ptr(&client);
+
+    client.set_err_sig(&err_sig);
     client.set_ui_ptr(dynamic_cast<interface::IUI*>(uinterface));
     client.set_comm_ptr(dynamic_cast<interface::IComm*>(&comm));
+    client.set_packet_ptr(packet);
 
     client.run();
 

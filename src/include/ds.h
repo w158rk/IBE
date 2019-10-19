@@ -91,8 +91,6 @@ typedef struct packet_ctx{
 } PacketCTX;
 
 
-extern ID server;
-extern ID client;
 void ID_init();
 
 #endif
