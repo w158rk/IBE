@@ -183,7 +183,7 @@ int handle_sk_response(PacketCTX *ctx) {
     filename[filename_len-2] = 'f';
     filename[filename_len-1] = '\0';
     #ifdef DEBUG
-    fprintf(stderr, "sk_filename is%s\n", filename2);
+    fprintf(stderr, "sk_filename is%s\n", filename);
     #endif
     /*if((fp=fopen(filename,"rb+"))==NULL)
     {

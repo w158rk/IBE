@@ -1,4 +1,4 @@
-#include "base.h"
+#include "depend.h"
 #include "comm.h"
 
 void sig_chld(int signo)

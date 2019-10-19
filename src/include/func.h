@@ -21,16 +21,7 @@
  */
 int run_get_private_key(const char* id, int id_len, ID *father_node);
 
+int run_send_message(const char* id, int id_len, char* ip, int port, char* dest_id);
 
-/**!
- * @brief run the user interface. Generally, it receives a request from the 
- *      the user and do something 
- * @param entity_id the id of the user 
- * @param id_len the length of the id 
- * @return -1 when something wrong, 0 when no errors
- */
-int socket_interface_run(ID *id_name);
-
-int socket_main(ID *id_name,  int port);
 
 #endif

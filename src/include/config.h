@@ -49,6 +49,11 @@
 #define IBE_TYPE                    1 
 #define SM4_TYPE                    2
 
+
+/** sys **/
+#define SYSTEM_LOG "/tmp/ibe_log"
+#define NUM_THREADS 4
+
 #endif
 
 

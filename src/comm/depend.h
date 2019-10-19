@@ -30,8 +30,6 @@
 
 // #define SA                      struct sockaddr
 
-#define SYSTEM_LOG "/tmp/ibe_log"
-#define NUM_THREADS 4
 
 
 /*****************************************************
@@ -63,31 +61,6 @@
  * ***************************************************/
 typedef struct sockaddr SA;
 
-/*****************************************************
- * 函数声明
- * ***************************************************/
-/*
- * socket 包装函数
- */
-int   Fgets(char* s, int size, FILE* stream);
-ssize_t Write(int fd, const void *vptr, size_t n);
-int     Accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
-
-/* 
- * socket 监听与连接函数
- */
-int create_listening_socket(int listen_port);
-int connect_socket_server(char* ip_addr, int port, FILE** read_file, FILE** write_file);
-int disconnect_socket_server(FILE* read_file, FILE* write_file);
-int run_listen_core(const char* entity_id,int entity_id_len, FILE* read_file, FILE* write_file, FILE* log_file);
-
-
-
-/* 
- * 系统函数
- */
-void sig_chld(int signo);
-FILE* open_log_file();
 
 
 #endif
