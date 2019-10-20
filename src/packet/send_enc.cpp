@@ -38,7 +38,7 @@ void Packet::send_enc()
 
     char *data = (char *)malloc(length + APP_HEAD_LEN);
     memcpy(data, app_packet->head, APP_HEAD_LEN);
-    memcpy(data+APP_HEAD_LEN, app_packet->payload, length); 
+    memcpy(data, app_packet->payload, length); 
 
     int type = *(int *)(sec_packet->head);
     //unsigned char cipher[100000];

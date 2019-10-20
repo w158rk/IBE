@@ -1,3 +1,21 @@
+## 10.20
+记录改动的地方：
+1. `utils.h`中定义的文件名字应为`client_id->id`
+2. `send_enc`中在生成data的时候应为
+```c
+memcpy(data, app_packet->head, APP_HEAD_LEN);
+memcpy(data, app_packet->payload, length); 
+```
+3. 解密部分的代码
+```c
+char *m = (char *)malloc(BUFFER_SIZE);
+IBEPrivateKey sk = NULL;
+size_t m_len;
+get_sk_fp("sk_Server.conf", &sk);
+ibe_decrypt(p_sec_packet->payload.data, c_len, m, &m_len, &sk);
+fprintf(stderr, "m is %s\n", m);
+```
+
 ## 10.16
 1. sm9私钥长度虽然偶尔不是313，但是可以正常加解密！！！
 2. 解决了IBE加解密通信的bug，现在可以server和client之间进行互通消息了

@@ -34,7 +34,7 @@
     filename[0] = 's';      \
     filename[1] = 'k';\
     filename[2] = '_';\
-    memcpy(filename+3, (client_id), (client_id->length));\
+    memcpy(filename+3, (client_id->id), (client_id->length));\
     filename[filename_len-6] = '.'; \
     filename[filename_len-5] = 'c'; \
     filename[filename_len-4] = 'o'; \

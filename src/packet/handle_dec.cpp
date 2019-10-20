@@ -12,6 +12,8 @@ extern "C" {
 #include<ds.h>
 #include<utils.h>
 
+#define DEBUG
+
 using namespace packet;
 void Packet::handle_dec() {
 
@@ -35,21 +37,25 @@ void Packet::handle_dec() {
         
         GENERATE_SK_FILENAME(ctx->dest_id)
 
-        char m[BUFFER_SIZE];
+        /*char m[BUFFER_SIZE];
         size_t m_len;
         if (!get_sk_fp(filename, &sk)||!ibe_decrypt(p_sec_packet->payload.data, c_len, m, &m_len, &sk))
         {
             ERROR("decrypt fail");
             throw std::exception();
-        };
+        };*/
+        char *m = (char *)malloc(BUFFER_SIZE);
+        IBEPrivateKey sk = NULL;
+        size_t m_len;
+        get_sk_fp("sk_Server.conf", &sk);
+        ibe_decrypt(p_sec_packet->payload.data, c_len, m, &m_len, &sk);
+        fprintf(stderr, "m is %s\n", m);
         FREE_SK_FILENAME;
 
-        //fprintf(stderr, "message : %s\n", m);
 
         #ifdef DEBUG 
-        fprintf(stderr, "filename is%s\n", filename);
         fprintf(stderr, "message length : %d\n", m_len); 
-        fprintf(stderr, "message : %d\n", *(int *)m);
+        fprintf(stderr, "message : %s\n", m);
         #endif
 
         // make the app packet 
