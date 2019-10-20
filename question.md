@@ -4,7 +4,7 @@
 2. `send_enc`中在生成data的时候应为
 ```c
 memcpy(data, app_packet->head, APP_HEAD_LEN);
-memcpy(data, app_packet->payload, length); 
+memcpy(data+ APP_HEAD_LEN, app_packet->payload, length); 
 ```
 3. 解密部分的代码
 ```c

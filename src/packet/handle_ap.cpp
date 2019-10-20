@@ -12,8 +12,9 @@ extern "C" {
     #include <config.h>
 }
 
+#include <iostream>
 #include <packet.hpp>
-//#define DEBUG
+#define DEBUG
 using namespace packet;
 
 int handle_m(Packet *target)
@@ -53,7 +54,7 @@ int handle_sk_request(Packet *target) {
     //int payload_len = *(int *)(head + 4);
     int payload_len = strlen(payload);
     #ifdef DEBUG 
-    fprintf(stderr, "payload: %x-\n", payload);
+    fprintf(stderr, "payload: %s\n", payload);
     fprintf(stderr, "payload_len: %d\n", payload_len);
     #endif
     int id_len = strlen(payload+SM4_KEY_LEN);       //计算id的长度
@@ -75,7 +76,7 @@ int handle_sk_request(Packet *target) {
     fprintf(stderr, "[%s : %d] extract finished\n", __FILE__, __LINE__);
     fprintf(stderr, "&msk : %ld \n", msk);
     fprintf(stderr, "id: %s", payload + SM4_KEY_LEN);
-    fprintf(stderr, "payload1: %x\n", payload);
+    fprintf(stderr, "payload1: %s\n", payload);
     #endif
 
     /*生成私钥sk*/
@@ -83,6 +84,8 @@ int handle_sk_request(Packet *target) {
         ERROR(" cannot extract the private key");
         throw std::exception();
     }       
+
+    fprintf(stderr, "sk id%s\n", sk);
 
     char data[BUFFER_SIZE] = "This is a test text";
    IBEPublicParameters mpk;
@@ -275,8 +278,13 @@ void Packet::handle_ap() {
         ERROR("call wrong function");
         throw std::exception();
     }
-
-    AppPacket *p = get_ctx()->payload.appPacket;
+    //fprintf(stderr, "payload is %s\n", get_ctx()->payload.appPacket->payload);
+    //fprintf(stderr, "type : %d\n",  *(int *)(get_ctx()->payload.appPacket->head));
+    PacketCTX *ctx = get_ctx();
+    fprintf(stderr, "payload is %s\n", ctx->payload.appPacket->payload);
+    fprintf(stderr, "type : %d\n",  *(int *)(ctx->payload.appPacket->head));
+    AppPacket *p = ctx->payload.appPacket;
+    // std::cout  << p->payload << std::endl;
     char *head = p->head;
 
     /* analyze the head */

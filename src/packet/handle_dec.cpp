@@ -47,7 +47,7 @@ void Packet::handle_dec() {
         char *m = (char *)malloc(BUFFER_SIZE);
         IBEPrivateKey sk = NULL;
         size_t m_len;
-        get_sk_fp("sk_Server.conf", &sk);
+        get_sk_fp(filename, &sk);
         ibe_decrypt(p_sec_packet->payload.data, c_len, m, &m_len, &sk);
         fprintf(stderr, "m is %s\n", m);
         FREE_SK_FILENAME;
@@ -59,13 +59,13 @@ void Packet::handle_dec() {
         #endif
 
         // make the app packet 
-        AppPacket app_packet;
-        memcpy(app_packet.head, m, APP_HEAD_LEN);       //head中放入解密前8位的内容
+        AppPacket *app_packet = new AppPacket;
+        memcpy(app_packet->head, m, APP_HEAD_LEN);       //head中放入解密前8位的内容
         int payload_len = *(int *)(m+4);                // get the length of the payload 
 
         char *payload = (char *)malloc(payload_len);
         memcpy(payload, m+APP_HEAD_LEN, payload_len);
-        app_packet.payload = payload;       //payload中放入解密后8位的内容
+        app_packet->payload = payload;       //payload中放入解密后8位的内容
 
         #ifdef DEBUG 
         fprintf(stderr, "payload length : %d\n", payload_len);
@@ -73,7 +73,9 @@ void Packet::handle_dec() {
         #endif
 
         // add the app packet to the payload of the sec packet 
-        p_sec_packet->payload.appPacket = &app_packet;
+        p_sec_packet->payload.appPacket = app_packet;
+
+        fprintf(stderr, "fin payload : %s\n",  get_ctx()->payload.secPacket->payload.appPacket->payload);
         break;
     }
 
