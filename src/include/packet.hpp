@@ -20,6 +20,8 @@ namespace packet {
         GET_AND_SET(interface::IComm *, comm_ptr)
         GET_AND_SET(PacketCTX *, ctx)
 
+        unsigned char sm4key[16];
+
     private:
         DECLARE_MEMBER(PacketCTX *, ctx)
         DECLARE_MEMBER(interface::IUser *, user_ptr)

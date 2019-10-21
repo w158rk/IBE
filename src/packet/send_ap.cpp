@@ -36,6 +36,14 @@ void Packet::send_ap()
             break;
         
         case PRIVATE_KEY_REQUEST_TYPE:
+        {
+            memcpy(sm4key, ctx->payload.appPacket->payload, 16);
+            #ifdef DEBUG
+            for(int t=0;t<16;t++)
+                printf("%02x ",sm4key[t]);
+            printf("\n");
+            #endif
+        }
         case SESSION_KEY_ACK_TYPE:
             send_type = IBE_TYPE;
             break;

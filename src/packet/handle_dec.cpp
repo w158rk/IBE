@@ -82,15 +82,12 @@ void Packet::handle_dec() {
     case SM4_TYPE:
     {
         sm4_context sm4ctx;
-        unsigned char sm4key[SM4_KEY_LEN];
-        /*FILE *fp_sm4;
-        if((fp_sm4=fopen("sm4_Client.conf","rb+"))==NULL)
-        {
-            printf("file cannot open \n");
-        }
-        get_key(sm4key, fp_sm4);
-        fclose(fp_sm4);
-        fprintf(stderr, "key is%s\n", sm4key);*/
+        
+        #ifdef DEBUG
+        for(int t=0;t<16;t++)
+            printf("%02x ",sm4key[t]);
+        printf("\n");
+        #endif
         sm4_setkey_dec(&sm4ctx, sm4key);
         fprintf(stderr, "data is%s\n",p_sec_packet->payload.data);
         int N = strlen(p_sec_packet->payload.data);
