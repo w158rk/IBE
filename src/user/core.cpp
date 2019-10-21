@@ -18,6 +18,7 @@ extern "C" {
 	#include <sys.h>
 }
 
+//#define DEBUG
 
 using namespace user;
 
@@ -183,6 +184,7 @@ int User::run_send_message(char *dest_ip,
 	}
 
 	/* 需要加密的文件放在id_message.txt中 */
+	fprintf(stderr, "len is%d\n", dest_id->length);
 	int filename_message_len = dest_id->length + 13;
 	char *filename_message = (char *)malloc(filename_message_len);
 	memcpy(filename_message, dest_id->id, dest_id->length);

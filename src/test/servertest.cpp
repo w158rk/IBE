@@ -30,6 +30,7 @@ int main()
     server.set_ui_ptr(dynamic_cast<interface::IUI*>(uinterface));
     server.set_comm_ptr(dynamic_cast<interface::IComm*>(&comm));
 
+    server.set_packet_ptr(packet);
 
     server.run();
 

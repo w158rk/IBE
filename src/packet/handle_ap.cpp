@@ -246,7 +246,6 @@ int handle_message(Packet *target)
     char *head = p->head;
     int length = *(int *)(head+4);
     #ifdef DEBUG
-    fprintf(stderr, "message is:%s\n",p->payload);
     fprintf(stderr,"the length is:%d", length);
     #endif
     char *message = (char *)malloc(length);
@@ -261,7 +260,7 @@ int handle_message(Packet *target)
         printf("file_massge cannot open \n");
 		goto end;
     }
-    fwrite(message, sizeof(char), length+1, fp);
+    fwrite(message, sizeof(char), length, fp);
     fclose(fp);
     fprintf(stderr, "receive message done\n");
     rnt=1;

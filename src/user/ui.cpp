@@ -1,6 +1,7 @@
 #include<ui.hpp>
 #include<user.hpp>
 #include<config.h>
+#include<string.h>
 
 using namespace ui;
 
@@ -41,7 +42,9 @@ int UInterface::socket_interface_run() {
 			scanf("%s %d %s",&ip_ad, &port, &id_cstr);
 			ID dest_id;
 			dest_id.id = id_cstr;
-			fprintf(stderr, "ip is: %s  port is: %d  id is: %s\n", ip_ad, port, dest_id);
+			int len = strlen(id_cstr);
+			dest_id.length = len;
+			fprintf(stderr, "ip is: %s  port is: %d  id is: %s\n", ip_ad, port, id_cstr);
 			if(-1 == user->run_send_message(ip_ad, port, &dest_id))
 			{
 				return -1;
