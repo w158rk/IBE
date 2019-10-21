@@ -12,6 +12,7 @@ extern "C" {
 //#define DEBUG
 #include<config.h>
 #include<packet.hpp>
+#include<crypto.h>
 using namespace packet;
 
 void Packet::send_ap()
@@ -37,7 +38,7 @@ void Packet::send_ap()
         
         case PRIVATE_KEY_REQUEST_TYPE:
         {
-            memcpy(sm4key, ctx->payload.appPacket->payload, 16);
+            memcpy(sm4key, ctx->payload.appPacket->payload, SM4_KEY_LEN);
             #ifdef DEBUG
             for(int t=0;t<16;t++)
                 printf("%02x ",sm4key[t]);
@@ -58,7 +59,7 @@ void Packet::send_ap()
     #ifdef DEBUG 
     fprintf(stderr, "send type : %d\n", send_type);
     #endif
-    //生成send_packet
+    //生戝send_packet
     SecPacket *send_packet = (SecPacket *)malloc(sizeof(SecPacket));  
     
     *(int *)(send_packet->head) = send_type;

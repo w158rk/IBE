@@ -115,14 +115,6 @@ int Client::run_get_private_key(char *server_ip,
 	fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, payload);
 	#endif
 
-	char sm4key[SM4_KEY_LEN];
-	memcpy(sm4key, payload, 16);
-	#ifdef DEBUG
-	for(int t=0;t<16;t++)
-		printf("%02x ",sm4key[t]);
-	printf("\n");
-	#endif
-
 	/*组织包*/
 	PacketCTX ctx;
 

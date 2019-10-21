@@ -5,7 +5,6 @@ extern "C" {
 #include <utils.h>
 #include <string.h>
 #include <config.h>
-#include <openssl/sm4.h>
 }
 
 #include<packet.hpp>

@@ -6,7 +6,6 @@
  */
 
 extern "C" {
-    #include<openssl/sm4.h>
     #include <crypto.h>
     #include <string.h>
 }

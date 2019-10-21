@@ -3,6 +3,7 @@
 
 #include<interface.hpp>
 #include<utils.h>
+#include<crypto.h>
 
 namespace packet {
 
@@ -20,7 +21,7 @@ namespace packet {
         GET_AND_SET(interface::IComm *, comm_ptr)
         GET_AND_SET(PacketCTX *, ctx)
 
-        unsigned char sm4key[16];
+        unsigned char sm4key[SM4_KEY_LEN];
 
     private:
         DECLARE_MEMBER(PacketCTX *, ctx)

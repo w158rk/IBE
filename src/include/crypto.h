@@ -16,6 +16,7 @@
 
 #include <openssl/bn.h>
 #include <openssl/ec.h>
+#include<openssl/sm4.h>
 
 
 int ibe_encrypt(const  char* data, size_t data_len,  char* c_buf, size_t *c_len, 
@@ -62,7 +63,16 @@ int gen_random_key(char *key);
 
 char *cbc_iv_new(void);
 char *cbc_key_new(void);
+
 void set_key(unsigned char *key, FILE* filename);
+void get_key(unsigned char *key, FILE* filename);
+void sm4_setkey_enc( sm4_context *ctx, unsigned char key[16] );
+void sm4_setkey_dec( sm4_context *ctx, unsigned char key[16] );
+void sm4_crypt_ecb( sm4_context *ctx,
+				     int mode,
+					 int length,
+                     unsigned char *input,
+                     unsigned char *output);
 /*
  * secret sharing 
  *
