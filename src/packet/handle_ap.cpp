@@ -88,8 +88,8 @@ int handle_sk_request(Packet *target) {
     fprintf(stderr, "sk id%s\n", sk);
 
     char data[BUFFER_SIZE] = "This is a test text";
-   IBEPublicParameters mpk;
-   get_mpk_fp(MPK_FILENAME, &mpk);
+   IBEPublicParameters mpk = NULL;
+	get_mpk_fp(MPK_FILENAME, &mpk);		//从文件中读出sP的值
 
     size_t data_len = strlen(data);
     char c_buf[BUFFER_SIZE] = {'\0'};

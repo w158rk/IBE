@@ -107,8 +107,8 @@ void Packet::send_enc()
             #ifdef DEBUG
             fprintf(stderr, "sk_length is:%d\n", length_sk);
             fprintf(stderr, "cipher is:%s\n",cipher);
-            // sm4_setkey_dec(&sm4ctx, ctx->key);
-            // sm4_crypt_ecb(&sm4ctx,0,IBE_SK_LEN,cipher, output);
+            sm4_setkey_dec(&sm4ctx, (unsigned char*)(ctx->key));
+            sm4_crypt_ecb(&sm4ctx,0,IBE_SK_LEN,(unsigned char*)cipher, (unsigned char*)output);
             fprintf(stderr, "output is:%s\n", output);
             int out_len = strlen(output);
             fprintf(stderr, "out_len is %d\n", out_len);
