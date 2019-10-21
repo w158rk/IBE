@@ -25,6 +25,7 @@ int main()
     
     ui::UInterface* uinterface = new ui::UInterface();
 
+    packet->set_comm_ptr(&comm);
     uinterface->set_user_ptr(&(interface::IUser&)server);
     server.set_ui_ptr(dynamic_cast<interface::IUI*>(uinterface));
     server.set_comm_ptr(dynamic_cast<interface::IComm*>(&comm));

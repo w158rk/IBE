@@ -83,7 +83,16 @@ void Packet::handle_dec() {
     {
         sm4_context sm4ctx;
         unsigned char sm4key[SM4_KEY_LEN];
+        /*FILE *fp_sm4;
+        if((fp_sm4=fopen("sm4_Client.conf","rb+"))==NULL)
+        {
+            printf("file cannot open \n");
+        }
+        get_key(sm4key, fp_sm4);
+        fclose(fp_sm4);
+        fprintf(stderr, "key is%s\n", sm4key);*/
         sm4_setkey_dec(&sm4ctx, sm4key);
+        fprintf(stderr, "data is%s\n",p_sec_packet->payload.data);
         int N = strlen(p_sec_packet->payload.data);
         #ifdef DEBUG
         fprintf(stderr, "len is %d\n",N);
@@ -91,7 +100,7 @@ void Packet::handle_dec() {
         unsigned char *sk = (unsigned char *)malloc(IBE_SK_LEN);
 	    sm4_crypt_ecb(&sm4ctx, 0, IBE_SK_LEN, (unsigned char*)(p_sec_packet->payload.sk_data),sk);
         #ifdef DEBUG
-        fprintf(stderr, "id为：%s\n",ctx->dest_id);
+        fprintf(stderr, "id为：%s\n",ctx->dest_id->id);
 		fprintf(stderr, "解密得到sk：%s\n",sk);
         fprintf(stderr, "私钥的长度为：%d\n",strlen(p_sec_packet->payload.data));
         #endif
