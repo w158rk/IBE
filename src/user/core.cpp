@@ -77,19 +77,6 @@ int Client::run_get_private_key(char *server_ip,
 
 	/* generate and copy the sm4 key */
 	char *p = payload;
-	/*int filename_len = id_len + 10;
-    char *filename = (char *)malloc(filename_len);
-    filename[0] = 's';
-    filename[1] = 'm';
-    filename[2] = '4';
-	filename[3] = '_';
-    memcpy(filename+4, id, id_len);
-    filename[filename_len-6] = '.'; 
-    filename[filename_len-5] = 'c'; 
-    filename[filename_len-4] = 'o'; 
-    filename[filename_len-3] = 'n'; 
-    filename[filename_len-2] = 'f';
-    filename[filename_len-1] = '\0';*/
 	GENERATE_SM4_FILENAME(id, id_len)
 	#ifdef DEBUG
 	fprintf(stderr, "filename is:%s\n", filename);
