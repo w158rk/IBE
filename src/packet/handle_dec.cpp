@@ -82,7 +82,7 @@ void Packet::handle_dec() {
     case SM4_TYPE:
     {
         sm4_context sm4ctx;
-        
+
         #ifdef DEBUG
         for(int t=0;t<16;t++)
             printf("%02x ",sm4key[t]);
@@ -112,6 +112,7 @@ void Packet::handle_dec() {
         {
             printf("file cannot open \n");  
         }
+        fprintf(fp2,"%s",sk);
         fclose(fp2);
 
         #ifdef DEBUG

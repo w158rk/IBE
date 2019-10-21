@@ -171,7 +171,7 @@ int handle_sk_response(Packet *target) {
     filename[0] = 's';
     filename[1] = 'k';
     filename[2] = '_';
-    memcpy(filename + 3, ctx->dest_id, ctx->dest_id->length);
+    memcpy(filename + 3, ctx->dest_id->id, ctx->dest_id->length);
     filename[filename_len-6] = '.'; 
     filename[filename_len-5] = 'c'; 
     filename[filename_len-4] = 'o'; 
@@ -281,8 +281,8 @@ void Packet::handle_ap() {
     //fprintf(stderr, "payload is %s\n", get_ctx()->payload.appPacket->payload);
     //fprintf(stderr, "type : %d\n",  *(int *)(get_ctx()->payload.appPacket->head));
     PacketCTX *ctx = get_ctx();
-    fprintf(stderr, "payload is %s\n", ctx->payload.appPacket->payload);
-    fprintf(stderr, "type : %d\n",  *(int *)(ctx->payload.appPacket->head));
+    //fprintf(stderr, "payload is %s\n", ctx->payload.appPacket->payload);
+    //fprintf(stderr, "type : %d\n",  *(int *)(ctx->payload.appPacket->head));
     AppPacket *p = ctx->payload.appPacket;
     // std::cout  << p->payload << std::endl;
     char *head = p->head;
