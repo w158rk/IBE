@@ -16,6 +16,7 @@ extern "C" {
 	#include <crypto.h>
 	#include <string.h>
 	#include <sys.h>
+	#include<utils.h>
 }
 
 //#define DEBUG
@@ -76,7 +77,7 @@ int Client::run_get_private_key(char *server_ip,
 
 	/* generate and copy the sm4 key */
 	char *p = payload;
-	int filename_len = id_len + 10;
+	/*int filename_len = id_len + 10;
     char *filename = (char *)malloc(filename_len);
     filename[0] = 's';
     filename[1] = 'm';
@@ -88,7 +89,8 @@ int Client::run_get_private_key(char *server_ip,
     filename[filename_len-4] = 'o'; 
     filename[filename_len-3] = 'n'; 
     filename[filename_len-2] = 'f';
-    filename[filename_len-1] = '\0';
+    filename[filename_len-1] = '\0';*/
+	GENERATE_SM4_FILENAME(id, id_len)
 	#ifdef DEBUG
 	fprintf(stderr, "filename is:%s\n", filename);
 	#endif
@@ -100,6 +102,7 @@ int Client::run_get_private_key(char *server_ip,
 	unsigned char key[SM4_KEY_LEN];
 	set_key(key,fp);		//生成16位的key
 	fclose(fp);
+	FREE_SM4_FILENAME;
 	memcpy(p, key, SM4_KEY_LEN);		//把key复制到p中
 	packet.payload = payload;		//AppPacket.payload存放sm4 key
 

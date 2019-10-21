@@ -10,6 +10,7 @@ extern "C" {
     #include <sys.h>
     #include <string.h>
     #include <config.h>
+    #include<utils.h>
 }
 
 #include <iostream>
@@ -164,9 +165,7 @@ int handle_sk_response(Packet *target) {
 
     PacketCTX *ctx = target->get_ctx();
     ID *dest_id = ctx->dest_id;
-
-    FILE *fp;
-    int filename_len = ctx->dest_id->length + 9;
+    /*int filename_len = ctx->dest_id->length + 9;
     char *filename = (char *)malloc(filename_len);
     filename[0] = 's';
     filename[1] = 'k';
@@ -177,26 +176,15 @@ int handle_sk_response(Packet *target) {
     filename[filename_len-4] = 'o'; 
     filename[filename_len-3] = 'n'; 
     filename[filename_len-2] = 'f';
-    filename[filename_len-1] = '\0';
+    filename[filename_len-1] = '\0';*/
+    GENERATE_SK_FILENAME(ctx->dest_id)
     #ifdef DEBUG
     fprintf(stderr, "sk_filename is%s\n", filename);
     #endif
-    /*if((fp=fopen(filename,"rb+"))==NULL)
-    {
-        printf("file cannot open \n");  
-    }
-    int i=0;
-    char sk[100000],temp[10000];
-    while(fgets(temp,1001,fp)){
-		for(int j=0;temp[j]!='\0';i++,j++){
-			sk[i]=temp[j];
-		}
-	}
-	sk[i]='\0';
-    fclose(fp);*/
     IBEPrivateKey sk;
     get_sk_fp(filename, &sk);
     fprintf(stderr, "The private key is:%s\n", sk);
+    FREE_SK_FILENAME;
     char data[BUFFER_SIZE] = "This is a test text";
     IBEPublicParameters mpk;
     get_mpk_fp(MPK_FILENAME, &mpk);
