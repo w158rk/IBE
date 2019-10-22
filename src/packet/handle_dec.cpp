@@ -88,16 +88,11 @@ void Packet::handle_dec() {
         #endif
         sm4_setkey_dec(&sm4ctx, sm4key);
         fprintf(stderr, "data is%s\n",p_sec_packet->payload.data);
-        int N = strlen(p_sec_packet->payload.data);
-        #ifdef DEBUG
-        fprintf(stderr, "len is %d\n",N);
-        #endif
-        unsigned char *sk = (unsigned char *)malloc(IBE_SK_LEN);
-	    sm4_crypt_ecb(&sm4ctx, 0, IBE_SK_LEN, (unsigned char*)(p_sec_packet->payload.sk_data),sk);
+        unsigned char *sk = (unsigned char *)malloc(IBE_SK_LEN + IBE_SK_LEN);
+	    sm4_crypt_ecb(&sm4ctx, 0, IBE_SK_LEN + APP_HEAD_LEN, (unsigned char*)(p_sec_packet->payload.sk_data),sk);
+        fprintf(stderr, "sk is%s\n", sk + APP_HEAD_LEN);
         #ifdef DEBUG
         fprintf(stderr, "id为：%s\n",ctx->dest_id->id);
-		fprintf(stderr, "解密得到sk：%s\n",sk);
-        fprintf(stderr, "私钥的长度为：%d\n",strlen(p_sec_packet->payload.data));
         #endif
 
         GENERATE_SK_FILENAME(ctx->dest_id)        
@@ -110,7 +105,7 @@ void Packet::handle_dec() {
         {
             printf("file cannot open \n");  
         }
-        fprintf(fp2,"%s",sk);
+        fprintf(fp2,"%s",sk + APP_HEAD_LEN);
         fclose(fp2);
 
         #ifdef DEBUG
@@ -119,7 +114,7 @@ void Packet::handle_dec() {
 
         FREE_SK_FILENAME;
 
-        *(int *)(p_sec_packet->payload.appPacket->head) = PRIVATE_KEY_RESPONSE_TYPE;
+        memcpy(p_sec_packet->payload.appPacket->head, sk, APP_HEAD_LEN);
 
         break;
     }

@@ -176,6 +176,7 @@ int handle_sk_response(Packet *target) {
     char data[BUFFER_SIZE] = "This is a test text";
     IBEPublicParameters mpk;
     get_mpk_fp(MPK_FILENAME, &mpk);
+    fprintf(stderr, "mpk is%s\n", mpk);
 
     size_t data_len = strlen(data);
     char c_buf[BUFFER_SIZE] = {'\0'};
@@ -191,6 +192,11 @@ int handle_sk_response(Packet *target) {
     {
         fprintf(stderr, "sk is wrong\n");
     }
+    else
+    {
+        fprintf(stderr,"sk is correct\n");
+    }
+    
     
     rtn = 1;
 

@@ -84,11 +84,15 @@ void Packet::send_enc()
         {
             int length_sk = strlen(sec_packet->payload.appPacket->payload);
 
-            char *sk_data = (char *)malloc(IBE_SK_LEN);
+            AppPacket packet;
+            *(int *)(packet.head) = PRIVATE_KEY_RESPONSE_TYPE;	
+
+            char *sk_data = (char *)malloc(IBE_SK_LEN + APP_HEAD_LEN);
             #ifdef DEBUG
             fprintf(stderr, "sk is: %s\n", sec_packet->payload.appPacket->payload);
             #endif
-            memcpy(sk_data, sec_packet->payload.appPacket->payload, IBE_SK_LEN);
+            memcpy(sk_data, packet.head, APP_HEAD_LEN);
+            memcpy(sk_data + APP_HEAD_LEN, sec_packet->payload.appPacket->payload, IBE_SK_LEN);
 
             char *output = (char *)malloc(BUFFER_SIZE);
             sm4_context sm4ctx;
@@ -101,16 +105,14 @@ void Packet::send_enc()
             #endif
             
             sm4_setkey_enc(&sm4ctx,(unsigned char*)(ctx->key));
-            sm4_crypt_ecb(&sm4ctx, 1, IBE_SK_LEN, (unsigned char*)sk_data, (unsigned char*)cipher);
+            sm4_crypt_ecb(&sm4ctx, 1, IBE_SK_LEN + APP_HEAD_LEN, (unsigned char*)sk_data, (unsigned char*)cipher);
             
             #ifdef DEBUG
             fprintf(stderr, "sk_length is:%d\n", length_sk);
             fprintf(stderr, "cipher is:%s\n",cipher);
             sm4_setkey_dec(&sm4ctx, (unsigned char*)(ctx->key));
-            sm4_crypt_ecb(&sm4ctx,0,IBE_SK_LEN,(unsigned char*)cipher, (unsigned char*)output);
-            fprintf(stderr, "output is:%s\n", output);
-            int out_len = strlen(output);
-            fprintf(stderr, "out_len is %d\n", out_len);
+            sm4_crypt_ecb(&sm4ctx,0,IBE_SK_LEN + APP_HEAD_LEN,(unsigned char*)cipher, (unsigned char*)output);
+            fprintf(stderr, "output sk is:%s\n", output + APP_HEAD_LEN);
             #endif
 
             sec_packet->payload.sk_data = (char *)malloc(BUFFER_SIZE);
