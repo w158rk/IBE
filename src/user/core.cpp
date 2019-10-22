@@ -57,7 +57,6 @@ int Client::run_get_private_key(char *server_ip,
 		std::cerr << e.what() << '\n';
 		throw e;
 	}
-	
 
 	#ifdef DEBUG 
 	fprintf(stderr, "[%s:%d] mark\n", __FILE__, __LINE__);
@@ -94,7 +93,7 @@ int Client::run_get_private_key(char *server_ip,
 	packet.payload = payload;		//AppPacket.payload存放sm4 key
 
 	#ifdef DEBUG 
-	fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, payload);
+	fprintf(stderr, "[%s : %d] payload1 : %s\n", __FILE__, __LINE__, payload);
 	#endif
 
 	/* copy the id */
@@ -102,7 +101,7 @@ int Client::run_get_private_key(char *server_ip,
 	memcpy(p, id, (size_t)id_len);		//将id放在payload中
 
 	#ifdef DEBUG 
-	fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, payload);
+	fprintf(stderr, "[%s : %d] payload2 : %s\n", __FILE__, __LINE__, payload);
 	#endif
 
 	/*组织包*/
@@ -114,7 +113,6 @@ int Client::run_get_private_key(char *server_ip,
 
 	#ifdef DEBUG
 	fprintf(stderr, "send sm4_key is:\n");
-	fprintf(stderr, "payload is %s\n", ctx.payload.appPacket->payload);
 	for(int t=0;t<16;t++)
 		printf("%02x ",ctx.payload.appPacket->payload[t]);
 	printf("\n");

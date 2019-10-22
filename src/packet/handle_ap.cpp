@@ -15,7 +15,7 @@ extern "C" {
 
 #include <iostream>
 #include <packet.hpp>
-#define DEBUG
+//#define DEBUG
 using namespace packet;
 
 int handle_m(Packet *target)
@@ -55,7 +55,6 @@ int handle_sk_request(Packet *target) {
     //int payload_len = *(int *)(head + 4);
     int payload_len = strlen(payload);
     #ifdef DEBUG 
-    fprintf(stderr, "payload: %s\n", payload);
     fprintf(stderr, "payload_len: %d\n", payload_len);
     #endif
     int id_len = strlen(payload+SM4_KEY_LEN);       //计算id的长度
@@ -77,7 +76,7 @@ int handle_sk_request(Packet *target) {
     fprintf(stderr, "[%s : %d] extract finished\n", __FILE__, __LINE__);
     fprintf(stderr, "&msk : %ld \n", msk);
     fprintf(stderr, "id: %s", payload + SM4_KEY_LEN);
-    fprintf(stderr, "payload1: %s\n", payload);
+    fprintf(stderr, "payload: %s\n", payload);
     #endif
 
     /*生成私钥sk*/
@@ -88,10 +87,10 @@ int handle_sk_request(Packet *target) {
 
     fprintf(stderr, "sk id%s\n", sk);
 
+    /*测试该sk能否成功加解密*/
     char data[BUFFER_SIZE] = "This is a test text";
    IBEPublicParameters mpk = NULL;
 	get_mpk_fp(MPK_FILENAME, &mpk);		//从文件中读出sP的值
-
     size_t data_len = strlen(data);
     char c_buf[BUFFER_SIZE] = {'\0'};
     size_t c_len;
@@ -116,21 +115,15 @@ int handle_sk_request(Packet *target) {
     *(int *)(send_packet.head+4) = IBE_SK_LEN;      //头部存放了标示和私钥长度
     char *ptr = (char *)malloc(IBE_SK_LEN);
     memcpy(ptr, sk, IBE_SK_LEN);
-    send_packet.payload = ptr;        //payload中存放私钥
+    send_packet.payload = ptr;        //send_packet的payload中存放私钥
     send_ctx.phase = SEND_APP_PACKET;
     send_ctx.payload.appPacket = &send_packet;
     #ifdef DEBUG
     int N = strlen(send_ctx.payload.appPacket->payload);
-    fprintf(stderr,"len is: %d\n",N);
-    #endif
-     #ifdef DEBUG 
-    fprintf(stderr, "payload2: %x\n", payload);
-    for(int t=0;t<16;t++)
-		printf("%02x ",payload[t]);
-	printf("\n");
+    fprintf(stderr,"payload len is: %d\n",N);
     #endif
     char *sm4_key= (char *)malloc(SM4_KEY_LEN);
-	memcpy(sm4_key, payload, 16);
+	memcpy(sm4_key, payload, 16);       //payload的前16位为sm4key
     #ifdef DEBUG
 	fprintf(stderr, "sm4_key is:%s\n", sm4_key);
 	for(int t=0;t<16;t++)
@@ -138,13 +131,7 @@ int handle_sk_request(Packet *target) {
 	printf("\n");
     #endif
 
-    send_ctx.key= sm4_key;
-
-    #ifdef DEBUG
-    fprintf(stderr, "payload3: %s\n", payload);
-    fprintf(stderr, "send_ctx.sm4_key): %s\n", send_ctx.key);
-    //fprintf(stderr, "sm4_key: %x\n", send_ctx.sm4_key);
-    #endif
+    send_ctx.key= sm4_key;      //sm4key放在send_ctx的key中
 
     if(0 == target->packet_send(&send_ctx)) {
         ERROR("send the p error");
@@ -170,14 +157,13 @@ int handle_sk_response(Packet *target) {
     fprintf(stderr, "sk_filename is%s\n", filename);
     #endif
     IBEPrivateKey sk;
-    get_sk_fp(filename, &sk);
+    get_sk_fp(filename, &sk);       //从文件中获取sk
     fprintf(stderr, "The private key is:%s\n", sk);
     FREE_SK_FILENAME;
+    /*对sk能否进行成功加解密进行验证*/
     char data[BUFFER_SIZE] = "This is a test text";
     IBEPublicParameters mpk;
     get_mpk_fp(MPK_FILENAME, &mpk);
-    fprintf(stderr, "mpk is%s\n", mpk);
-
     size_t data_len = strlen(data);
     char c_buf[BUFFER_SIZE] = {'\0'};
     size_t c_len;
@@ -186,7 +172,6 @@ int handle_sk_response(Packet *target) {
     size_t out_len = BUFFER_SIZE;   
     char out[BUFFER_SIZE] = {'\0'};
     ibe_decrypt(c_buf, c_len, out, &out_len, &sk);
-    //fprintf(stderr,"Here\n");
     //fprintf(stderr, "out is%s\n", out);
     if(data_len!=out_len || memcmp(data, out, out_len)!=0)
     {
@@ -231,11 +216,12 @@ int handle_message(Packet *target)
     fprintf(stderr,"the length is:%d", length);
     #endif
     char *message = (char *)malloc(length);
-    strncpy(message, p->payload, length);
+    strncpy(message, p->payload, length);       //message中存放解密后的信息
     message[length]='\0';
     #ifdef DEBUG
     fprintf(stderr, "message is:%s\n", message);
     #endif
+    /*解密后的信息存放在dec_message.txt中*/
     FILE *fp;
     if((fp=fopen("dec_message.txt","wb+"))==NULL)
     {
@@ -259,13 +245,8 @@ void Packet::handle_ap() {
         ERROR("call wrong function");
         throw std::exception();
     }
-    //fprintf(stderr, "payload is %s\n", get_ctx()->payload.appPacket->payload);
-    //fprintf(stderr, "type : %d\n",  *(int *)(get_ctx()->payload.appPacket->head));
     PacketCTX *ctx = get_ctx();
-    //fprintf(stderr, "payload is %s\n", ctx->payload.appPacket->payload);
-    //fprintf(stderr, "type : %d\n",  *(int *)(ctx->payload.appPacket->head));
     AppPacket *p = ctx->payload.appPacket;
-    // std::cout  << p->payload << std::endl;
     char *head = p->head;
 
     /* analyze the head */

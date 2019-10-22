@@ -28,6 +28,10 @@ void Packet::send_ap()
     char *head = packet->head;
     int send_type, type = *(int *)head;
 
+    #ifdef DEBUG 
+    fprintf(stderr, "send type : %d\n", send_type);
+    #endif
+
     switch (type)
     {
         case PLAIN_MESSAGE_TYPE:
@@ -38,6 +42,7 @@ void Packet::send_ap()
         
         case PRIVATE_KEY_REQUEST_TYPE:
         {
+            /*?????sk?packet???sm4key???sm4key[]???*/
             memcpy(sm4key, ctx->payload.appPacket->payload, SM4_KEY_LEN);
             #ifdef DEBUG
             for(int t=0;t<16;t++)
@@ -56,22 +61,13 @@ void Packet::send_ap()
             send_type = NO_ENC_TYPE;
     }
 
-    #ifdef DEBUG 
-    fprintf(stderr, "send type : %d\n", send_type);
-    #endif
-    //生戝send_packet
+    //send_packet
     SecPacket *send_packet = (SecPacket *)malloc(sizeof(SecPacket));  
     
     *(int *)(send_packet->head) = send_type;
     fprintf(stderr, "send type is:%d\n", send_type);
     send_packet->payload.appPacket = packet;
-    #ifdef DEBUG
-    fprintf(stderr, "sk1 is: %s\n", send_packet->payload.appPacket->payload);
-    #endif
     ctx->payload.secPacket = send_packet;
-    #ifdef DEBUG
-    fprintf(stderr, "sk2 is: %s\n", ctx->payload.secPacket->payload.appPacket->payload);
-    #endif
     ctx->phase = SEND_SIGN;
 
 }

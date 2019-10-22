@@ -1,3 +1,6 @@
+## 10.22
+问题：`packet.hpp`中的sm4key有的时候会莫名被清零。
+
 ## 10.21
 1. 为了在内存中存储sm4key，在`packet.hpp`中类的public添加了`unsigned char sm4key[16];`。然后在`send_ap.cpp`判断是否是获取私钥，如果是保存`ctx->payload.appPacket->packet`中前16位的sm4key，再`handle_dec.cp`中使用
 2. 后期在处理`sm4.h`的时候要把现在一些16数据的地方改为`SM4_KEY_LEN`

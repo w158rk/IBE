@@ -26,8 +26,8 @@ int UInterface::socket_interface_run() {
 	int choise;
 	scanf("%d", &choise);
 	switch (choise) {
-		case 1/* constant-expression */:
-		{	/* code */
+		case 1:
+		{	
 			user::Client *client = dynamic_cast<user::Client *>(user);
 			if (-1 == client->run_get_private_key(SERVER_IP_ADDRESS, SERVER_LISTEN_PORT)) {
 				return -1;
