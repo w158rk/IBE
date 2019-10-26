@@ -39,8 +39,14 @@ decrypted text length : 52
 
 ```
 ./sstest                // test the secret sharing functions
+
 ```
 
+
+# 外部库 
+
+[ini parser](https://github.com/benhoyt/inih)
+[json parser](https://rapidjson.org)
 
 # todo 
 

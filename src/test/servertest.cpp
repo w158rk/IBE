@@ -4,34 +4,47 @@
 #include<comm.hpp>
 #include<ui.hpp>
 #include<packet.hpp>
-
 #include<config.h>
 
+#include<rapidjson/document.h>
+#include<rapidjson/reader.h>
+#include<rapidjson/filereadstream.h>
 
-int main() 
+#define ASSERT(exp) std::cerr << (exp) << std::endl
+
+void runserver(int argc, char *argv[])
 {
+    if(argc < 2) {
+        std::cerr << "Please enter the path to config file" << std::endl;
+    }
+
+    // read the config file 
+    rapidjson::Document* doc = get_cfg_doc(argv[1]);
+
+    // initialize the ID
+    ID *server_id = get_id_from_doc(*doc);
+
+    // initialize the objects at the order 
     char err_sig;
-    ID server_id;
-    server_id.id = SERVER_ID;
-    server_id.length = SERVER_ID_LEN;
+    user::Server server(std::string((*doc)["id"]["ip_address"].GetString()),
+                        (*doc)["id"]["port"].GetInt(), 
+                        server_id);
+    packet::Packet packet;
+    comm::Comm comm;
+    ui::UInterface uinterface;
 
-    user::Server server(std::string(SERVER_IP_ADDRESS), SERVER_LISTEN_PORT, &server_id);
-    server.set_err_sig(&err_sig);
-
-    packet::Packet *packet = new packet::Packet();
-
-    comm::Comm comm(packet, &(interface::IUser&)server);
-    comm.set_err_sig(&err_sig);
-    
-    ui::UInterface* uinterface = new ui::UInterface();
-
-    packet->set_comm_ptr(&comm);
-    uinterface->set_user_ptr(&(interface::IUser&)server);
-    server.set_ui_ptr(dynamic_cast<interface::IUI*>(uinterface));
-    server.set_comm_ptr(dynamic_cast<interface::IComm*>(&comm));
-
-    server.set_packet_ptr(packet);
+    // bind the server    
+    bind_objects(server, comm, packet, uinterface, &err_sig);
+    add_other_cfg(server, *doc);
+    delete doc;
 
     server.run();
+}
+
+int main(int argc, char *argv[]) 
+{
+
+    runserver(argc, argv);
 
 }
+

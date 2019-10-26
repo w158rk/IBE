@@ -12,6 +12,16 @@ extern "C" {
 
 //#define DEBUG
 
+
+/**
+ * At the beginning of this function, the ctx contains a sec packet 
+ * whose payload is the encrypted message 
+ * 
+ * The function will get the encryption type from the header and 
+ * find the keys somewhere, then decrypt the message and organize 
+ * it as a app packet, which will be stored in the payload of 
+ * the sec packet
+ */
 using namespace packet;
 void Packet::handle_dec() {
 
@@ -19,8 +29,6 @@ void Packet::handle_dec() {
 
     /* packets */
     SecPacket *p_sec_packet = ctx->payload.secPacket;
-
-    IBEPrivateKey sk = NULL;
 
     int crypto_type = *(int *)(p_sec_packet->head);
 
@@ -31,35 +39,42 @@ void Packet::handle_dec() {
         break;
     case IBE_TYPE:
     {
+        // get the cipher length and allocate space for decryption
         int c_len = *(int *)(p_sec_packet->head+4);
-        
-        GENERATE_SK_FILENAME(ctx->dest_id)
-
         char *m = (char *)malloc(BUFFER_SIZE);
-        IBEPrivateKey sk = NULL;
         size_t m_len;
+
+        // get the private key from file
+        IBEPrivateKey sk = NULL;
+        GENERATE_SK_FILENAME(ctx->dest_id)
         get_sk_fp(filename, &sk);
+
+        // decrypt
         ibe_decrypt(p_sec_packet->payload.data, c_len, m, &m_len, &sk);
+        std::free(sk);
         FREE_SK_FILENAME;
 
-        #ifdef DEBUG 
+#ifdef DEBUG 
         fprintf(stderr, "message length : %d\n", m_len); 
         fprintf(stderr, "message : %s\n", m);
-        #endif
+#endif
 
-        // make the app packet 
+        // organize the message as a app packet 
         AppPacket *app_packet = new AppPacket;
-        memcpy(app_packet->head, m, APP_HEAD_LEN);       //head中放入解密前8位的内容
-        int payload_len = *(int *)(m+4);                // get the length of the payload 
 
-        char *payload = (char *)malloc(payload_len);
+        // the head is the first 8 bytes of the decrypted message
+        memcpy(app_packet->head, m, APP_HEAD_LEN);       
+        
+        // copy the rest of the message into the payload of app packet
+        int payload_len = *(int *)(m+4);                 
+        char *payload = (char *)std::malloc(payload_len);
         memcpy(payload, m+APP_HEAD_LEN, payload_len);
-        app_packet->payload = payload;       //payload中放入解密8位后的内容
+        app_packet->payload = payload;     
 
-        #ifdef DEBUG 
+#ifdef DEBUG 
         fprintf(stderr, "payload length : %d\n", payload_len);
         fprintf(stderr, "payload : %s\n", payload);
-        #endif
+#endif
 
         // add the app packet to the payload of the sec packet 
         p_sec_packet->payload.appPacket = app_packet;       //把该app_packet包放在ctx->payload.secPacket->payload.appPacket中
@@ -70,38 +85,50 @@ void Packet::handle_dec() {
     case SM4_TYPE:
     {
         sm4_context sm4ctx;
-        /*从packet.hpp中读取sm4key*/
-        #ifdef DEBUG
-        for(int t=0;t<16;t++)
-            printf("%02x ",sm4key[t]);
-        printf("\n");
-        #endif
-        sm4_setkey_dec(&sm4ctx, sm4key);
-        fprintf(stderr, "data is%s\n",p_sec_packet->payload.data);
-        unsigned char *sm4_cipher = (unsigned char *)malloc(IBE_SK_LEN + IBE_SK_LEN);
-	    sm4_crypt_ecb(&sm4ctx, 0, IBE_SK_LEN + APP_HEAD_LEN, (unsigned char*)(p_sec_packet->payload.sk_data),sm4_cipher);
-        fprintf(stderr, "sk is%s\n", sm4_cipher + APP_HEAD_LEN);
-        #ifdef DEBUG
+
+        // get the key from the packet object
+        sm4_setkey_dec(&sm4ctx, (unsigned char*)get_sm4_key());
+
+        // allocate space for decryption
+        int length = *(int *)(p_sec_packet->head+4);
+        unsigned char *sm4_msg = (unsigned char *)malloc(BUFFER_SIZE);
+	    sm4_crypt_ecb(&sm4ctx, 
+                        0, 
+                        length, 
+                        (unsigned char*)(p_sec_packet->payload.data),
+                        sm4_msg);
+#ifdef DEBUG
+        fprintf(stderr, "sk is%s\n", sm4_msg + APP_HEAD_LEN);
         fprintf(stderr, "id为：%s\n",ctx->dest_id->id);
-        #endif
 
-        GENERATE_SK_FILENAME(ctx->dest_id)        
+        // GENERATE_SK_FILENAME(ctx->dest_id)        
 
-        #ifdef DEBUG
-        fprintf(stderr, "sk_filename is%s\n", filename);
-        #endif
-        FILE *fp2;
-        if((fp2=fopen(filename,"wb+"))==NULL)
-        {
-            printf("file cannot open \n");  
-        }
-        fprintf(fp2,"%s",sm4_cipher + APP_HEAD_LEN);
-        fclose(fp2);
-        fprintf(stderr,"sk_file generate\n");
+        // fprintf(stderr, "sk_filename is%s\n", filename);
+        // FILE *fp2;
+        // if((fp2=fopen(filename,"wb+"))==NULL)
+        // {
+        //     printf("file cannot open \n");  
+        // }
+        // fprintf(fp2,"%s",sm4_cipher + APP_HEAD_LEN);
+        // fclose(fp2);
+        // fprintf(stderr,"sk_file generate\n");
 
-        FREE_SK_FILENAME;
+        // FREE_SK_FILENAME;
+#endif
+        
+        // create a new app packet 
+        AppPacket *p_app_packet = new AppPacket;
 
-        memcpy(p_sec_packet->payload.appPacket->head, sm4_cipher, APP_HEAD_LEN);        //把标识放在ctx->payload.secPacket->payload.appPacket的head中
+        // copy the header and the payload into the app packet
+        memcpy(p_app_packet->head, sm4_msg, APP_HEAD_LEN);        
+        memcpy(p_app_packet->payload, sm4_msg+APP_HEAD_LEN, length-APP_HEAD_LEN);
+
+        // set the payload of the sec packet        
+        free(p_sec_packet->payload.data);
+        p_sec_packet->payload.appPacket = p_app_packet;
+
+        // free the temporaries
+        free(sm4_msg);
 
         break;
     }

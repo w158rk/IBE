@@ -1,3 +1,24 @@
+## 10.26
+
+**TODO** : 给sm4加密的mode定义宏 [link](src/packet/send_enc.cpp#L108)
+
+**TODO** : 重写handle_sk_response [link](src/packet/handle_ap.cpp#L161)
+
+**TODO** : 计算sm4加密的长度 [link](src/packet/send_enc.cpp#L120)
+
+**TODO** : 存取长度的位置用网络序 (`K`)
+
+**TODO** : 修改set_key(): 1. 不能用文件; 2. 要写sm4  [定义](./src/crypto/sm4.c#L347), [调用](./src/user/core.cpp#L91)
+
+1. 加入PacketException 
+2. 删除SecPacket payload域的sk_data 
+3. 在ID中保留ip和port 
+4. 加入json配置文件 
+
+**Q**: 连上服务器要不要监听？
+
+[答10.22问题](#10.22)：可能压根不是一个ctx，已经把sm4存在Packet对象里了
+
 ## 10.22
 问题：`packet.hpp`中的sm4key有的时候会莫名被清零。
 

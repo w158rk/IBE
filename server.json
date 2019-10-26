@@ -1,0 +1,15 @@
+{
+    "system" : {
+        "log" : "server.log"
+    },
+    "crypto" : {
+        "mpk_file" : "mpk.conf",
+        "msk_file" : "msk.conf"
+    },
+    "id" : {
+        "id" : "Server", 
+        "ip_address" : "127.0.0.1",
+        "port" : 5001,
+        "parent" : null
+    }
+}

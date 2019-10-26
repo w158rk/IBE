@@ -43,7 +43,9 @@ void Packet::send_ap()
         case PRIVATE_KEY_REQUEST_TYPE:
         {
             /*?????sk?packet???sm4key???sm4key[]???*/
+            char *sm4key = (char *)std::malloc(SM4_KEY_LEN);
             memcpy(sm4key, ctx->payload.appPacket->payload, SM4_KEY_LEN);
+            set_sm4_key(sm4key);
             #ifdef DEBUG
             for(int t=0;t<16;t++)
                 printf("%02x ",sm4key[t]);
@@ -62,7 +64,7 @@ void Packet::send_ap()
     }
 
     //send_packet
-    SecPacket *send_packet = (SecPacket *)malloc(sizeof(SecPacket));  
+    SecPacket *send_packet = new SecPacket;  
     
     *(int *)(send_packet->head) = send_type;
     fprintf(stderr, "send type is:%d\n", send_type);

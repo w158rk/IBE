@@ -24,6 +24,10 @@
         return m_##name;    \
     }
 
+#define VIRTUAL_GET_AND_SET(type, name) \
+    virtual void set_##name(type name) = 0; \
+    virtual type get_##name() = 0;
+
 #define DECLARE_MEMBER(type, name) \
     type m_##name;          \
     bool m_f##name = false;
@@ -60,5 +64,8 @@
     filename[filename_len-1] = '\0';
 
 #define FREE_SM4_FILENAME free(filename)
+
+
+
 
 #endif

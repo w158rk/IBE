@@ -3,11 +3,10 @@
 #include<config.h>
 #include<string.h>
 
-using namespace ui;
+#include <iostream>
+#include <iomanip>
 
-UInterface::UInterface() {
-	int i=0;
-}
+using namespace ui;
 
 void UInterface::run() {
 	socket_interface_run();
@@ -25,13 +24,25 @@ int UInterface::socket_interface_run() {
 	
 	int choise;
 	scanf("%d", &choise);
+
+	// get the ip and listen port of server 
+
+	ID *id = get_user_ptr()->get_id();
+	ID *parent = id->father_node;
+
 	switch (choise) {
 		case 1:
 		{	
 			user::Client *client = dynamic_cast<user::Client *>(user);
-			if (-1 == client->run_get_private_key(SERVER_IP_ADDRESS, SERVER_LISTEN_PORT)) {
-				return -1;
+			try 
+			{
+				client->run_get_private_key(parent->ip, parent->port);
 			}			
+			catch(user::UserException& e)
+			{
+				std::cerr << e.what() << std::endl;
+				return -1;
+			}
 			break;
 		}
 		case 2:
@@ -45,10 +56,15 @@ int UInterface::socket_interface_run() {
 			int len = strlen(id_cstr);
 			dest_id.length = len;
 			fprintf(stderr, "ip is: %s  port is: %d  id is: %s\n", ip_ad, port, id_cstr);
-			if(-1 == user->run_send_message(ip_ad, port, &dest_id))
+			try 
 			{
-				return -1;
+				user->run_send_message(ip_ad, port, &dest_id);
 			}
+			catch(user::UserException& e)
+			{
+				std::cerr << e.what() << std::endl;
+				return -1;
+			}			
 			break;
 		}
 		default:
@@ -56,4 +72,26 @@ int UInterface::socket_interface_run() {
 	}
 
 	return 0;
+}
+
+void UInterface::print(char *message, int length) 
+{
+	std::string out(message, length);
+	std::cout << "[info]" << out << std::endl;
+}
+
+
+void UInterface::print(std::string message) 
+{
+	
+}
+
+void UInterface::error(char *message, int length) 
+{
+
+}
+
+void UInterface::error(std::string message) 
+{
+	
 }
