@@ -81,11 +81,12 @@ int handle_sk_request(Packet *target)
 
     /*生成私钥sk*/
     if ( 0 == ibe_extract(&sk, &msk, client_id, (size_t)client_id_len)) {
-        ERROR(" cannot extract the private key");
-        throw std::exception();
+        throw PacketException(" cannot extract the private key");
     }       
-    
-    free(msk);
+
+#ifdef DEBUG 
+        fprintf(stderr, "the generation of the private key passed \n");
+#endif    
 
     {   /* test the validation of the private key*/
         char data[] = "This is a test text";
@@ -142,6 +143,9 @@ int handle_sk_request(Packet *target)
     send_ctx->key = sm4_key;      //sm4key放在send_ctx的key中
 
     // send the packet
+#ifdef DEBUG 
+    std::cerr << "begin sending" << std::endl;
+#endif
     if(0 == target->packet_send(send_ctx)) {
         ERROR("send the p error");
         goto end;
@@ -270,8 +274,7 @@ void Packet::handle_ap() {
     int rtn = 0;
 
     if(get_ctx()->phase != RECV_APP_PACKET) {
-        ERROR("call wrong function");
-        throw std::exception();
+        throw PacketException("call wrong function");
     }
     PacketCTX *ctx = get_ctx();
     AppPacket *p = ctx->payload.appPacket;

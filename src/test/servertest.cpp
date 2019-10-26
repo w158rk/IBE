@@ -36,7 +36,6 @@ void runserver(int argc, char *argv[])
     // bind the server    
     bind_objects(server, comm, packet, uinterface, &err_sig);
     add_other_cfg(server, *doc);
-    delete doc;
 
     server.run();
 }

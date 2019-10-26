@@ -35,8 +35,6 @@ void runclient(int argc, char *argv[])
     bind_objects(client, comm, packet, uinterface, &err_sig);
     add_other_cfg(client, *doc);
 
-    delete doc;
-
     client.run();
 }
 

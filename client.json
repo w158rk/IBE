@@ -8,11 +8,11 @@
     "id" : {
         "id" : "Client", 
         "ip_address" : "127.0.0.1",
-        "port" : 16205,
+        "port" : 16001,
         "parent" : {
             "id" : "Server", 
             "ip_address" : "127.0.0.1",
-            "port" : 5001,
+            "port" : 5002,
             "parent" : null            
         }
     }

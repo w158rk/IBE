@@ -12,6 +12,11 @@ extern "C" {
 
 #include<packet.hpp>
 #include<config.h>
+
+#ifdef DEBUG 
+#include<iostream>
+#endif
+
 using namespace packet;
 
 
@@ -66,6 +71,10 @@ void Packet::send_enc()
             {
                 throw PacketException("encrypt failed");
             }
+
+#ifdef DEBUG 
+            std::cerr << "encrypted length: " << cipher_len << std::endl;
+#endif
 
             // copy the cipher into the sec packet
             sec_packet->payload.data = (char *)malloc(cipher_len);

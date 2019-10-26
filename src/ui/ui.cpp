@@ -17,58 +17,62 @@ int UInterface::socket_interface_run() {
 	interface::IUser *user = get_user_ptr();
     ID *user_id = user->get_id();
 	
-	printf("What do you want to do? %s\n", user_id->id);
-	printf("Choose from :\n");
-	printf("\t1. Extract your Private Key\n");
-	printf("\t2. Send message\n");
-	
-	int choise;
-	scanf("%d", &choise);
+	while(true)
+	{
+		printf("What do you want to do? %s\n", user_id->id);
+		printf("Choose from :\n");
+		printf("\t1. Extract your Private Key\n");
+		printf("\t2. Send message\n");
+		
+		int choise;
+		scanf("%d", &choise);
 
-	// get the ip and listen port of server 
+		// get the ip and listen port of server 
 
-	ID *id = get_user_ptr()->get_id();
-	ID *parent = id->father_node;
+		ID *id = get_user_ptr()->get_id();
+		ID *parent = id->father_node;
 
-	switch (choise) {
-		case 1:
-		{	
-			user::Client *client = dynamic_cast<user::Client *>(user);
-			try 
-			{
-				client->run_get_private_key(parent->ip, parent->port);
-			}			
-			catch(user::UserException& e)
-			{
-				std::cerr << e.what() << std::endl;
-				return -1;
+		switch (choise) {
+			case 1:
+			{	
+				user::Client *client = dynamic_cast<user::Client *>(user);
+				try 
+				{
+					client->run_get_private_key(parent->ip, parent->port);
+				}			
+				catch(user::UserException& e)
+				{
+					std::cerr << e.what() << std::endl;
+					return -1;
+				}
+				break;
 			}
-			break;
-		}
-		case 2:
-		{
-			printf("Please input whom you want to send to(IP_ADDRESS LISTEN_PORT ID)\n");
-			char ip_ad[20], id_cstr[20];
-			int port;
-			scanf("%s %d %s",&ip_ad, &port, &id_cstr);
-			ID dest_id;
-			dest_id.id = id_cstr;
-			int len = strlen(id_cstr);
-			dest_id.length = len;
-			fprintf(stderr, "ip is: %s  port is: %d  id is: %s\n", ip_ad, port, id_cstr);
-			try 
+			case 2:
 			{
-				user->run_send_message(ip_ad, port, &dest_id);
+				printf("Please input whom you want to send to(IP_ADDRESS LISTEN_PORT ID)\n");
+				char ip_ad[20], id_cstr[20];
+				int port;
+				scanf("%s %d %s",&ip_ad, &port, &id_cstr);
+				ID dest_id;
+				dest_id.id = id_cstr;
+				int len = strlen(id_cstr);
+				dest_id.length = len;
+				fprintf(stderr, "ip is: %s  port is: %d  id is: %s\n", ip_ad, port, id_cstr);
+				try 
+				{
+					user->run_send_message(ip_ad, port, &dest_id);
+				}
+				catch(user::UserException& e)
+				{
+					std::cerr << e.what() << std::endl;
+					return -1;
+				}			
+				break;
 			}
-			catch(user::UserException& e)
-			{
-				std::cerr << e.what() << std::endl;
-				return -1;
-			}			
-			break;
+			default:
+				break;
 		}
-		default:
-			break;
+
 	}
 
 	return 0;

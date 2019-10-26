@@ -10,6 +10,9 @@ extern "C" {
 #include<packet.hpp>
 #include<ds.h>
 
+#ifdef DEBUG 
+#include<iostream>
+#endif
 //#define DEBUG
 
 
@@ -43,6 +46,10 @@ void Packet::handle_dec() {
         int c_len = *(int *)(p_sec_packet->head+4);
         char *m = (char *)malloc(BUFFER_SIZE);
         size_t m_len;
+
+#ifdef DEBUG 
+        std::cerr << "length before decryption: " << c_len << std::endl;
+#endif
 
         // get the private key from file
         IBEPrivateKey sk = NULL;
