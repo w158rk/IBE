@@ -19,7 +19,7 @@ extern "C" {
 	#include<utils.h>
 }
 
-//#define DEBUG
+#define DEBUG
 
 using namespace user;
 
@@ -86,6 +86,7 @@ void Client::run_get_private_key(char *server_ip,
     //     printf("file cannot open \n");
     // }
 	unsigned char key[SM4_KEY_LEN];
+	set_sm4key(key);
 	// set_key(key,fp);		//生成16位的key
 	// fclose(fp);
 	// FREE_SM4_FILENAME;

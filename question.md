@@ -1,3 +1,6 @@
+## 10.27
+1. 修改set_key()的问题解决
+
 ## 10.26
 
 **TODO** : 给sm4加密的mode定义宏 [link](src/packet/send_enc.cpp#L108)

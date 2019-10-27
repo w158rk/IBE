@@ -15,7 +15,7 @@ extern "C" {
 
 #include <iostream>
 #include <packet.hpp>
-//#define DEBUG
+#define DEBUG
 using namespace packet;
 
 int handle_m(Packet *target)
@@ -86,6 +86,7 @@ int handle_sk_request(Packet *target)
 
 #ifdef DEBUG 
         fprintf(stderr, "the generation of the private key passed \n");
+        fprintf(stderr, "sk is%s\n", sk);
 #endif    
 
     {   /* test the validation of the private key*/

@@ -10,11 +10,10 @@ extern "C" {
 #include<packet.hpp>
 #include<ds.h>
 
+#define DEBUG
 #ifdef DEBUG 
 #include<iostream>
 #endif
-//#define DEBUG
-
 
 /**
  * At the beginning of this function, the ctx contains a sec packet 
@@ -48,7 +47,7 @@ void Packet::handle_dec() {
         size_t m_len;
 
 #ifdef DEBUG 
-        std::cerr << "length before decryption: " << c_len << std::endl;
+        //std::cerr << "length before decryption: " << c_len << std::endl;
 #endif
 
         // get the private key from file

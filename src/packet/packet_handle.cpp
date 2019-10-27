@@ -1,5 +1,6 @@
 #include <packet.hpp>
 
+#define DEBUG
 using namespace packet;
 
 int Packet::packet_handle(PacketCTX* ctx) {

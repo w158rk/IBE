@@ -73,6 +73,7 @@ void sm4_crypt_cbc( sm4_context *ctx,
 
 void set_key(unsigned char *key, FILE* filename);
 void get_key(unsigned char *key, FILE* filename);
+void set_sm4key(unsigned char *key);
 int choice1(unsigned char *input);
 int choice2(unsigned char *input);
  

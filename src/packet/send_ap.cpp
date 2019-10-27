@@ -9,7 +9,7 @@
 extern "C" {
 #include <string.h>
 }
-//#define DEBUG
+#define DEBUG
 #include<config.h>
 #include<packet.hpp>
 #include<crypto.h>
@@ -42,7 +42,6 @@ void Packet::send_ap()
         
         case PRIVATE_KEY_REQUEST_TYPE:
         {
-            /*?????sk?packet???sm4key???sm4key[]???*/
             char *sm4key = (char *)std::malloc(SM4_KEY_LEN);
             memcpy(sm4key, ctx->payload.appPacket->payload, SM4_KEY_LEN);
             set_sm4_key(sm4key);

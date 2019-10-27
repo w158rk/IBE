@@ -364,6 +364,22 @@ void set_key(unsigned char *key, FILE* filename){
 	
 }
 
+void set_sm4key(unsigned char *key)
+{
+    srand(time(NULL));
+    #ifdef DEBUG 
+	printf("随机生成的key:");
+    #endif
+
+	for(int i=0;i<16;i++){
+	  int a= rand() % 255;
+      key[i]=(unsigned char)a;
+      #ifdef DEBUG 
+      printf("%02x ",key[i]);
+      #endif
+	}
+}
+
 void get_key(unsigned char *key, FILE* filename){
 	unsigned char str[17];
     int t;

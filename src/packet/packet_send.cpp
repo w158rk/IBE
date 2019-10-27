@@ -1,4 +1,5 @@
 #include <packet.hpp>
+#define DEBUG
 #ifdef DEBUG
 #include <stdio.h>
 #endif
