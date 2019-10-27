@@ -57,7 +57,10 @@ void Packet::handle_dec() {
         get_sk_fp(filename, &sk);
 
         // decrypt
-        ibe_decrypt(p_sec_packet->payload.data, c_len, m, &m_len, &sk);
+        if(0 == ibe_decrypt(p_sec_packet->payload.data, c_len, m, &m_len, &sk))
+        {
+            throw PacketException("ibe decryption failed");
+        }
         std::free(sk);
         FREE_SK_FILENAME;
 

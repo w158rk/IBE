@@ -87,7 +87,7 @@ int Comm::run_listen_core()
 		p_packet->payload.data = payload;
 
 		// handle the packet
-		PacketCTX *ctx = (PacketCTX *)malloc(sizeof(PacketCTX));
+		PacketCTX *ctx = new PacketCTX;
 
 		ctx->phase = RECV_SEC_PACKET;
 		ctx->payload.secPacket = p_packet;
@@ -100,7 +100,6 @@ int Comm::run_listen_core()
 		}
 		break;
 
-		free(ctx);
 	} while(1);				// 客户端关闭之前一直执行
 
 	return 0;

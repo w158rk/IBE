@@ -150,12 +150,13 @@ int handle_sk_request(Packet *target)
         ERROR("send the p error");
         goto end;
     }
+    #ifdef DEBUG
+    fprintf(stderr,"[%s:%d] mark \n", __FILE__, __LINE__);
+    #endif
 
     rtn = 1;
 end:
     /* free all the local allocated variable */
-    delete send_ctx;
-    delete send_packet;
     return rtn;
 
 }
@@ -285,6 +286,7 @@ void Packet::handle_ap() {
 
 #ifdef DEBUG 
     fprintf(stderr, "[%s : %d]type : %d\n", __FILE__, __LINE__, type);
+    fprintf(stderr,"[%s:%d] get_ctx : %ld\n", __FILE__, __LINE__, (get_ctx()));
 #endif
 
     switch (type)
@@ -323,6 +325,6 @@ void Packet::handle_ap() {
             break;
     }
     
-    get_ctx()->phase = RECV_DONE;
+    ctx->phase = RECV_DONE;
     rtn = 1;
 }

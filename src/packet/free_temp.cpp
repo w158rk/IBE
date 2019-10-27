@@ -30,6 +30,7 @@ void packet::free_ctx(PacketCTX *ctx)
     }
     ctx->payload.appPacket = nullptr;
 
+    
     /* free the IDs */ 
     if(ctx->src_id != nullptr) delete ctx->src_id;
     if(ctx->dest_id != nullptr) delete ctx->dest_id;

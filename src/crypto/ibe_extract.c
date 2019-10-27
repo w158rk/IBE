@@ -53,7 +53,7 @@ int ibe_extract(IBEPrivateKey *sk,
     }
 
     #ifdef DEBUG 
-    fprintf(stderr, "\nlength of sk : %d\n", ret);
+    fprintf(stderr, "\nlength of sk : %d\n", flg);
     #endif
 
     #ifdef DEBUG 
