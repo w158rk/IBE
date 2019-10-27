@@ -14,11 +14,13 @@
 char sk_filename[] = "sk_Server.conf";
 // char id[] = "Server";
 char data[BUFFER_SIZE] = "This is a test text";
+char data2[BUFFER_SIZE] = "This is a sign test";
 char c_buf[BUFFER_SIZE] = {'\0'};
 char out[BUFFER_SIZE] = {'\0'};
 char out_read[BUFFER_SIZE] = {'\0'};
+char sign_data[BUFFER_SIZE] = {'\0'};
 
-size_t c_len, out_len;
+size_t c_len, out_len, sign_len;
 
 IBEPublicParameters mpk;
 IBEMasterSecret msk;
@@ -101,6 +103,24 @@ end:
     return -1;
 }
 
+int test_sm9_sign()
+{
+    fprintf(stderr, "[test] sign\n");
+    size_t data_len = strlen(data2);
+    int ret = ibe_sign(NID_sm3, data2, data_len, &sign_data, &sign_len, &sk);
+    fprintf("sign data is%s\n", sign_data);
+    return ret;
+}
+
+int test_sm9_verify()
+{
+    printf("[test] sign verify\n");
+    size_t data_len = strlen(data2);
+    size_t sign_len = strlen(sign_data);
+    int ret = ibe_verify(data2, data_len, sign_data, sign_len, &mpk, SERVER_ID, SERVER_ID_LEN);
+    return ret;
+}
+
 int main(int argc, char *argv[]) {
 
     if(-1 == test_set_up()) goto end; 
@@ -109,6 +129,10 @@ int main(int argc, char *argv[]) {
     if(-1 == test_extract_private_key()) goto end;  //获取sk
     if(-1 == test_sm9_encrypt()) goto end;  //加密
     if(-1 == test_sm9_decrypt()) goto end;  //解密 
+
+    /*int i = test_sm9_sign();
+    int ret = test_sm9_verify();
+    printf("ret is%d\n", ret);*/
     
     if(-1 == test_put_private_key()) goto end;  //输出sk于文件中 
     if(-1 == test_get_private_key()) goto end;  //从文件中读取sk
