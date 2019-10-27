@@ -1,0 +1,19 @@
+{
+    "system" : {
+        "log" : "server.log"
+    },
+    "crypto" : {
+        "mpk_file" : "mpk.conf"
+    },
+    "id" : {
+        "id" : "Client", 
+        "ip_address" : "127.0.0.1",
+        "port" : 16001,
+        "parent" : {
+            "id" : "Server", 
+            "ip_address" : "127.0.0.1",
+            "port" : 5002,
+            "parent" : null            
+        }
+    }
+}

@@ -9,6 +9,12 @@ Client::Client(std::string ip_address, int port, ID* id)
     
 }
 
+Client::Client(ID* id)
+    :User(id)
+{
+
+}
+
 Client::~Client()
 {
     

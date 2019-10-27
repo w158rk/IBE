@@ -45,7 +45,6 @@ typedef struct {
     char head[SEC_HEAD_LEN];
     union payload1 {
         char *data;
-        char *sk_data;
         AppPacket *appPacket;
     } payload;
     char signature[SIGN_LEN];
@@ -79,8 +78,8 @@ typedef struct packet_ctx{
     ID *src_id;
     ID *dest_id;
     
-    IBEPublicParameters *mpk;
-    IBEPrivateKey *sk;  
+    IBEPublicParameters mpk;
+    IBEPrivateKey sk;  
 
    char *sm4_key[16];
 

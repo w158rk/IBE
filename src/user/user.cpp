@@ -14,6 +14,13 @@ User::User(std::string ip_address, int port, ID* id)
     set_id(id);
 }
 
+User::User(ID* id)
+{
+    set_ip_address(id->ip);
+    set_port(id->port);
+    set_id(id);
+}
+
 int User::run()
 {
     // run the listener

@@ -10,7 +10,6 @@
 
 #include "utils.h"
 #include "ds.h"
-
 /**
  * @brief set up the system 
  * @param[in] mpk_filename file to store the mpk 
@@ -59,6 +58,7 @@ int put_sk_fp(const char* sk_filename, IBEPrivateKey* sk);
  * @param[in] id 
  * @param[in] id_len
  */
+
 
 int sys_id2point(
     EC_POINT **point,

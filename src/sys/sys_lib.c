@@ -53,7 +53,7 @@ int get_msk_fp(const char* msk_filename, IBEMasterSecret* msk) {
     SM9MasterSecret *sm9_msk = NULL;
 
     #ifdef DEBUG 
-    fprintf(stderr, "*msk_filename : %ld\n", msk_filename);
+    fprintf(stderr, "*msk_filename : %s\n", msk_filename);
     fprintf(stderr, "*msk : %ld\n", *msk);
     #endif
 

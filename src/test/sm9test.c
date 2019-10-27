@@ -9,8 +9,12 @@
 #include <config.h>
 #include <sys.h>
 
-// char mpk_filename[] = "mpk.conf";
-// char msk_filename[] = "msk.conf";
+#define MPK_FILENAME "mpk.conf"
+#define MSK_FILENAME "msk.conf"
+#define SERVER_ID "Server"
+#define SERVER_ID_LEN 6
+
+
 char sk_filename[] = "sk_Server.conf";
 // char id[] = "Server";
 char data[BUFFER_SIZE] = "This is a test text";

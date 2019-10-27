@@ -18,6 +18,7 @@ namespace comm
                 interface::IUser *user_ptr);
         Comm(   interface::IPacket *packet_ptr,
                 interface::IUser *user_ptr);
+        Comm() = default;
         ~Comm() = default;
         
         int connect_to_server(char* ip_addr, int port);

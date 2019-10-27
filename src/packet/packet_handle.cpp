@@ -36,4 +36,13 @@ void Packet::packet_handle()
         }
     }
 
+    /** When the handle of the packet is finished, 
+     * the context should be freed and 
+     * the member ctx should be null 
+     * f_ctx should be false 
+     */
+    free_ctx(ctx);
+    m_fctx = false;
+    m_ctx = nullptr;
+
 }

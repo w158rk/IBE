@@ -6,6 +6,8 @@
 #include<interface.hpp>
 #include<utils.h>
 
+#include<rapidjson/document.h>
+
 namespace user {
 
     class User : public interface::IUser
@@ -14,6 +16,7 @@ namespace user {
     public :
 
         User(std::string ip_address, int port, ID* id);
+        User(ID* id);
         int run();
 
         ~User();
@@ -25,8 +28,10 @@ namespace user {
         GET_AND_SET(int, port)
         GET_AND_SET(ID*, id)
         GET_AND_SET(char *, err_sig)
+        GET_AND_SET(char *, msk_filename)
+        GET_AND_SET(char *, mpk_filename)
 
-        int run_send_message(char *dest_ip, 
+        void run_send_message(char *dest_ip, 
 							int dest_port,
 							ID *dest_id);
 
@@ -38,6 +43,8 @@ namespace user {
         DECLARE_MEMBER(int, port)
         DECLARE_MEMBER(ID*, id)
         DECLARE_MEMBER(char *, err_sig)
+        DECLARE_MEMBER(char *, msk_filename)
+        DECLARE_MEMBER(char *, mpk_filename)
 
         void socket_main();
         void file_main();
@@ -59,9 +66,10 @@ namespace user {
     public:
 
         Client(std::string ip_address, int port, ID* id);
+        Client(ID* id);
         ~Client();
 
-        int run_get_private_key(char *server_ip, 
+        void run_get_private_key(char *server_ip, 
 								int server_port,
 								ID *server_id=nullptr);
 
@@ -69,7 +77,39 @@ namespace user {
 
     };
 
+    class UserException : public std::exception 
+    {
+    public:
+        UserException(std::string message)
+        {
+            set_message(message);
+        }
+        UserException() = default;
+        ~UserException() = default;
+
+        GET_AND_SET(std::string, message)
+        std::string what(){
+            if(m_fmessage)
+            {
+                std::string rtn("error in user module : ");
+                rtn.append(m_message);
+                return rtn;
+            }
+            return std::string("error in user module");
+        }
+    private: 
+        DECLARE_MEMBER(std::string, message)
+    };
 
 };
+
+rapidjson::Document* get_cfg_doc(char* filename) ;
+ID* get_id_from_doc(rapidjson::Document& doc);
+void bind_objects(interface::IUser& user, 
+                    interface::IComm& comm, 
+                    interface::IPacket& packet, 
+                    interface::IUI& uinterface,
+                    char *err_sig);
+void add_other_cfg(user::User& user, rapidjson::Document &doc);
 
 #endif
