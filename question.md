@@ -13,6 +13,8 @@
 
 **TODO** : 修改set_key(): 1. 不能用文件; 2. 要写sm4  [定义](./src/crypto/sm4.c#L347), [调用](./src/user/core.cpp#L91)
 
+**TODO** : IBE_MS_LEN 可能是140。。 会导致extract失败
+
 1. 加入PacketException 
 2. 删除SecPacket payload域的sk_data 
 3. 在ID中保留ip和port 

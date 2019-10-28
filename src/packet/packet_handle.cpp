@@ -5,10 +5,26 @@ using namespace packet;
 
 int Packet::packet_handle(PacketCTX* ctx) {
     
+    // store the current ctx and restore it after send
+    PacketCTX *old_ctx = nullptr;
+    if(m_fctx){
+        old_ctx = m_ctx;
+    }
     set_ctx(ctx);
-
+    
     packet_handle();
 
+    if(old_ctx != nullptr) 
+    {
+        m_ctx = old_ctx;
+    }
+    else
+    {
+        m_ctx = nullptr;
+        m_fctx = false;
+    }
+
+    free_ctx(ctx);
     return 1;
 }
 
@@ -42,8 +58,5 @@ void Packet::packet_handle()
      * the member ctx should be null 
      * f_ctx should be false 
      */
-    free_ctx(ctx);
-    m_fctx = false;
-    m_ctx = nullptr;
 
 }

@@ -7,9 +7,26 @@
 using namespace packet;
 
 int Packet::packet_send(PacketCTX* ctx) {
-
+    
+    // store the current ctx and restore it after send
+    PacketCTX *old_ctx = nullptr;
+    if(m_fctx){
+        old_ctx = m_ctx;
+    }
     set_ctx(ctx);
     packet_send();
+
+    if(old_ctx != nullptr) 
+    {
+        m_ctx = old_ctx;
+    }
+    else
+    {
+        set_ctx(nullptr);
+        m_fctx = false;
+    }
+
+    free_ctx(ctx);
     return 1;
 
 }
@@ -57,6 +74,11 @@ void Packet::packet_send()
     fprintf(stderr,"[%s:%d] the length of the sec packet : %d\n", __FILE__, __LINE__, len);
     #endif
     length = get_comm_ptr()->send(sec_packet->payload.data, len);
+
+    #ifdef DEBUG
+    fprintf(stderr,"[%s:%d] mark \n", __FILE__, __LINE__);
+    #endif
+
     if (length != len) {
         fprintf(stderr,"[%s:%d] error in write file\n", __FILE__, __LINE__);
         throw std::exception();
