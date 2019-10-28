@@ -1,3 +1,7 @@
+## 10.28
+问题：server在生成私钥并进行sm4加密后，`packet_send.cpp`的第78行文件写不进去，主要问题出现在`connection.c`的第112行wirte函数中
+解决方法：将HEAD和payload.data中的内容连起来然后一并写入
+
 ## 10.27
 1. 修改set_key()的问题解决
 

@@ -15,7 +15,7 @@ extern "C" {
 	#include <string.h>
 }
 #include <comm.hpp>
-// #define DEBUG
+#define DEBUG
 // static long int current_client_id;
 using namespace comm;
 

@@ -1,4 +1,5 @@
 #include <packet.hpp>
+#include <string.h>
 #define DEBUG
 #ifdef DEBUG
 #include <stdio.h>
@@ -58,28 +59,29 @@ void Packet::packet_send()
     // 1. send the head 
 	SecPacket *sec_packet = ctx->payload.secPacket;
 
-    #ifdef DEBUG
+#ifdef DEBUG
     fprintf(stderr,"the first word of the sec head : %d\n", *(int *)(sec_packet->head));
-    #endif
+#endif
 
-    int length = get_comm_ptr()->send(sec_packet->head, SEC_HEAD_LEN);
-    if (length != SEC_HEAD_LEN) {
-        fprintf(stderr,"[%s:%d] error in write file\n", __FILE__, __LINE__);
-        throw std::exception();
-    }
-    
-	// 2. send the payload
-	int len = *(int *)(sec_packet->head+4);
-    #ifdef DEBUG
+    int len = *(int *)(sec_packet->head+4);
+#ifdef DEBUG
     fprintf(stderr,"[%s:%d] the length of the sec packet : %d\n", __FILE__, __LINE__, len);
-    #endif
-    length = get_comm_ptr()->send(sec_packet->payload.data, len);
+#endif
+
+    char *data = (char *)std::malloc(len+SEC_HEAD_LEN);
+    memcpy(data, sec_packet->head, SEC_HEAD_LEN);
+#ifdef DEBUG
+    fprintf(stderr, "head is%s\n", data);
+#endif
+    memcpy(data+SEC_HEAD_LEN, sec_packet->payload.data, len);
+    int length = get_comm_ptr()->send(data, len+SEC_HEAD_LEN);
+
 
     #ifdef DEBUG
     fprintf(stderr,"[%s:%d] mark \n", __FILE__, __LINE__);
     #endif
 
-    if (length != len) {
+    if (length != len + SEC_HEAD_LEN) {
         fprintf(stderr,"[%s:%d] error in write file\n", __FILE__, __LINE__);
         throw std::exception();
     }
