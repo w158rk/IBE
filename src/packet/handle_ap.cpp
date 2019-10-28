@@ -165,54 +165,26 @@ end:
 
 int handle_sk_response(Packet *target) {
     int rtn = 0;
-// GENERATE_SK_FILENAME(ctx->dest_id)        
+    PacketCTX *ctx = target->get_ctx();
+    char *sk = (char *)std::malloc(IBE_SK_LEN);
+    memcpy(sk, ctx->payload.appPacket->payload, IBE_SK_LEN);
+#ifdef DEBUG
+    fprintf(stderr, "sk is%s\n", sk);
+#endif
 
-// fprintf(stderr, "sk_filename is%s\n", filename);
-// FILE *fp2;
-// if((fp2=fopen(filename,"wb+"))==NULL)
-// {
-//     printf("file cannot open \n");  
-// }
-// fprintf(fp2,"%s",sm4_cipher + APP_HEAD_LEN);
-// fclose(fp2);
-// fprintf(stderr,"sk_file generate\n");
+    GENERATE_SK_FILENAME(ctx->dest_id)        
 
-// FREE_SK_FILENAME;
+    fprintf(stderr, "sk_filename is%s\n", filename);
+    FILE *fp2;
+    if((fp2=fopen(filename,"wb+"))==NULL)
+    {
+        printf("file cannot open \n");  
+    }
+    fprintf(fp2,"%s", sk);
+    fclose(fp2);
+    fprintf(stderr,"sk_file generate\n");
 
-//     PacketCTX *ctx = target->get_ctx();
-//     ID *dest_id = ctx->dest_id;
-
-//     GENERATE_SK_FILENAME(ctx->dest_id)
-// #ifdef DEBUG
-//     fprintf(stderr, "sk_filename is%s\n", filename);
-// #endif
-//     IBEPrivateKey sk;
-//     get_sk_fp(filename, &sk);       //从文件中获取sk
-
-//     fprintf(stderr, "The private key is:%s\n", sk);
-//     FREE_SK_FILENAME;
-//     /*对sk能否进行成功加解密进行验证*/
-//     char data[BUFFER_SIZE] = "This is a test text";
-//     IBEPublicParameters mpk;
-//     get_mpk_fp(MPK_FILENAME, &mpk);
-//     size_t data_len = strlen(data);
-//     char c_buf[BUFFER_SIZE] = {'\0'};
-//     size_t c_len;
-//     ibe_encrypt(data, data_len, c_buf, &c_len, &mpk, CLIENT_ID, CLIENT_ID_LEN);
-//     //fprintf(stderr, "cipher is: %s\n", c_buf);
-//     size_t out_len = BUFFER_SIZE;   
-//     char out[BUFFER_SIZE] = {'\0'};
-//     ibe_decrypt(c_buf, c_len, out, &out_len, &sk);
-//     //fprintf(stderr, "out is%s\n", out);
-//     if(data_len!=out_len || memcmp(data, out, out_len)!=0)
-//     {
-//         fprintf(stderr, "sk is wrong\n");
-//     }
-//     else
-//     {
-//         fprintf(stderr,"sk is correct\n");
-//     }
-    
+    FREE_SK_FILENAME;
     
     rtn = 1;
 

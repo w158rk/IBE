@@ -41,15 +41,15 @@ void Client::run_get_private_key(char *server_ip,
 	comm->connect_to_server(server_ip, server_port);
 
 	// QUESTION : is it necessary to run a listening thread for the connection ?	
-	// try
-	// {
-	// 	comm->file_main();
-	// }
-	// catch(const std::exception& e)
-	// {
-	// 	std::cerr << e.what() << '\n';
-	// 	throw e;
-	// }
+	 try
+	 {
+	 	comm->file_main();
+	 }
+	 catch(const std::exception& e)
+	 {
+	 	std::cerr << e.what() << '\n';
+	 	throw e;
+	 }
 
 	/**
 	 * the format of the head is:
