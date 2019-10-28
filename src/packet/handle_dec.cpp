@@ -60,6 +60,7 @@ void Packet::handle_dec() {
         {
             throw PacketException("ibe decryption failed");
         }
+        fprintf(stderr, "sk is%s\n", sk);
         std::free(sk);
         FREE_SK_FILENAME;
 
@@ -109,20 +110,6 @@ void Packet::handle_dec() {
 #ifdef DEBUG
         fprintf(stderr, "sk is%s\n", sm4_msg + APP_HEAD_LEN);
         fprintf(stderr, "id为：%s\n",ctx->dest_id->id);
-
-        // GENERATE_SK_FILENAME(ctx->dest_id)        
-
-        // fprintf(stderr, "sk_filename is%s\n", filename);
-        // FILE *fp2;
-        // if((fp2=fopen(filename,"wb+"))==NULL)
-        // {
-        //     printf("file cannot open \n");  
-        // }
-        // fprintf(fp2,"%s",sm4_cipher + APP_HEAD_LEN);
-        // fclose(fp2);
-        // fprintf(stderr,"sk_file generate\n");
-
-        // FREE_SK_FILENAME;
 #endif
         
         // create a new app packet 

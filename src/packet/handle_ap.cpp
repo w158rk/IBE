@@ -217,7 +217,7 @@ int handle_message(Packet *target)
     char *head = p->head;
     int length = *(int *)(head+4);
 #ifdef DEBUG
-    fprintf(stderr,"the length is:%d", length);
+    fprintf(stderr,"the length is:%d\n", length);
 #endif
 
     char *message = p->payload;

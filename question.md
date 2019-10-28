@@ -1,9 +1,16 @@
 ## 10.28
 问题：server在生成私钥并进行sm4加密后，`packet_send.cpp`的第78行文件写不进去，主要问题出现在`connection.c`的第112行wirte函数中
+
 解决方法：将HEAD和payload.data中的内容连起来然后一并写入
 1. client连上server后继续监听
 2. `handle_sk_response`完成
-问题：`handle_dk_response`中对sk进行验证莫名的问题，后期再完善
+
+**问题：**
+1. `handle_dk_response`中对sk进行验证莫名的问题，后期再完善
+2. IBE解密server用的是client的私钥？？？client找不到私钥
+3. sm4_key还是有概率出错啊，会报`some members not set`的错
+
+**待解决：** sm4加密后的长度
 
 ## 10.27
 1. 修改set_key()的问题解决
