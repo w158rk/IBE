@@ -43,6 +43,10 @@ void Client::run_get_private_key(char *server_ip,
 	// QUESTION : is it necessary to run a listening thread for the connection ?	
 	 try
 	 {
+#ifdef DEBUG 
+		std::cerr << "main comm: " << (unsigned long)this << std::endl;
+#endif
+
 	 	comm->file_main();
 	 }
 	 catch(const std::exception& e)
@@ -75,21 +79,8 @@ void Client::run_get_private_key(char *server_ip,
 	*(int *)(p_app_packet->head + 4) = m_len;		//从AppPacket.head的第4位开始存放payload的长度
 
 	/* generate and copy the sm4 key */
-
-	// GENERATE_SM4_FILENAME(id, id_len)
-	// #ifdef DEBUG
-	// fprintf(stderr, "filename is:%s\n", filename);
-	// #endif
-	// FILE *fp;
-	// if((fp=fopen(filename,"wb+"))==NULL)
-    // {
-    //     printf("file cannot open \n");
-    // }
 	unsigned char key[SM4_KEY_LEN];
 	set_sm4key(key);
-	// set_key(key,fp);		//生成16位的key
-	// fclose(fp);
-	// FREE_SM4_FILENAME;
 	memcpy(payload, key, SM4_KEY_LEN);		//把key复制到p中
 
 #ifdef DEBUG 
@@ -112,27 +103,13 @@ void Client::run_get_private_key(char *server_ip,
 	ctx->payload.appPacket = p_app_packet;
 	ctx->dest_id = server_id;
 
-#ifdef DEBUG
-	fprintf(stderr, "send sm4_key is:\n");
-	for(int t=0;t<16;t++)
-		printf("%02x ",ctx->payload.appPacket->payload[t]);
-	printf("\n");
-#endif
-
 	// this code is a little weird, but it works 
 	// to get the mpk into the ctx
 
 	IBEPublicParameters mpk = NULL;
 	get_mpk_fp(get_mpk_filename(), &mpk);		//从文件中读出sP的值
 	
-#ifdef DEBUG 
-	fprintf(stderr, "[%s : %d] phase : %d\n", __FILE__, __LINE__, ctx->phase);
-#endif
-
 	ctx->mpk = mpk;		//将sP放入包中
-#ifdef DEBUG 
-	fprintf(stderr, "[%s : %d] phase : %d\n", __FILE__, __LINE__, ctx->phase);
-#endif
 
 	if(0 == get_packet_ptr()->packet_send(ctx)) {
 		throw UserException("wrong when make the packet to send");

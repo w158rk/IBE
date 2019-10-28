@@ -15,8 +15,12 @@ extern "C" {
 	#include <string.h>
 }
 #include <comm.hpp>
-#define DEBUG
 // static long int current_client_id;
+
+#ifdef DEBUG 
+	#include <iostream>
+#endif
+
 using namespace comm;
 
 /*读取包的内容和处理包的过程*/
@@ -28,6 +32,9 @@ int Comm::run_listen_core()
 	char *entity_id_cstr = entity_id->id;
 	int entity_id_len = entity_id->length; 
 
+#ifdef DEBUG 
+	std::cerr << "listen comm: " << (unsigned long)this << std::endl;
+#endif
 
 	do
 	{

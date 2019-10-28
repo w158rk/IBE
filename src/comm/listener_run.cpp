@@ -15,45 +15,28 @@ void comm::Comm::file_listener_run()
         fprintf(stderr, "[error] flags are not set completely, check the error sig and files\n", __FILE__, __LINE__);
 		return ;
     }
-
-	bool main_server_has_error = false;
-
-	if(signal(SIGCHLD, sig_chld) == SIG_ERR)					// 锁
+	
+	// do not use the child process, use the thread directly
+	/*处理监听事件*/
+	if(run_listen_core() == -1)
 	{
-		fprintf(stderr, "can't bind signal handler\n");
-		main_server_has_error = true;
+		// 业务
+		fprintf(stderr, "server core has error\n");
+		goto end;
 	}
 
-	if(signal(SIGCHLD, sig_chld) == SIG_ERR)					// 锁
+	//disconnect client socket is duplex, so read_file and write_file is the same file
+	if(fclose(m_read_file) == EOF)
 	{
-		fprintf(stderr, "can't bind signal handler\n");
-		main_server_has_error = true;
+		fprintf(stderr, "close the read file occurs an error\n");
+		goto end;
 	}
 
-	if(fork() == 0) // child process
-	{				// 监听进程
-		int child_server_status = 0;
-
-		/*处理监听事件*/
-		if(run_listen_core() == -1)
-		{
-			// 业务
-			fprintf(stderr, "server core has error\n");
-			child_server_status = -1;
-		}
-
-		//disconnect client socket is duplex, so read_file and write_file is the same file
-		if(fclose(m_read_file) == EOF)
-		{
-			fprintf(stderr, "close the read file occurs an error\n");
-			child_server_status = -1;
-		}
-		m_fread_file = false;
-		m_fwrite_file = false;
-
-	}
-
+end:
 	*m_err_sig = -1;
+	m_fread_file = false;
+	m_fwrite_file = false;
+
 }
 
 void comm::Comm::socket_listener_run()
@@ -82,12 +65,6 @@ void comm::Comm::socket_listener_run()
 	fprintf(stdout, "start listening\n");
 	#endif
 
-	if(signal(SIGCHLD, sig_chld) == SIG_ERR)					// 锁
-	{
-		fprintf(stderr, "can't bind signal handler\n");
-		main_server_has_error = true;
-	}
-	
 	while(main_server_has_error == false)					// 业务
 	{
 		client_len = sizeof(client_addr);
@@ -98,12 +75,50 @@ void comm::Comm::socket_listener_run()
 			break;
 		}
 
+		FILE* read_file;
+
+		if((read_file = fdopen(connect_fd, "r+")) == NULL)
+		{
+			fprintf(stderr, "convertion from connected socket fd to FILE struct has error\n");
+			close(connect_fd);
+			main_server_has_error = -1;
+		}
+		else
+		{
+			set_write_file(read_file);
+			set_read_file(read_file);
+
+#ifdef DEBUG
+			fprintf(stdout, "establish client server socket connection\n");
+#endif
+
+		/*处理监听事件*/
+		if(run_listen_core() == -1)
+		{
+			// 业务
+			fprintf(stderr, "server core has error\n");
+			main_server_has_error = -1;
+		}
+
+		//disconnect client socket is duplex, so read_file and write_file is the same file
+		if(fclose(read_file) == EOF)
+		{
+			fprintf(stderr, "close the read file occurs an error\n");
+			main_server_has_error = -1;
+		}
+
+		m_read_file = nullptr;	
+		m_write_file = nullptr;	
+		m_fread_file = false;
+		m_fwrite_file = false;
+
+		}
+
+
 		if(fork() == 0) // child process
 		{				// 监听进程
 			int child_server_status = 0;
 
-			FILE* read_file;
-			FILE* write_file;
 
 			if(close(listen_fd) == -1)
 			{
@@ -111,43 +126,6 @@ void comm::Comm::socket_listener_run()
 				child_server_status = -1;
 			}
 			
-			if((read_file = fdopen(connect_fd, "r+")) == NULL)
-			{
-				fprintf(stderr, "convertion from connected socket fd to FILE struct has error\n");
-				close(connect_fd);
-				child_server_status = -1;
-			}
-			else
-			{
-				write_file = read_file; // socket is duplex
-				m_write_file = write_file;
-				m_read_file = read_file;
-				m_fwrite_file = true;
-				m_fread_file = true;
-
-				#ifdef __DEBUG__
-				fprintf(stdout, "establish client server socket connection\n");
-				#endif
-
-				/*处理监听事件*/
-				if(run_listen_core() == -1)
-				{
-					// 业务
-					fprintf(stderr, "server core has error\n");
-					child_server_status = -1;
-				}
-
-				//disconnect client socket is duplex, so read_file and write_file is the same file
-				if(fclose(read_file) == EOF)
-				{
-					fprintf(stderr, "close the read file occurs an error\n");
-					child_server_status = -1;
-				}
-				
-				m_fread_file = false;
-				m_fwrite_file = false;
-
-			}
 			
 		}
 

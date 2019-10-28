@@ -96,35 +96,53 @@ void Packet::handle_dec() {
     {
         sm4_context sm4ctx;
 
+#ifdef DEBUG 
+        std::cerr << "\nm_fsm4_key: " << m_fsm4_key << std::endl;
+#endif
+
         // get the key from the packet object
         sm4_setkey_dec(&sm4ctx, (unsigned char*)get_sm4_key());
 
         // allocate space for decryption
         int length = *(int *)(p_sec_packet->head+4);
-        unsigned char *sm4_msg = (unsigned char *)malloc(BUFFER_SIZE);
+        unsigned char *sm4_msg = (unsigned char *)std::malloc(BUFFER_SIZE);
 	    sm4_crypt_ecb(&sm4ctx, 
                         0, 
                         length, 
                         (unsigned char*)(p_sec_packet->payload.data),
                         sm4_msg);
 #ifdef DEBUG
-        fprintf(stderr, "sk is%s\n", sm4_msg + APP_HEAD_LEN);
         fprintf(stderr, "id为：%s\n",ctx->dest_id->id);
 #endif
         
         // create a new app packet 
         AppPacket *p_app_packet = new AppPacket;
+        p_app_packet->payload = (char *)std::malloc(length-APP_HEAD_LEN);
 
         // copy the header and the payload into the app packet
         memcpy(p_app_packet->head, sm4_msg, APP_HEAD_LEN);        
         memcpy(p_app_packet->payload, sm4_msg+APP_HEAD_LEN, length-APP_HEAD_LEN);
 
         // set the payload of the sec packet        
-        free(p_sec_packet->payload.data);
-        p_sec_packet->payload.appPacket = p_app_packet;
+         try
+        {
+            std::free(p_sec_packet->payload.data);
+        }
+        catch(std::exception &e)
+        {
+            std::cerr << e.what() << std::endl;
+        }
+       p_sec_packet->payload.appPacket = p_app_packet;
 
         // free the temporaries
-        free(sm4_msg);
+        try
+        {
+            std::free(sm4_msg);
+        }
+        catch(std::exception &e)
+        {
+            std::cerr << e.what() << std::endl;
+        }
 
         break;
     }

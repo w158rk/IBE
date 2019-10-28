@@ -26,7 +26,7 @@ void packet::free_ctx(PacketCTX *ctx)
     AppPacket *packet = ctx->payload.appPacket;
     if(packet != nullptr)
     {
-        packet::free_app_packet(packet);
+        free_app_packet(packet);
     }
     ctx->payload.appPacket = nullptr;
 
@@ -36,8 +36,11 @@ void packet::free_ctx(PacketCTX *ctx)
     if(ctx->dest_id != nullptr) delete ctx->dest_id;
 
     /* free the mpk and sk */
-    if(ctx->mpk != nullptr) std::free(ctx->mpk);
-    if(ctx->sk != nullptr) std::free(ctx->sk);
+    
+    // I don't know where they are assigned
+    
+    // if(ctx->mpk != nullptr) std::free(ctx->mpk);
+    // if(ctx->sk != nullptr) std::free(ctx->sk);
 
     /* free the key */
     if(ctx->key != nullptr) std::free(ctx->key);

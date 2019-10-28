@@ -85,6 +85,7 @@ int handle_sk_request(Packet *target)
     }       
 
 #ifdef DEBUG 
+        fprintf(stderr, "client_id : %s \n", client_id);
         fprintf(stderr, "the generation of the private key passed \n");
         fprintf(stderr, "sk is%s\n", sk);
 #endif    
