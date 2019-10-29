@@ -26,9 +26,7 @@ void runserver(int argc, char *argv[])
 
     // initialize the objects at the order 
     char err_sig;
-    user::Server server(std::string((*doc)["id"]["ip_address"].GetString()),
-                        (*doc)["id"]["port"].GetInt(), 
-                        server_id);
+    user::User server(server_id);
     packet::Packet packet;
     comm::Comm comm;
     ui::UInterface uinterface;
@@ -42,8 +40,22 @@ void runserver(int argc, char *argv[])
 
 int main(int argc, char *argv[]) 
 {
-
-    runserver(argc, argv);
+    try 
+    {
+        runserver(argc, argv);
+    }
+    catch(user::UserException &e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
+    catch(comm::CommException &e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
+    catch(packet::PacketException &e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
 
 }
 

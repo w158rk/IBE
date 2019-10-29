@@ -8,7 +8,6 @@ extern "C" {
 }
 
 #include<packet.hpp>
-#include<ds.h>
 
 #define DEBUG
 #ifdef DEBUG 
@@ -96,12 +95,8 @@ void Packet::handle_dec() {
     {
         sm4_context sm4ctx;
 
-#ifdef DEBUG 
-        std::cerr << "\nm_fsm4_key: " << m_fsm4_key << std::endl;
-#endif
-
         // get the key from the packet object
-        sm4_setkey_dec(&sm4ctx, (unsigned char*)get_sm4_key());
+        sm4_setkey_dec(&sm4ctx, (unsigned char*)get_user_ptr()->get_sm4_key());
 
         // allocate space for decryption
         int length = *(int *)(p_sec_packet->head+4);

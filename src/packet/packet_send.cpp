@@ -70,7 +70,12 @@ void Packet::packet_send()
     char *data = (char *)std::malloc(len+SEC_HEAD_LEN);
     memcpy(data, sec_packet->head, SEC_HEAD_LEN);
     memcpy(data+SEC_HEAD_LEN, sec_packet->payload.data, len);
+
+    // send the packet from the comm object
     int length = get_comm_ptr()->send(data, len+SEC_HEAD_LEN);
+#ifdef DEBUG 
+    fprintf(stderr, "length : %d\n", length);
+#endif
     std::free(data);
 
     if (length != len + SEC_HEAD_LEN) {

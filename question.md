@@ -1,3 +1,7 @@
+## 10.29
+
+把crypto里的set_sm4key改成gen或random开头的函数 
+
 ## 10.28
 问题：server在生成私钥并进行sm4加密后，`packet_send.cpp`的第78行文件写不进去，主要问题出现在`connection.c`的第112行wirte函数中
 

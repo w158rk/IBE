@@ -20,14 +20,12 @@ namespace packet {
         GET_AND_SET(interface::IUser *, user_ptr)
         GET_AND_SET(interface::IComm *, comm_ptr)
         GET_AND_SET(PacketCTX *, ctx)
-        GET_AND_SET(char *, sm4_key)
 
     private:
         DECLARE_MEMBER(PacketCTX *, ctx)
         DECLARE_MEMBER(interface::IUser *, user_ptr)
         DECLARE_MEMBER(interface::IComm *, comm_ptr)
         DECLARE_MEMBER(interface::IUI *, ui_ptr)
-        DECLARE_MEMBER(char *, sm4_key)
 
         void handle_ap();
         void handle_dec();

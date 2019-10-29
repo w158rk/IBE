@@ -158,7 +158,6 @@ int handle_sk_request(Packet *target)
 
     rtn = 1;
 end:
-    /* free all the local allocated variable */
     return rtn;
 
 }

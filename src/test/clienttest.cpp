@@ -26,7 +26,7 @@ void runclient(int argc, char *argv[])
 
     // initialize the objects at the order 
     char err_sig;
-    user::Client client(client_id);
+    user::User client(client_id);
     packet::Packet packet;
     comm::Comm comm;
     ui::UInterface uinterface;

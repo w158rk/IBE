@@ -1,5 +1,6 @@
 #include <packet.hpp>
 
+
 void packet::free_sec_packet(SecPacket *packet)
 {
     /* free the payload */
@@ -43,6 +44,20 @@ void packet::free_ctx(PacketCTX *ctx)
     // if(ctx->sk != nullptr) std::free(ctx->sk);
 
     /* free the key */
-    if(ctx->key != nullptr) std::free(ctx->key);
+    if(ctx->key != nullptr) {
+        try 
+        {
+            std::free(ctx->key);
+        }
+        catch(std::exception &e)
+        {
+            fprintf(stderr, "%s\n", e.what());
+        }
+        
+    }
     delete ctx;
+
+#ifdef DEBUG 
+    fprintf(stderr, "free the ctx with no error\n");
+#endif
 }

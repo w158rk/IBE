@@ -1,7 +1,7 @@
 #ifndef INTERFACE_H
 #define INTERFACE_H
 
-#include<ds.h>
+#include<ds.hpp>
 #include<utils.h>
 #include<string>
 
@@ -34,13 +34,18 @@ namespace interface
         virtual int connect_to_server(char* ip_addr, int port) = 0;
         
         virtual void socket_main() = 0;
-        virtual void file_main() = 0;
 
         virtual ~IComm() = default;
 
+        static void file_main(IUser *user, 
+					std::FILE *read_file, 
+					std::FILE *write_file); 
+
         VIRTUAL_GET_AND_SET(IPacket *, packet_ptr)
         VIRTUAL_GET_AND_SET(IUser *, user_ptr)
-        VIRTUAL_GET_AND_SET(char *, err_sig)
+        VIRTUAL_GET_AND_SET(IUI *, ui_ptr)
+        VIRTUAL_GET_AND_SET(std::FILE *, read_file)
+        VIRTUAL_GET_AND_SET(std::FILE *, write_file)
 
     };
 
@@ -58,12 +63,16 @@ namespace interface
 
         virtual ~IUser() = default;
 
-        VIRTUAL_GET_AND_SET(IComm *, comm_ptr)
-        VIRTUAL_GET_AND_SET(IPacket *, packet_ptr)
         VIRTUAL_GET_AND_SET(char *, err_sig)
         VIRTUAL_GET_AND_SET(IUI *, ui_ptr)
         VIRTUAL_GET_AND_SET(char *, mpk_filename)
         VIRTUAL_GET_AND_SET(char *, msk_filename)
+        VIRTUAL_GET_AND_SET(IComm *, comm_ptr)
+        VIRTUAL_GET_AND_SET(IPacket *, packet_ptr)
+        VIRTUAL_GET_AND_SET(char *, sm4_key)
+
+        virtual void add_client(IComm *comm) = 0;
+        virtual void delete_client(IComm *comm) = 0;
 
     };
 
