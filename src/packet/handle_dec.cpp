@@ -103,7 +103,7 @@ void Packet::handle_dec() {
         int length = *(int *)(p_sec_packet->head+4);
         unsigned char *sm4_msg = (unsigned char *)malloc(BUFFER_SIZE);
 	    sm4_crypt_ecb(&sm4ctx, 
-                        0, 
+                        DEC_PARAMETER, 
                         length, 
                         (unsigned char*)(p_sec_packet->payload.data),
                         sm4_msg);

@@ -116,13 +116,13 @@ void Packet::send_enc()
             sm4_setkey_enc(sm4ctx,(unsigned char*)(ctx->key));
 
             // TODO : 1 here should be a readable macro
-            sm4_crypt_ecb(sm4ctx, 1, app_length + APP_HEAD_LEN, (unsigned char*)sk_data, (unsigned char*)cipher);
-            
+            sm4_crypt_ecb(sm4ctx, ENC_PARAMETER, app_length + APP_HEAD_LEN, (unsigned char*)sk_data, (unsigned char*)cipher);
+         
 #ifdef DEBUG
             fprintf(stderr, "cipher is:%s\n",cipher);
             /*对生成的cipher进行验证是否正确*/
             sm4_setkey_dec(sm4ctx, (unsigned char*)(ctx->key));
-            sm4_crypt_ecb(sm4ctx,0,IBE_SK_LEN + APP_HEAD_LEN,(unsigned char*)cipher, (unsigned char*)output);
+            sm4_crypt_ecb(sm4ctx,DEC_PARAMETER,IBE_SK_LEN + APP_HEAD_LEN,(unsigned char*)cipher, (unsigned char*)output);
             fprintf(stderr, "output sk is:%s\n", output + APP_HEAD_LEN);
 #endif
 
