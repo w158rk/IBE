@@ -10,6 +10,8 @@ namespace comm
 
     class Comm : public interface::IComm 
     {
+        friend class interface::IComm;
+
     public : 
     
         Comm(   FILE *read_file, 
@@ -24,13 +26,16 @@ namespace comm
         int connect_to_server(char* ip_addr, int port);
         int send(const void *vptr, size_t n);
         void socket_main();
-        void file_main();
+        void file_main(interface::IUser *user, 
+					std::FILE *read_file, 
+					std::FILE *write_file); 
 
 
         GET_AND_SET(FILE *, read_file)
         GET_AND_SET(FILE *, write_file)
         GET_AND_SET(interface::IPacket *, packet_ptr)
         GET_AND_SET(interface::IUser *, user_ptr)
+        GET_AND_SET(interface::IUI *, ui_ptr)
         GET_AND_SET(char *, err_sig)
 
     private :
@@ -40,6 +45,7 @@ namespace comm
         DECLARE_MEMBER(interface::IPacket *, packet_ptr)
         DECLARE_MEMBER(interface::IUser *, user_ptr)
         DECLARE_MEMBER(char *, err_sig)
+        DECLARE_MEMBER(interface::IUI *, ui_ptr)
 
 
         int run_listen_core();
@@ -47,7 +53,31 @@ namespace comm
         void socket_listener_run();
 
     };
-    
+
+    class CommException : public std::exception 
+    {
+    public:
+        CommException(std::string message)
+        {
+            set_message(message);
+        }
+        CommException() = default;
+        ~CommException() = default;
+
+        GET_AND_SET(std::string, message)
+        std::string what(){
+            if(m_fmessage)
+            {
+                std::string rtn("error in comm module : ");
+                rtn.append(m_message);
+                return rtn;
+            }
+            return std::string("error in comm module");
+        }
+    private: 
+        DECLARE_MEMBER(std::string, message)
+    };
+        
 }
 
 #endif

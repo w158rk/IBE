@@ -35,7 +35,7 @@ int UInterface::socket_interface_run() {
 		switch (choise) {
 			case 1:
 			{	
-				user::Client *client = dynamic_cast<user::Client *>(user);
+				user::User *client = dynamic_cast<user::User *>(user);
 				try 
 				{
 					client->run_get_private_key(parent->ip, parent->port);

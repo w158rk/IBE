@@ -11,7 +11,6 @@ void bind_objects(interface::IUser& user,
     user.set_comm_ptr(&comm);
     user.set_ui_ptr(&uinterface);
 
-    comm.set_err_sig(err_sig);
     comm.set_user_ptr(&user);
     comm.set_packet_ptr(&packet);
 

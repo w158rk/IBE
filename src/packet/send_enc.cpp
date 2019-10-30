@@ -36,15 +36,7 @@ void Packet::send_enc()
     AppPacket *app_packet = sec_packet->payload.appPacket;
     int app_length = *(int *)(app_packet->head+4);
 
-#ifdef DEBUG 
-    fprintf(stderr, "app packet length : %d\n", app_length);
-#endif    
-
     int sec_type = *(int *)(sec_packet->head);
-#ifdef DEBUG 
-    fprintf(stderr, "[%s:%d] type : %d\n", __FILE__, __LINE__, sec_type);
-#endif  
-
 
     switch (sec_type)
     {

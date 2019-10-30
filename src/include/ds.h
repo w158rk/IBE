@@ -38,19 +38,7 @@ typedef struct ID_STR{
     struct ID_STR *father_node;
 }ID;
 
-typedef struct {
-    char head[APP_HEAD_LEN];
-    char *payload;
-} AppPacket;
 
-typedef struct {
-    char head[SEC_HEAD_LEN];
-    union payload1 {
-        char *data;
-        AppPacket *appPacket;
-    } payload;
-    char signature[SIGN_LEN];
-} SecPacket;
 
 /**
  * packet process context
@@ -69,28 +57,6 @@ enum state {
     RECV_DEC,
     RECV_SEC_PACKET,
 };
-
-typedef struct packet_ctx{
-    enum state phase;
-    union payload2 {
-        AppPacket *appPacket;
-        SecPacket *secPacket;
-    } payload;
-    
-    ID *src_id;
-    ID *dest_id;
-    
-    IBEPublicParameters mpk;
-    IBEPrivateKey sk;  
-
-   char *sm4_key[16];
-
-   char * key;
-
-    // FILE *read_file;
-    // FILE *write_file;
-} PacketCTX;
-
 
 void ID_init();
 

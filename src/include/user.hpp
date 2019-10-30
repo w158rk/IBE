@@ -2,11 +2,12 @@
 #define USER__H
 
 #include<string>
-#include<ds.h>
 #include<interface.hpp>
 #include<utils.h>
 
 #include<rapidjson/document.h>
+
+#include<set>
 
 namespace user {
 
@@ -15,14 +16,11 @@ namespace user {
 
     public :
 
-        User(std::string ip_address, int port, ID* id);
         User(ID* id);
         int run();
 
         ~User();
 
-        GET_AND_SET(interface::IComm *, comm_ptr)
-        GET_AND_SET(interface::IPacket *, packet_ptr)
         GET_AND_SET(interface::IUI *, ui_ptr)
         GET_AND_SET(std::string, ip_address)
         GET_AND_SET(int, port)
@@ -30,50 +28,38 @@ namespace user {
         GET_AND_SET(char *, err_sig)
         GET_AND_SET(char *, msk_filename)
         GET_AND_SET(char *, mpk_filename)
+        GET_AND_SET(interface::IComm *, comm_ptr)
+        GET_AND_SET(interface::IPacket *, packet_ptr)
+        GET_AND_SET(char *, sm4_key)
 
+        void run_get_private_key(char *server_ip, 
+								int server_port,
+								ID *server_id=nullptr);
         void run_send_message(char *dest_ip, 
 							int dest_port,
 							ID *dest_id);
 
+        void add_client(interface::IComm *comm);
+        void delete_client(interface::IComm *comm);
+
     private :
+        DECLARE_MEMBER(interface::IUI *, ui_ptr)
         DECLARE_MEMBER(interface::IComm *, comm_ptr)
         DECLARE_MEMBER(interface::IPacket *, packet_ptr)
-        DECLARE_MEMBER(interface::IUI *, ui_ptr)
         DECLARE_MEMBER(std::string, ip_address)
         DECLARE_MEMBER(int, port)
         DECLARE_MEMBER(ID*, id)
         DECLARE_MEMBER(char *, err_sig)
         DECLARE_MEMBER(char *, msk_filename)
         DECLARE_MEMBER(char *, mpk_filename)
+        DECLARE_MEMBER(char *, sm4_key)
+        
+        // with no flag with them as they are only used by the object itself
+        std::set<interface::IComm *> client_comms;
+        std::set<interface::IPacket *> client_packets;
 
         void socket_main();
         void file_main();
-
-    };
-
-    class Server : public User
-    {
-
-    public :
-
-        Server(std::string ip_address, int port, ID* id);
-        ~Server();
-    };
-
-    class Client : public User
-    {
-    
-    public:
-
-        Client(std::string ip_address, int port, ID* id);
-        Client(ID* id);
-        ~Client();
-
-        void run_get_private_key(char *server_ip, 
-								int server_port,
-								ID *server_id=nullptr);
-
-
 
     };
 

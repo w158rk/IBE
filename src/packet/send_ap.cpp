@@ -44,7 +44,7 @@ void Packet::send_ap()
         {
             char *sm4key = (char *)std::malloc(SM4_KEY_LEN);
             memcpy(sm4key, ctx->payload.appPacket->payload, SM4_KEY_LEN);
-            set_sm4_key(sm4key);
+            get_user_ptr()->set_sm4_key(sm4key);
             #ifdef DEBUG
             for(int t=0;t<16;t++)
                 printf("%02x ",sm4key[t]);

@@ -42,7 +42,7 @@ int ibe_extract(IBEPrivateKey *sk,
 
     SM9PrivateKey *sm9_sk = SM9_extract_private_key(sm9_ms, id, id_len);
     #ifdef DEBUG 
-    fprintf(stderr, "sm9_sk : %ld\n", sm9_sk);
+    fprintf(stderr, "id : %s\n", id);
     #endif
 
 
