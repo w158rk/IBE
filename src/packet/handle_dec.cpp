@@ -101,11 +101,13 @@ void Packet::handle_dec() {
         // allocate space for decryption
         int length = *(int *)(p_sec_packet->head+4);
         unsigned char *sm4_msg = (unsigned char *)std::malloc(BUFFER_SIZE);
+        int out_len;
 	    sm4_crypt_ecb(&sm4ctx, 
                         DEC_PARAMETER, 
                         length, 
                         (unsigned char*)(p_sec_packet->payload.data),
-                        sm4_msg);
+                        sm4_msg,
+                        &out_len);
 #ifdef DEBUG
         fprintf(stderr, "id为：%s\n",ctx->dest_id->id);
 #endif

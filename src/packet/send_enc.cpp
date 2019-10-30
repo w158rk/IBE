@@ -97,24 +97,32 @@ void Packet::send_enc()
             // copy the app packet into the plain data field
             memcpy(sk_data, app_packet->head, APP_HEAD_LEN);
             memcpy(sk_data + APP_HEAD_LEN, app_packet->payload, app_length);
-            size_t cipher_len = BUFFER_SIZE;
+            //size_t cipher_len = BUFFER_SIZE;
 
 #ifdef DEBUG
             char *output = (char *)malloc(BUFFER_SIZE);
 #endif
 
+            int len = app_length + APP_HEAD_LEN;
+            int c_len;
             // encrypt
             sm4_context *sm4ctx = new sm4_context;
             sm4_setkey_enc(sm4ctx,(unsigned char*)(ctx->key));
 
             // TODO : 1 here should be a readable macro
-            sm4_crypt_ecb(sm4ctx, ENC_PARAMETER, app_length + APP_HEAD_LEN, (unsigned char*)sk_data, (unsigned char*)cipher);
-         
+            sm4_crypt_ecb(sm4ctx, ENC_PARAMETER, app_length + APP_HEAD_LEN, (unsigned char*)sk_data, (unsigned char*)cipher, &c_len);
+#ifdef DEBUG
+            fprintf(stderr, "c_len is%d\n", c_len);
+#endif
+                 
 #ifdef DEBUG
             fprintf(stderr, "cipher is:%s\n",cipher);
             /*对生成的cipher进行验证是否正确*/
             sm4_setkey_dec(sm4ctx, (unsigned char*)(ctx->key));
-            sm4_crypt_ecb(sm4ctx,DEC_PARAMETER,IBE_SK_LEN + APP_HEAD_LEN,(unsigned char*)cipher, (unsigned char*)output);
+            unsigned char *data = (unsigned char *)std::malloc(c_len);
+            memcpy(data, cipher, c_len);
+            int out_len;
+            sm4_crypt_ecb(sm4ctx,DEC_PARAMETER,c_len,(unsigned char*)data, (unsigned char*)output, &out_len);
             fprintf(stderr, "output sk is:%s\n", output + APP_HEAD_LEN);
 #endif
 
@@ -122,10 +130,10 @@ void Packet::send_enc()
              * TODO : calculate the cipher length from somewhere
              * here the segmentation fault is likely to happen
              */
-            sec_packet->payload.data = (char *)malloc(cipher_len);
-            memcpy(sec_packet->payload.data, cipher, cipher_len);       //加密后的信息放在sec_packet下的payload.sk_data中
+            sec_packet->payload.data = (char *)malloc(c_len);
+            memcpy(sec_packet->payload.data, cipher, c_len);       //加密后的信息放在sec_packet下的payload.sk_data中
             
-            *(int *)(sec_packet->head+4) = (int)cipher_len;     //sec_packet的head后4位存放密文的长度
+            *(int *)(sec_packet->head+4) = (int)c_len;     //sec_packet的head后4位存放密文的长度
 
             break;
         }

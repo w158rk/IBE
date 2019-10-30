@@ -73,7 +73,8 @@ void sm4_crypt_ecb( sm4_context *ctx,
 				     int mode,
 					 int length,
                      unsigned char *input,
-                     unsigned char *output);
+                     unsigned char *output,
+                     int *output_lenth);
 /*
  * secret sharing 
  *

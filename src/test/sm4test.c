@@ -50,7 +50,8 @@ int main()
 
 	//encrypt standard testing vector
 	sm4_setkey_enc(&ctx,key);
-	sm4_crypt_ecb(&ctx,1,N,input,output);
+	int out_len;
+	sm4_crypt_ecb(&ctx,1,N,input,output,&out_len);
 	printf("加密得到：");
 	for(i=0;i<N;i++)
 		printf("%02x ", output[i]);
@@ -58,7 +59,7 @@ int main()
  
 	//decrypt testing
 	sm4_setkey_dec(&ctx,key);
-	sm4_crypt_ecb(&ctx,0,N,output,output);
+	sm4_crypt_ecb(&ctx,0,N,output,output,&out_len);
 	printf("解密得到：");
 	for(i=0;i<N;i++)
 		printf("%c", output[i]);

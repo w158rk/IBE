@@ -1,5 +1,6 @@
 ## 10.30
 1. `crypto.h`中sm4 key生成的函数改为`gen_random_sm4key`
+2. sm4的长度问题解决
 
 ## 10.29
 

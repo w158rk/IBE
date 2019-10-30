@@ -285,8 +285,19 @@ void sm4_crypt_ecb( sm4_context *ctx,
 				   int mode,
 				   int length,
 				   unsigned char *input,
-                   unsigned char *output)
+                   unsigned char *output,
+                   int *output_length)
 {
+    int re = length%16;
+    if(re==0)
+    {
+        *output_length = length;
+    }
+
+    else
+    {
+        *output_length = (length/16+1)*16;
+    }
     while( length > 0 )
     {
         sm4_one_round( ctx->sk, input, output );
@@ -294,7 +305,6 @@ void sm4_crypt_ecb( sm4_context *ctx,
         output += 16;
         length -= 16;
     }
- 
 }
  
 /*
