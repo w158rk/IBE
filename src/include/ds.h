@@ -27,6 +27,8 @@ typedef char    *IBEMasterSecret;
 #define SEC_HEAD_LEN    24
 #define SIGN_LEN        32
 #define MES_LEN         10000
+#define ENC_PARAMETER       1
+#define DEC_PARAMETER       0
 
 typedef struct ID_STR{
     char *id;
