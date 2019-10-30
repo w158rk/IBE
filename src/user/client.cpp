@@ -65,17 +65,9 @@ void User::run_get_private_key(char *server_ip,
 	set_sm4_key(key);
 	memcpy(payload, key, SM4_KEY_LEN);		//把key复制到p中
 
-#ifdef DEBUG 
-	fprintf(stderr, "[%s : %d] payload1 : %s\n", __FILE__, __LINE__, payload);
-#endif
-
 	/* copy the id */
 	memcpy(payload+SM4_KEY_LEN, id, (size_t)id_len);		
 	p_app_packet->payload = payload;
-
-#ifdef DEBUG 
-	fprintf(stderr, "[%s : %d] payload2 : %s\n", __FILE__, __LINE__, payload);
-#endif
 
 	PacketCTX *ctx = new PacketCTX;
 	// NOTE : It is the responsibility of packet class to 

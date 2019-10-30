@@ -55,10 +55,6 @@ void User::run_send_message(char *dest_ip,
 	memcpy(filename_message, dest_id->id, dest_id->length);
 	memcpy(filename_message+dest_id->length, "_message.txt", 14);
 
-	#ifdef DEBUG
-	fprintf(stderr, "%s\n", filename_message);
-	#endif
-	
 	/* 读取信息 */
 	FILE *fp;
 	if((fp=fopen(filename_message,"rb+"))==NULL)
@@ -74,10 +70,6 @@ void User::run_send_message(char *dest_ip,
 	}
 	fclose(fp);
 	int len = strlen(message);
-	#ifdef DEBUG
-	fprintf(stderr, "the message is:%s\n", message);
-	fprintf(stderr, "the length of message is:%d\n", len);
-	#endif
 
 	/* 组织包 */
 
@@ -104,9 +96,6 @@ void User::run_send_message(char *dest_ip,
 	get_mpk_fp(get_mpk_filename(), &mpk);
 
 	ctx->mpk = mpk;		//将sP放入包中
-#ifdef DEBUG 
-	fprintf(stderr, "[%s : %d] phase : %d\n", __FILE__, __LINE__, ctx->phase);
-#endif
 
 	if(0 == get_packet_ptr()->packet_send(ctx)) {
 		throw UserException("wrong when make the packet to send");

@@ -23,16 +23,8 @@ int ibe_encrypt(const  char* data, size_t data_len,  char* c_buf, size_t *c_len,
         goto end;
     }
 
-    #ifdef DEBUG 
-    fprintf(stderr, "\ntest2 : %ld\n", sm9_mpk);
-    #endif
-
     int ret = SM9_encrypt(NID_sm9encrypt_with_sm3_xor, data, data_len,
 		c_buf, c_len, sm9_mpk, id, id_len);
-
-    #ifdef DEBUG 
-    fprintf(stderr, "test2\n");
-    #endif
 
     if(!ret) {
 

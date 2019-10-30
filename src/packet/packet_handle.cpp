@@ -33,9 +33,6 @@ void Packet::packet_handle()
     PacketCTX *ctx = get_ctx();
 
     while(ctx->phase != RECV_DONE) {
-        #ifdef DEBUG 
-        fprintf(stderr, "handle phase : %d\n", ctx->phase);
-        #endif
         switch (ctx->phase)
         {
         case RECV_APP_PACKET:

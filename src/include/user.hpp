@@ -31,6 +31,7 @@ namespace user {
         GET_AND_SET(interface::IComm *, comm_ptr)
         GET_AND_SET(interface::IPacket *, packet_ptr)
         GET_AND_SET(char *, sm4_key)
+        GET_AND_SET(std::thread *, thread)
 
         void run_get_private_key(char *server_ip, 
 								int server_port,
@@ -41,6 +42,8 @@ namespace user {
 
         void add_client(interface::IComm *comm);
         void delete_client(interface::IComm *comm);
+        void add_thread(std::thread *thread);
+        void delete_thread(std::thread *thread);
 
     private :
         DECLARE_MEMBER(interface::IUI *, ui_ptr)
@@ -53,10 +56,12 @@ namespace user {
         DECLARE_MEMBER(char *, msk_filename)
         DECLARE_MEMBER(char *, mpk_filename)
         DECLARE_MEMBER(char *, sm4_key)
+        DECLARE_MEMBER(std::thread *, thread)
         
         // with no flag with them as they are only used by the object itself
         std::set<interface::IComm *> client_comms;
         std::set<interface::IPacket *> client_packets;
+        std::set<std::thread *> client_threads;
 
         void socket_main();
         void file_main();

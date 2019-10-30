@@ -32,10 +32,6 @@ int Comm::run_listen_core()
 	char *entity_id_cstr = entity_id->id;
 	int entity_id_len = entity_id->length; 
 
-#ifdef DEBUG 
-	std::cerr << "listen comm: " << (unsigned long)this << std::endl;
-#endif
-
 	/* now I have got the crypto type, so what I should do is to get the plain text
 		* from the packet 
 		* */
@@ -62,8 +58,6 @@ int Comm::run_listen_core()
 
 	#ifdef DEBUG 
 	fprintf(stderr, "finish reading the head\n");
-	fprintf(stderr, "type : %d\n", *(int *)(p_packet->head));
-	fprintf(stderr, "length : %d\n", *(int *)(p_packet->head+4));
 	#endif
 	// length of the packet without the head
 	int length = *(int *) (p_packet->head+4);

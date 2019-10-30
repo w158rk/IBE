@@ -45,10 +45,6 @@ void Packet::handle_dec() {
         char *m = (char *)malloc(BUFFER_SIZE);
         size_t m_len;
 
-#ifdef DEBUG 
-        //std::cerr << "length before decryption: " << c_len << std::endl;
-#endif
-
         // get the private key from file
         IBEPrivateKey sk = NULL;
         GENERATE_SK_FILENAME(ctx->dest_id)
@@ -59,14 +55,8 @@ void Packet::handle_dec() {
         {
             throw PacketException("ibe decryption failed");
         }
-        fprintf(stderr, "sk is%s\n", sk);
         std::free(sk);
         FREE_SK_FILENAME;
-
-#ifdef DEBUG 
-        fprintf(stderr, "message length : %d\n", m_len); 
-        fprintf(stderr, "message : %s\n", m);
-#endif
 
         // organize the message as a app packet 
         AppPacket *app_packet = new AppPacket;
@@ -80,10 +70,6 @@ void Packet::handle_dec() {
         memcpy(payload, m+APP_HEAD_LEN, payload_len);
         app_packet->payload = payload;     
 
-#ifdef DEBUG 
-        fprintf(stderr, "payload length : %d\n", payload_len);
-        fprintf(stderr, "payload : %s\n", payload);
-#endif
 
         // add the app packet to the payload of the sec packet 
         p_sec_packet->payload.appPacket = app_packet;       //把该app_packet包放在ctx->payload.secPacket->payload.appPacket中
@@ -106,9 +92,6 @@ void Packet::handle_dec() {
                         length, 
                         (unsigned char*)(p_sec_packet->payload.data),
                         sm4_msg);
-#ifdef DEBUG
-        fprintf(stderr, "id为：%s\n",ctx->dest_id->id);
-#endif
         
         // create a new app packet 
         AppPacket *p_app_packet = new AppPacket;

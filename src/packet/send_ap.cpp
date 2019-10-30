@@ -28,10 +28,6 @@ void Packet::send_ap()
     char *head = packet->head;
     int send_type, type = *(int *)head;
 
-    #ifdef DEBUG 
-    fprintf(stderr, "send type : %d\n", send_type);
-    #endif
-
     switch (type)
     {
         case PLAIN_MESSAGE_TYPE:
@@ -45,11 +41,6 @@ void Packet::send_ap()
             char *sm4key = (char *)std::malloc(SM4_KEY_LEN);
             memcpy(sm4key, ctx->payload.appPacket->payload, SM4_KEY_LEN);
             get_user_ptr()->set_sm4_key(sm4key);
-            #ifdef DEBUG
-            for(int t=0;t<16;t++)
-                printf("%02x ",sm4key[t]);
-            printf("\n");
-            #endif
         }
         case SESSION_KEY_ACK_TYPE:
             send_type = IBE_TYPE;

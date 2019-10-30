@@ -52,10 +52,6 @@ void Packet::send_enc()
             memcpy(data, app_packet->head, APP_HEAD_LEN); 
             memcpy(data+APP_HEAD_LEN, app_packet->payload, app_length); 
 
-#ifdef DEBUG 
-            fprintf(stderr, "[%s:%d] IBE ENC\n", __FILE__, __LINE__);
-            fprintf(stderr, "dest id is:%s\n", ctx->dest_id->id);
-#endif  
 
             // encrypt
             if (!ibe_encrypt(data, (size_t)app_length+APP_HEAD_LEN, 
@@ -64,10 +60,6 @@ void Packet::send_enc()
             {
                 throw PacketException("encrypt failed");
             }
-
-#ifdef DEBUG 
-            std::cerr << "encrypted length: " << cipher_len << std::endl;
-#endif
 
             // copy the cipher into the sec packet
             sec_packet->payload.data = (char *)malloc(cipher_len);
@@ -85,10 +77,6 @@ void Packet::send_enc()
     
         case SM4_TYPE:
         {   
-#ifdef DEBUG
-            fprintf(stderr, "sk is: %s\n", sec_packet->payload.appPacket->payload);
-            fprintf(stderr, "app packet length before sm4 encryption is: %d\n", app_length);
-#endif
             
             // allocate space for plain data and cipher
             char *sk_data = (char *)std::malloc(app_length + APP_HEAD_LEN);
@@ -111,11 +99,9 @@ void Packet::send_enc()
             sm4_crypt_ecb(sm4ctx, 1, app_length + APP_HEAD_LEN, (unsigned char*)sk_data, (unsigned char*)cipher);
             
 #ifdef DEBUG
-            fprintf(stderr, "cipher is:%s\n",cipher);
             /*对生成的cipher进行验证是否正确*/
             sm4_setkey_dec(sm4ctx, (unsigned char*)(ctx->key));
             sm4_crypt_ecb(sm4ctx,0,IBE_SK_LEN + APP_HEAD_LEN,(unsigned char*)cipher, (unsigned char*)output);
-            fprintf(stderr, "output sk is:%s\n", output + APP_HEAD_LEN);
 #endif
 
             /**

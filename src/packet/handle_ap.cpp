@@ -46,9 +46,6 @@ int handle_sk_request(Packet *target)
     PacketCTX *ctx = target->get_ctx();
 
     AppPacket *p = ctx->payload.appPacket;
-    #ifdef DEBUG 
-    fprintf(stderr, "[%s : %d] payload : %s\n", __FILE__, __LINE__, p->payload);
-    #endif
     char *head = p->head;
     char *payload = p->payload;        //获取的payload为client的SM4_key加上id
 
@@ -56,12 +53,6 @@ int handle_sk_request(Packet *target)
     int payload_len = *(int *)(head + 4);
     char *client_id = payload + SM4_KEY_LEN;
     int client_id_len = payload_len - SM4_KEY_LEN;       //计算id的长度
-
-#ifdef DEBUG 
-    fprintf(stderr, "payload_len: %d\n", payload_len);
-    fprintf(stderr, "id_len is: %d\n", client_id_len);
-    fprintf(stderr, "id: %s\n", client_id);
-#endif
 
     IBEMasterSecret msk = NULL;
     IBEPrivateKey sk = NULL;
@@ -83,12 +74,6 @@ int handle_sk_request(Packet *target)
     if ( 0 == ibe_extract(&sk, &msk, client_id, (size_t)client_id_len)) {
         throw PacketException(" cannot extract the private key");
     }       
-
-#ifdef DEBUG 
-        fprintf(stderr, "client_id : %s \n", client_id);
-        fprintf(stderr, "the generation of the private key passed \n");
-        fprintf(stderr, "sk is%s\n", sk);
-#endif    
 
     {   /* test the validation of the private key*/
         char data[] = "This is a test text";
@@ -152,9 +137,6 @@ int handle_sk_request(Packet *target)
         ERROR("send the p error");
         goto end;
     }
-    #ifdef DEBUG
-    fprintf(stderr,"[%s:%d] mark \n", __FILE__, __LINE__);
-    #endif
 
     rtn = 1;
 end:
@@ -168,9 +150,6 @@ int handle_sk_response(Packet *target) {
     PacketCTX *ctx = target->get_ctx();
     char *sk = (char *)std::malloc(IBE_SK_LEN);
     memcpy(sk, ctx->payload.appPacket->payload, IBE_SK_LEN);
-#ifdef DEBUG
-    fprintf(stderr, "sk is%s\n", sk);
-#endif
 
     GENERATE_SK_FILENAME(ctx->dest_id)        
 
@@ -216,9 +195,6 @@ int handle_message(Packet *target)
     AppPacket *p = ctx->payload.appPacket;
     char *head = p->head;
     int length = *(int *)(head+4);
-#ifdef DEBUG
-    fprintf(stderr,"the length is:%d\n", length);
-#endif
 
     char *message = p->payload;
 
@@ -256,11 +232,6 @@ void Packet::handle_ap() {
 
     /* analyze the head */
     int type = *(int *)head;
-
-#ifdef DEBUG 
-    fprintf(stderr, "[%s : %d]type : %d\n", __FILE__, __LINE__, type);
-    fprintf(stderr,"[%s:%d] get_ctx : %ld\n", __FILE__, __LINE__, (get_ctx()));
-#endif
 
     switch (type)
     {

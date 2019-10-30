@@ -4,6 +4,8 @@
 #include<ds.hpp>
 #include<utils.h>
 #include<string>
+#include<thread>
+
 
 namespace interface 
 {
@@ -69,11 +71,13 @@ namespace interface
         VIRTUAL_GET_AND_SET(char *, msk_filename)
         VIRTUAL_GET_AND_SET(IComm *, comm_ptr)
         VIRTUAL_GET_AND_SET(IPacket *, packet_ptr)
+        VIRTUAL_GET_AND_SET(std::thread *, thread)
         VIRTUAL_GET_AND_SET(char *, sm4_key)
 
         virtual void add_client(IComm *comm) = 0;
         virtual void delete_client(IComm *comm) = 0;
-
+        virtual void add_thread(std::thread *thread) = 0;
+        virtual void delete_thread(std::thread *thread) = 0 ;
     };
 
     class IUI
