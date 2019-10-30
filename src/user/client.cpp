@@ -61,7 +61,7 @@ void User::run_get_private_key(char *server_ip,
 
 	/* generate and copy the sm4 key */
 	char *key = (char *)std::malloc(SM4_KEY_LEN);
-	set_sm4key((unsigned char *)key);
+	gen_random_sm4key((unsigned char *)key);
 	set_sm4_key(key);
 	memcpy(payload, key, SM4_KEY_LEN);		//把key复制到p中
 

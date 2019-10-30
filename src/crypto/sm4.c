@@ -364,7 +364,7 @@ void set_key(unsigned char *key, FILE* filename){
 	
 }
 
-void set_sm4key(unsigned char *key)
+void gen_random_sm4key(unsigned char *key)
 {
     srand(time(NULL));
     #ifdef DEBUG 

@@ -64,6 +64,7 @@ int gen_random_key(char *key);
 char *cbc_iv_new(void);
 char *cbc_key_new(void);
 
+void gen_random_sm4key(unsigned char *key);
 void set_key(unsigned char *key, FILE* filename);
 void get_key(unsigned char *key, FILE* filename);
 void sm4_setkey_enc( sm4_context *ctx, unsigned char key[16] );
