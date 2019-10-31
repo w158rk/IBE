@@ -1,6 +1,6 @@
 #include <packet.hpp>
 
-#define DEBUG
+
 using namespace packet;
 
 int Packet::packet_handle(PacketCTX* ctx) {
@@ -24,7 +24,12 @@ int Packet::packet_handle(PacketCTX* ctx) {
         m_fctx = false;
     }
 
-    free_ctx(ctx);
+    delete ctx;
+
+#ifdef DEBUG 
+    interface::IUI::debug("handle a packet finished");
+#endif
+
     return 1;
 }
 
@@ -32,8 +37,8 @@ void Packet::packet_handle()
 {
     PacketCTX *ctx = get_ctx();
 
-    while(ctx->phase != RECV_DONE) {
-        switch (ctx->phase)
+    while(ctx->get_phase() != RECV_DONE) {
+        switch (ctx->get_phase())
         {
         case RECV_APP_PACKET:
             handle_ap();
@@ -49,11 +54,5 @@ void Packet::packet_handle()
             break;
         }
     }
-
-    /** When the handle of the packet is finished, 
-     * the context should be freed and 
-     * the member ctx should be null 
-     * f_ctx should be false 
-     */
 
 }

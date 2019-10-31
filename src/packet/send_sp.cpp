@@ -13,9 +13,9 @@ void Packet::send_sp()
 {
 
     PacketCTX *ctx = get_ctx();
-    if(ctx->phase != SEND_SEC_PACKET) {
-
-        ERROR("call wrong function");
+    if(ctx->get_phase() != SEND_SEC_PACKET) {
+        interface::IUI::error("call wrong function send_sp");
+        throw PacketException("call wrong function send_sp");        
     }
-    ctx->phase = SEND_DONE;
+    ctx->set_phase(SEND_DONE);
 }

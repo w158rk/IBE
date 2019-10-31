@@ -5,6 +5,6 @@ using namespace packet;
 void Packet::handle_sp() {
 
     PacketCTX *ctx = get_ctx();
-    ctx->phase = RECV_DEC;
+    ctx->set_phase(RECV_DEC);
 
 }

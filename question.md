@@ -1,5 +1,5 @@
 ## 10.30
-1. `crypto.h`中sm4 key生成的函数改为`gen_random_sm4key`
+1. `crypto.h`中sm4 key生成的函数改为`gen_random_sm4`
 2. sm4的长度问题解决
 
 ## 10.29
@@ -114,7 +114,7 @@ fprintf(stderr, "m is %s\n", m);
 1. `handle_ap.c`的52行函数的结尾输出的msk和66行开头输出的msk不相符
 2. 在运行./servertest和./clienttest进行获取私钥的过程中，`ibe_extract.c`的45行输出的sm9_sk为0
 3. 在通信获取私钥的过程中，`ibe_extract.c`的51行会报错，`handle_ap.c`的67行会报错
-> 调试过程中对`handle_ap.c`，`ibe_extract.c`和`sys_lib.c`进行了`#define DEBUG`的调试
+> 调试过程中对`handle_ap.c`，`ibe_extract.c`和`sys_lib.c`进行了``的调试
 
 ## 9.15
 添加了关于SM4的代码部分，有关的头文件在`include/openssl/sm4.h`下，具体的实现文件在`crypto/sm4.c`中，新增添了`test`中的`sm4test.c`测试用于sm4的测试

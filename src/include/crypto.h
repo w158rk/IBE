@@ -16,8 +16,19 @@
 
 #include <openssl/bn.h>
 #include <openssl/ec.h>
-#include<openssl/sm4.h>
+#include <openssl/sm4.h>
 
+/* key lengths */
+#define AES_KEY_BITS            256 
+#define AES_KEY_LEN             (AES_KEY_BITS/8)
+#define AES_IV_BITS             128
+#define AES_IV_LEN              (AES_IV_BITS/8)
+#define SM4_KEY_BITS            128
+#define SM4_KEY_LEN             (SM4_KEY_BITS/8)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int ibe_encrypt(const  char* data, size_t data_len,  char* c_buf, size_t *c_len, 
     IBEPublicParameters *mpk, const char *id, size_t id_len);
@@ -44,27 +55,14 @@ void ibe_sk_copy(IBEPrivateKey *dest, IBEPrivateKey *src);
  * cbc 
  */
 
-/* key lengths */
-#define AES_KEY_BITS            256 
-#define AES_KEY_LEN             (AES_KEY_BITS/8)
-#define AES_IV_BITS             128
-#define AES_IV_LEN              (AES_IV_BITS/8)
-#define SM4_KEY_BITS            128
-#define SM4_KEY_LEN             (SM4_KEY_BITS/8)
+
 
 int put_iv_fp(const char* filename, const char* iv, size_t len);
 int get_iv_fp(const char* filename, char* iv, size_t len);
-int cbc_decrypt(unsigned char *c, size_t c_len, unsigned char *key,
-    unsigned char *iv, unsigned char *m, size_t* m_len);
-int cbc_encrypt(unsigned char *m, size_t m_len, unsigned char *key,
-    unsigned char *iv, unsigned char *c, size_t* c_len);
 int gen_random_iv(char *iv);
 int gen_random_key(char *key);
 
-char *cbc_iv_new(void);
-char *cbc_key_new(void);
-
-void gen_random_sm4key(unsigned char *key);
+void gen_random_sm4(unsigned char *key);
 void set_key(unsigned char *key, FILE* filename);
 void get_key(unsigned char *key, FILE* filename);
 void sm4_setkey_enc( sm4_context *ctx, unsigned char key[16] );
@@ -175,6 +173,8 @@ int SS_lagrange_value(BIGNUM *value, BIGNUM **poly_list, unsigned int length,
 /*!
  * @todo scalar multiplication of a point and a scalar
  */
-
+#ifdef __cplusplus
+}
+#endif
 #endif 
 

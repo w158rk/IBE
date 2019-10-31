@@ -19,7 +19,7 @@ extern "C" {
 	#include<utils.h>
 }
 
-#define DEBUG
+
 
 using namespace user;
 
@@ -82,20 +82,20 @@ void User::run_send_message(char *dest_ip,
 	 * |	type	|	length of payload	|
 	 * --------------------------------------
 	 */
-	*(int *)(p_app_packet->head) = IBE_MES_TYPE;		//设置标志位
-	*(int *)(p_app_packet->head + 4) = len;
-	p_app_packet->payload = message;
+	p_app_packet->set_type(IBE_MES_TYPE);
+	p_app_packet->set_length(len);
+	p_app_packet->set_payload(message);
 
 	PacketCTX *ctx = new PacketCTX;
 
-	ctx->phase = SEND_APP_PACKET;
-	ctx->payload.appPacket = p_app_packet;
-	ctx->dest_id = dest_id;
+	ctx->set_phase(SEND_APP_PACKET);
+	ctx->set_payload_app (p_app_packet);
+	ctx->set_dest_id(dest_id);
 
 	IBEPublicParameters mpk = NULL;
 	get_mpk_fp(get_mpk_filename(), &mpk);
 
-	ctx->mpk = mpk;		//将sP放入包中
+	ctx->set_mpk(&mpk);		//将sP放入包中
 
 	if(0 == get_packet_ptr()->packet_send(ctx)) {
 		throw UserException("wrong when make the packet to send");

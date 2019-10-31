@@ -9,7 +9,7 @@
 extern "C" {
 #include <string.h>
 }
-#define DEBUG
+
 #include<config.h>
 #include<packet.hpp>
 #include<crypto.h>
@@ -19,14 +19,15 @@ void Packet::send_ap()
 {
     PacketCTX *ctx = get_ctx();
 
-    if(ctx->phase != SEND_APP_PACKET) {
+    if(ctx->get_phase() != SEND_APP_PACKET) {
         ERROR("call wrong function");
         throw std::exception();
     }
 
-    AppPacket *packet = ctx->payload.appPacket;
-    char *head = packet->head;
-    int send_type, type = *(int *)head;
+    AppPacket *p_packet = ctx->get_payload_app();
+    char *p_head = p_packet->get_head();
+    int send_type;
+    int type = p_packet->get_type();
 
     switch (type)
     {
@@ -38,13 +39,11 @@ void Packet::send_ap()
         
         case PRIVATE_KEY_REQUEST_TYPE:
         {
-            char *sm4key = (char *)std::malloc(SM4_KEY_LEN);
-            memcpy(sm4key, ctx->payload.appPacket->payload, SM4_KEY_LEN);
-            get_user_ptr()->set_sm4_key(sm4key);
+            char *p_sm4key = (char *)std::malloc(SM4_KEY_LEN);
+            memcpy(p_sm4key, p_packet->get_payload(), SM4_KEY_LEN);
+            get_user_ptr()->set_sm4_key(p_sm4key);
         }
         case SESSION_KEY_ACK_TYPE:
-            send_type = IBE_TYPE;
-            break;
         case IBE_MES_TYPE:
             send_type = IBE_TYPE;
             break;
@@ -53,13 +52,13 @@ void Packet::send_ap()
             send_type = NO_ENC_TYPE;
     }
 
-    //send_packet
-    SecPacket *send_packet = new SecPacket;  
-    
-    *(int *)(send_packet->head) = send_type;
-    fprintf(stderr, "send type is:%d\n", send_type);
-    send_packet->payload.appPacket = packet;
-    ctx->payload.secPacket = send_packet;
-    ctx->phase = SEND_SIGN;
+    // make a sec packet, 
+    // the payload is an app packet and no length infomation set 
+    // length infomatino is set in end phase
+    SecPacket *p_send_packet = new SecPacket;  
 
+    p_send_packet->set_type(send_type);
+    p_send_packet->set_payload_app(p_packet);
+    ctx->set_payload_sec(p_send_packet);
+    ctx->set_phase(SEND_SIGN);
 }

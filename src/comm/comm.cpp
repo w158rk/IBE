@@ -1,3 +1,11 @@
+/**
+ * filename : comm.cpp 
+ * functions 
+ *      - getter and setter of Comm class 
+ *      - interface functions like connect_to_server and send 
+ */
+
+
 #include<stdio.h>
 #include<comm.hpp>
 #include<interface.hpp>
@@ -26,3 +34,12 @@ int Comm::send(const void *vptr, size_t n)
     return Write(fileno(write_file), vptr, n);    
 
 }
+
+GET_AND_SET_IMPL(Comm, FILE *, read_file)
+GET_AND_SET_IMPL(Comm, FILE *, write_file)
+GET_AND_SET_IMPL(Comm, interface::IPacket *, packet_ptr)
+GET_AND_SET_IMPL(Comm, interface::IUser *, user_ptr)
+GET_AND_SET_IMPL(Comm, interface::IUI *, ui_ptr)
+GET_AND_SET_IMPL(Comm, std::thread *, thread)
+GET_AND_SET_IMPL(Comm, char *, err_sig)
+GET_AND_SET_IMPL(CommException, std::string, message)

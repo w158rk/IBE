@@ -8,10 +8,6 @@ namespace ui {
         UInterface() = default;
         ~UInterface() = default;
         void run();
-        void print(std::string message);
-        void error(std::string message);
-        void print(char *message, int length);
-        void error(char *message, int length);
 
         GET_AND_SET(interface::IUser * , user_ptr)
 

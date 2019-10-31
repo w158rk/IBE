@@ -13,7 +13,7 @@ History: ...
 #include "comm_lcl.h"
 #include <config.h>
 
-// #define DEBUG
+// 
 static long int current_client_id;
 
 /**

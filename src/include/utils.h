@@ -7,25 +7,35 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s\n", __FILE__, \
-                __LINE__, __func__, info) 
-
+// #define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s\n", __FILE__, \
+//                 __LINE__, __func__, info) 
+#define ERROR(info)
 
 
 #define GET_AND_SET(type, name) \
-    void set_##name(type name){ \
-        m_##name = name;        \
+    void set_##name(type name); \
+    void unset_##name(); \
+    type get_##name();
+
+#define GET_AND_SET_IMPL(cls, type, name) \
+    void cls::set_##name(type name){ \
         m_f##name = true;       \
+        m_##name = name;        \
     }\
-    type get_##name(){\
+    void cls::unset_##name(){ \
+        m_f##name = false;       \
+    }\
+    type cls::get_##name(){\
         if(!m_f##name){ \
             ERROR("some members not set");\
         }   \
         return m_##name;    \
     }
 
+
 #define VIRTUAL_GET_AND_SET(type, name) \
     virtual void set_##name(type name) = 0; \
+    virtual void unset_##name() = 0; \
     virtual type get_##name() = 0;
 
 #define DECLARE_MEMBER(type, name) \
@@ -33,7 +43,7 @@
     bool m_f##name = false;
 
 #define GENERATE_SK_FILENAME(client_id) \
-    int filename_len = ctx->dest_id->length + 9;    \
+    int filename_len = client_id->length + 9;    \
     char *filename = (char *)malloc(filename_len);  \
     filename[0] = 's';      \
     filename[1] = 'k';\

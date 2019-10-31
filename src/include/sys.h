@@ -10,6 +10,9 @@
 
 #include "utils.h"
 #include "ds.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * @brief set up the system 
  * @param[in] mpk_filename file to store the mpk 
@@ -86,6 +89,8 @@ int sys_getPointPpub(
     IBEPublicParameters *mpk,
     size_t mpk_len 
 );
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif
