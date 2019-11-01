@@ -12,6 +12,7 @@ extern "C" {
 
 #ifdef DEBUG 
 #include<iostream>
+#include<sstream>
 #endif
 
 /**
@@ -54,7 +55,13 @@ void Packet::handle_dec() {
         // decrypt
         if(0 == ibe_decrypt(p_sec_packet->get_payload_byte(), c_len, m, &m_len, &sk))
         {
+#ifdef DEBUG            
+            std::ostringstream s;
+            s << "ibe decryption failed, length of cipher:" << c_len;
+            interface::IUI::error(s.str());
+#else
             interface::IUI::error("ibe decryption failed");
+#endif
             throw PacketException("ibe decryption failed");
         }
         std::free(sk);

@@ -15,6 +15,7 @@ extern "C" {
 
 #ifdef DEBUG 
 #include<iostream>
+#include<sstream>
 #endif
 
 using namespace packet;
@@ -56,7 +57,12 @@ void Packet::send_enc()
                 interface::IUI::error("encrypt failed");
                 throw PacketException("encrypt failed");
             }
-
+#ifdef DEBUG
+            std::ostringstream s;
+            s << "ibe encryption finished, length of cipher:" << cipher_len;
+            s << ". ID used in the process: " << ctx->get_dest_id()->id;
+            interface::IUI::debug(s.str());
+#endif
             // copy the cipher into the sec packet
             char *tmp = (char *)std::malloc(cipher_len);
             memcpy(tmp, cipher, cipher_len);       //将加密后的数据放到sec_packet的payload.data中

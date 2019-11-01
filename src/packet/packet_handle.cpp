@@ -1,5 +1,8 @@
 #include <packet.hpp>
 
+#ifdef DEBUG 
+#include <sstream>
+#endif
 
 using namespace packet;
 
@@ -38,6 +41,12 @@ void Packet::packet_handle()
     PacketCTX *ctx = get_ctx();
 
     while(ctx->get_phase() != RECV_DONE) {
+#ifdef DEBUG
+    std::ostringstream s;
+    s << "handle phase: " << ctx->get_phase() ;
+    interface::IUI::debug(s.str());
+#endif 
+
         switch (ctx->get_phase())
         {
         case RECV_APP_PACKET:

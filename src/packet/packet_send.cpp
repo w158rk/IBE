@@ -2,7 +2,7 @@
 #include <string.h>
 
 #ifdef DEBUG
-#include <stdio.h>
+#include <sstream>
 #endif
 
 using namespace packet;
@@ -37,6 +37,13 @@ void Packet::packet_send()
     PacketCTX *ctx = get_ctx();
 
     while(ctx->get_phase() != SEND_DONE) {
+
+#ifdef DEBUG
+    std::ostringstream s;
+    s << "send phase: " << ctx->get_phase() ;
+    interface::IUI::debug(s.str());
+#endif 
+
         switch (ctx->get_phase())
         {
         case SEND_APP_PACKET:

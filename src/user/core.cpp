@@ -35,8 +35,6 @@ void User::run_send_message(char *dest_ip,
 					ID *dest_id)
 {
 
-	interface::IComm *comm = get_comm_ptr();
-	comm->connect_to_server(dest_ip, dest_port);
 	
 	// try
 	// {
@@ -97,6 +95,10 @@ void User::run_send_message(char *dest_ip,
 
 	ctx->set_mpk(&mpk);		//将sP放入包中
 
+	interface::IComm *comm = get_comm_ptr();
+	comm->connect_to_server(dest_ip, dest_port);
+
+	// must connect to the server before this point
 	if(0 == get_packet_ptr()->packet_send(ctx)) {
 		throw UserException("wrong when make the packet to send");
 	}

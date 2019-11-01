@@ -45,13 +45,39 @@ int AppPacket::get_type()
 }
 void AppPacket::set_length(int length)
 {
-    char *head = get_head();
+    char *head = nullptr;
+    if(m_fhead)
+    {
+
+        head = m_head;
+
+    } 
+    else 
+    {
+
+        head = (char *)std::malloc(APP_HEAD_LEN);
+        std::memset(head, 0, APP_HEAD_LEN);
+
+    }
     *(int *)(head+4) = length;
     set_head(head);
 }
 void AppPacket::set_type(int type)
 {
-    char *head = get_head();
+    char *head = nullptr;
+    if(m_fhead)
+    {
+
+        head = m_head;
+
+    } 
+    else 
+    {
+
+        head = (char *)std::malloc(APP_HEAD_LEN);
+        std::memset(head, 0, APP_HEAD_LEN);
+
+    }
     *(int *)(head) = type;
     set_head(head);
 }
@@ -184,13 +210,39 @@ int SecPacket::get_type()
 }
 void SecPacket::set_length(int length)
 {
-    char *head = get_head();
+    char *head = nullptr;
+    if(m_fhead)
+    {
+
+        head = m_head;
+
+    } 
+    else 
+    {
+
+        head = (char *)std::malloc(APP_HEAD_LEN);
+        std::memset(head, 0, APP_HEAD_LEN);
+
+    }
     *(int *)(head+4) = length;
     set_head(head);
 }
 void SecPacket::set_type(int type)
 {
-    char *head = get_head();
+    char *head = nullptr;
+    if(m_fhead)
+    {
+
+        head = m_head;
+
+    } 
+    else 
+    {
+
+        head = (char *)std::malloc(APP_HEAD_LEN);
+        std::memset(head, 0, APP_HEAD_LEN);
+
+    }
     *(int *)(head) = type;
     set_head(head);
 }
