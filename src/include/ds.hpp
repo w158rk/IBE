@@ -22,8 +22,8 @@ class AppPacket
 {
 
 public:
-    AppPacket() = default;
-    ~AppPacket() = default;
+    AppPacket();
+    ~AppPacket();
 
     GET_AND_SET(char *, payload);
     GET_AND_SET(char *, head);
@@ -67,8 +67,8 @@ private:
 
 
 public: 
-    SecPacket() = default;
-    ~SecPacket() = default;
+    SecPacket();
+    ~SecPacket();
    
     GET_AND_SET(char *, payload_byte)
     GET_AND_SET(AppPacket *, payload_app)
@@ -126,8 +126,8 @@ private:
 
 public:
 
-    PacketCTX() = default;
-    ~PacketCTX() = default;
+    PacketCTX();
+    ~PacketCTX();
 
     GET_AND_SET(ID *, src_id)
     GET_AND_SET(ID *, dest_id)

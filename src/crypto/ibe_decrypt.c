@@ -11,13 +11,13 @@
 #include <openssl/bio.h>
 
 int ibe_decrypt(const char* c_buf, size_t c_len, char* m_buff, size_t *m_len, 
-    IBEPrivateKey *sk)
+    IBEPrivateKey *sk, long sk_len)
 {
     SM9PrivateKey *sm9_sk = NULL;
     IBEPrivateKey buff = NULL;
-    ibe_sk_copy(&buff, sk);
+    ibe_sk_copy(&buff, sk, sk_len);
 
-    d2i_SM9PrivateKey(&sm9_sk, &buff, IBE_SK_LEN);
+    d2i_SM9PrivateKey(&sm9_sk, &buff, sk_len);
 
     int ret = SM9_decrypt(NID_sm9encrypt_with_sm3_xor, c_buf, c_len, m_buff, m_len, sm9_sk);
 

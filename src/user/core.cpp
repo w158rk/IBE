@@ -103,5 +103,4 @@ void User::run_send_message(char *dest_ip,
 		throw UserException("wrong when make the packet to send");
 	}
 
-
 }

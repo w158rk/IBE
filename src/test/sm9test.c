@@ -11,6 +11,8 @@
 
 #define MPK_FILENAME "mpk.conf"
 #define MSK_FILENAME "msk.conf"
+#define MSK_LEN_FILENAME "msk-len.conf"
+#define MPK_LEN_FILENAME "mpk-len.conf"
 #define SERVER_ID "Server"
 #define SERVER_ID_LEN 6
 
@@ -33,7 +35,7 @@ IBEPrivateKey sk_read;
 
 int test_set_up() {
     printf("[test] set up function\n");
-    return sys_setup(MPK_FILENAME, MSK_FILENAME);   //系统建立得到mpk.conf，msk_conf
+    return ibe_setup(MPK_FILENAME, MSK_FILENAME,MPK_LEN_FILENAME, MSK_LEN_FILENAME);   //系统建立得到mpk.conf，msk_conf
 }
 
 int test_get_public_parameters() {
@@ -48,7 +50,7 @@ int test_get_master_secret() {
 
 int test_extract_private_key() {
     printf("[test] extract private key\n");
-    if (0 == ibe_extract(&sk, &msk, SERVER_ID, SERVER_ID_LEN))  //生成私钥存放在sk中
+    if (0 == ibe_extract(&sk, &msk, 139, SERVER_ID, SERVER_ID_LEN))  //生成私钥存放在sk中
         return -1;
     return 0;
 }

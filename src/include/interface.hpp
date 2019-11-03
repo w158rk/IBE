@@ -73,6 +73,11 @@ namespace interface
         VIRTUAL_GET_AND_SET(IPacket *, packet_ptr)
         VIRTUAL_GET_AND_SET(std::thread *, thread)
         VIRTUAL_GET_AND_SET(char *, sm4_key)
+        VIRTUAL_GET_AND_SET(char *, msk_len_file)
+        VIRTUAL_GET_AND_SET(char *, mpk_len_file)
+        VIRTUAL_GET_AND_SET(long, mpk_len)
+        VIRTUAL_GET_AND_SET(long, msk_len)
+        VIRTUAL_GET_AND_SET(long, sk_len)
 
         virtual void add_client(IComm *comm) = 0;
         virtual void delete_client(IComm *comm) = 0;

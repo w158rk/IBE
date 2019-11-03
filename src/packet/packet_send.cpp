@@ -27,6 +27,7 @@ int Packet::packet_send(PacketCTX* ctx) {
         m_fctx = false;
     }
 
+    delete ctx->get_payload_sec();
     delete ctx;
     return 1;
 

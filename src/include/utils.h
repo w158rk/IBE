@@ -7,9 +7,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-// #define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s\n", __FILE__, \
-//                 __LINE__, __func__, info) 
-#define ERROR(info)
+#define ERROR(info) fprintf(stderr, "[%s:%d]%s\n    %s\n", __FILE__, \
+                __LINE__, __func__, info) 
+// #define ERROR(info)
 
 
 #define GET_AND_SET(type, name) \
@@ -56,7 +56,27 @@
     filename[filename_len-2] = 'f';\
     filename[filename_len-1] = '\0';
 
-#define FREE_SK_FILENAME free(filename)
+#define FREE_SK_FILENAME free(filename);
+
+#define GENERATE_SK_LEN_FILENAME(client_id) \
+    int filename_len = client_id->length + 13;    \
+    char *filename = (char *)malloc(filename_len);  \
+    filename[0] = 's';      \
+    filename[1] = 'k';\
+    filename[2] = '-';\
+    filename[3] = 'l';\
+    filename[4] = 'e';\
+    filename[5] = 'n';\
+    filename[6] = '_';\
+    memcpy(filename+7, (client_id->id), (client_id->length));\
+    filename[filename_len-6] = '.'; \
+    filename[filename_len-5] = 'c'; \
+    filename[filename_len-4] = 'o'; \
+    filename[filename_len-3] = 'n'; \
+    filename[filename_len-2] = 'f';\
+    filename[filename_len-1] = '\0';
+#define FREE_SK_LEN_FILENAME free(filename);
+
 
 #define GENERATE_SM4_FILENAME(id, id_len) \
     int filename_len = id_len + 10;    \

@@ -1,6 +1,10 @@
 #include<packet.hpp>
 #include<cstring>
 
+#ifdef DEBUG 
+#include<sstream>
+#endif
+
 using namespace packet;
 
 GET_AND_SET_IMPL(Packet, interface::IUI *, ui_ptr)
@@ -11,6 +15,61 @@ GET_AND_SET_IMPL(Packet, PacketCTX *, ctx)
 GET_AND_SET_IMPL(PacketException, std::string, message)
 
 GET_AND_SET_IMPL(AppPacket, char *, payload)
+
+AppPacket::AppPacket()
+{
+#ifdef DEBUG
+    std::ostringstream s;
+    s << "create an apppacket at: " << (unsigned long)this;
+    interface::IUI::debug(s.str());
+#endif
+}
+
+AppPacket::~AppPacket()
+{
+#ifdef DEBUG
+    std::ostringstream s;
+    s << "delete then apppacket at: " << (unsigned long)this;
+    interface::IUI::debug(s.str());
+#endif
+}
+
+SecPacket::SecPacket()
+{
+#ifdef DEBUG
+    std::ostringstream s;
+    s << "create a sec packet at: " << (unsigned long)this;
+    interface::IUI::debug(s.str());
+#endif
+}
+
+SecPacket::~SecPacket()
+{
+#ifdef DEBUG
+    std::ostringstream s;
+    s << "delete the sec packet at: " << (unsigned long)this;
+    interface::IUI::debug(s.str());
+#endif
+}
+
+PacketCTX::PacketCTX()
+{
+#ifdef DEBUG
+    std::ostringstream s;
+    s << "create a packet ctx at: " << (unsigned long)this;
+    interface::IUI::debug(s.str());
+#endif
+}
+
+PacketCTX::~PacketCTX()
+{
+#ifdef DEBUG
+    std::ostringstream s;
+    s << "delete the packet ctx at: " << (unsigned long)this;
+    interface::IUI::debug(s.str());
+#endif
+}
+
 
 char *AppPacket::get_head() 
 {

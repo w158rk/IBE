@@ -29,11 +29,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+int ibe_setup(
+    char *mpk_file,
+    char *msk_file,
+    char *mpk_len_file,
+    char *msk_len_file
+);
 int ibe_encrypt(const  char* data, size_t data_len,  char* c_buf, size_t *c_len, 
-    IBEPublicParameters *mpk, const char *id, size_t id_len);
+    IBEPublicParameters *mpk, long mpk_len, const char *id, size_t id_len);
 int ibe_decrypt(const  char* c_buf, size_t c_len,  char* m_buff, size_t *m_len, 
-    IBEPrivateKey *sk);
+    IBEPrivateKey *sk, long sk_len);
 
 /**
  * @brief extract ibe private key 
@@ -44,12 +49,14 @@ int ibe_decrypt(const  char* c_buf, size_t c_len,  char* m_buff, size_t *m_len,
  * @param[in] id_len length of id
  */
 int ibe_extract(IBEPrivateKey *sk, 
+                long *,
                 IBEMasterSecret* msk, 
+                long msk_len,
                 const char* id,
                 size_t id_len);
 
 
-void ibe_sk_copy(IBEPrivateKey *dest, IBEPrivateKey *src);
+void ibe_sk_copy(IBEPrivateKey *dest, IBEPrivateKey *src, long);
 
 /*
  * cbc 

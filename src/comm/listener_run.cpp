@@ -13,7 +13,7 @@ extern "C" {
 void comm::Comm::file_listener_run()
 {
 	if(!m_fread_file | !m_fwrite_file){
-        fprintf(stderr, "[error] flags are not set completely, check the error sig and files\n", __FILE__, __LINE__);
+        interface::IUI::error("[error] flags are not set completely, check the error sig and files");
 		return ;
     }
 	

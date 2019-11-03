@@ -9,9 +9,6 @@
  * wrap of sm9
  */
 
-#define IBE_SK_LEN      313     /* > 313 */
-#define IBE_PP_LEN      104  /* public parameters > 104*/
-#define IBE_MS_LEN      139  /* master secret  > 139*/
 
 typedef char    *IBEPublicParameters;
 typedef char    *IBEPrivateKey;

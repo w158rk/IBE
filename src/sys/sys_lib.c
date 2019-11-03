@@ -72,10 +72,10 @@ end:
     return ret;
 }
 
-int put_sk_fp(const char* sk_filename, IBEPrivateKey* sk) {
+int put_sk_fp(const char* sk_filename, IBEPrivateKey* sk, long sk_len) {
     
     SM9PrivateKey *sm9_sk = NULL;
-    if(!d2i_SM9PrivateKey(&sm9_sk, sk, IBE_SK_LEN)) {
+    if(!d2i_SM9PrivateKey(&sm9_sk, sk, sk_len)) {
         ERROR("convert from bytes to private key fails");
         goto end;
     }

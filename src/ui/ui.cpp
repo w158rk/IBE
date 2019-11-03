@@ -33,15 +33,18 @@ void UInterface::run() {
 int UInterface::socket_interface_run() 
 {
 
-	interface::IUser *user = get_user_ptr();
-    ID *user_id = user->get_id();
+	interface::IUser *usr = get_user_ptr();
+    ID *user_id = usr->get_id();
 	
 	while(true)
 	{
+		user::User *user = reinterpret_cast<user::User *>(usr);
 		printf("What do you want to do? %s\n", user_id->id);
 		printf("Choose from :\n");
 		printf("\t1. Extract your Private Key\n");
 		printf("\t2. Send message\n");
+		printf("\t3. Set up your system\n");
+		printf("\t4. Read your system files\n");
 		
 		int choise;
 		scanf("%d", &choise);
@@ -54,10 +57,9 @@ int UInterface::socket_interface_run()
 		switch (choise) {
 			case 1:
 			{	
-				user::User *client = dynamic_cast<user::User *>(user);
 				try 
 				{
-					client->run_get_private_key(parent->ip, parent->port);
+					user->run_get_private_key(parent->ip, parent->port);
 				}			
 				catch(user::UserException& e)
 				{
@@ -86,6 +88,16 @@ int UInterface::socket_interface_run()
 					std::cerr << e.what() << std::endl;
 					return -1;
 				}			
+				break;
+			}
+			case 3:
+			{
+				user->sys_setup();
+				break;
+			}
+			case 4:
+			{
+				user->sys_init();
 				break;
 			}
 			default:

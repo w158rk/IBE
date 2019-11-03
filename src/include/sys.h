@@ -51,7 +51,7 @@ int get_sk_fp(const char* sk_filename, IBEPrivateKey* sk);
  * @param[in] sk 
  * @return 1 if no error, 0 else
  */
-int put_sk_fp(const char* sk_filename, IBEPrivateKey* sk);
+int put_sk_fp(const char* sk_filename, IBEPrivateKey* sk, long);
 
 /**
  * @brief get the hash point from user's ID 

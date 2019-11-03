@@ -65,28 +65,35 @@ int handle_sk_request(Packet *target)
     // i don't know why, may be some magic things
 
     /*生成私钥sk*/
-    if ( 0 == ibe_extract(&sk, &msk, client_id, (size_t)client_id_len)) {
+    long sk_len;
+    if ( 0 == ibe_extract(&sk,
+                            &sk_len, 
+                            &msk, 
+                            target->get_user_ptr()->get_msk_len(),
+                            client_id, 
+                            (size_t)client_id_len)) {
         interface::IUI::error(" cannot extract the private key");
         throw PacketException(" cannot extract the private key");
     }       
 
     {   /* test the validation of the private key*/
-        char data[] = "This is a test text";
-        char c_buf[BUFFER_SIZE] = {'\0'};
-        size_t data_len = strlen(data);
-        size_t c_len;
+        // char data[] = "This is a test text";
+        // char c_buf[BUFFER_SIZE] = {'\0'};
+        // size_t data_len = strlen(data);
+        // size_t c_len;
 
-        IBEPublicParameters mpk = NULL;
-        get_mpk_fp(mpk_filename, &mpk);		//从文件中读出sP的值
+        // IBEPublicParameters mpk = NULL;
+        // get_mpk_fp(mpk_filename, &mpk);		//从文件中读出sP的值
 
-        ibe_encrypt(data, data_len, c_buf, &c_len, &mpk, client_id, client_id_len);
-        size_t out_len = BUFFER_SIZE;   
-        char out[BUFFER_SIZE] = {'\0'};
-        ibe_decrypt(c_buf, c_len, out, &out_len, &sk);
-        if(data_len!=out_len || memcmp(data, out, out_len)!=0)
-        {
-            interface::IUI::error("extract sk fail");
-        }
+        // ibe_encrypt(data, data_len, c_buf, &c_len, &mpk, 
+        //             target->get_user_ptr()->get_mpk_len(), client_id, client_id_len);
+        // size_t out_len = BUFFER_SIZE;   
+        // char out[BUFFER_SIZE] = {'\0'};
+        // ibe_decrypt(c_buf, c_len, out, &out_len, &sk);
+        // if(data_len!=out_len || memcmp(data, out, out_len)!=0)
+        // {
+        //     interface::IUI::error("extract sk fail");
+        // }
 #ifdef DEBUG 
         interface::IUI::debug("the test of the private key passed");
 #endif
@@ -103,7 +110,7 @@ int handle_sk_request(Packet *target)
     // store the type of the app packet and the length of the 
     // private key at the header of the packet
     send_packet->set_type(PRIVATE_KEY_RESPONSE_TYPE);
-    send_packet->set_length(IBE_SK_LEN);
+    send_packet->set_length(sk_len);
 
     // store the private key in the payload 
     // TODO : Not sure if it is necessary to copy the key from sk to psk 
@@ -143,9 +150,11 @@ int handle_sk_response(Packet *target) {
     
     int rtn = 0;
     PacketCTX *ctx = target->get_ctx();
-    char *sk = (char *)std::malloc(IBE_SK_LEN);
+
     AppPacket *p_app_packet = ctx->get_payload_app();
-    memcpy(sk, p_app_packet->get_payload(), p_app_packet->get_length());
+    int len = p_app_packet->get_length();
+    char *sk = (char *)std::malloc(len);
+    memcpy(sk, p_app_packet->get_payload(), len);
 
     GENERATE_SK_FILENAME(ctx->get_dest_id())        
 

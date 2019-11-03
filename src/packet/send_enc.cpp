@@ -49,9 +49,13 @@ void Packet::send_enc()
 
             char *data = p_app_packet->to_bytes();
             // encrypt
-            if (!ibe_encrypt(data, (size_t)app_length+APP_HEAD_LEN, 
-                        cipher, &cipher_len, 
-                        ctx->get_mpk(), ctx->get_dest_id()->id, 
+            if (!ibe_encrypt(data, 
+                        (size_t)app_length+APP_HEAD_LEN, 
+                        cipher, 
+                        &cipher_len, 
+                        ctx->get_mpk(), 
+                        get_user_ptr()->get_mpk_len(),
+                        ctx->get_dest_id()->id, 
                         ctx->get_dest_id()->length))
             {
                 interface::IUI::error("encrypt failed");
@@ -68,6 +72,11 @@ void Packet::send_enc()
             memcpy(tmp, cipher, cipher_len);       //将加密后的数据放到sec_packet的payload.data中
             p_sec_packet->set_payload_byte(tmp);
 
+#ifdef DEBUG
+            FILE* fp = std::fopen("tmp-enc", "wb");
+            std::fwrite(p_sec_packet->get_payload_byte(), cipher_len, 1, fp);
+            std::fclose(fp);
+#endif
             // length without header 
             p_sec_packet->set_length((int)cipher_len);
 
@@ -101,9 +110,6 @@ void Packet::send_enc()
             sm4_setkey_enc(sm4ctx,(unsigned char*)(get_user_ptr()->get_sm4_key()));
             sm4_crypt_ecb(sm4ctx, ENC_PARAMETER, app_length + APP_HEAD_LEN, 
                             (unsigned char*)data, (unsigned char*)cipher, &c_len);
-#ifdef DEBUG
-            fprintf(stderr, "c_len is%d\n", c_len);
-#endif
                  
 #ifdef DEBUG
 {
@@ -133,5 +139,6 @@ void Packet::send_enc()
         break;
     }
 
+    delete p_app_packet;
     ctx->set_phase(SEND_SEC_PACKET);
 }
