@@ -6,16 +6,17 @@
  *      - setup a system by generating the mpk, msk file
 */
 
+#include<user.hpp>
+#ifdef DEBUG 
+#include<sstream>
+#endif
+
 extern "C" {
     #include <sys.h>
     #include <openssl/sm9.h>
     #include <openssl/bio.h>
 }
 
-#include<user.hpp>
-#ifdef DEBUG 
-#include<sstream>
-#endif
 
 using namespace user;
 

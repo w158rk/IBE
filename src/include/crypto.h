@@ -29,6 +29,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+/**
+ * @brief map an ID to point 
+ * @return 1 if no errors , else 0
+ * @param[out] point the initial value of point should be the address of a NULL point
+ * @param[in] id ID
+ * @param[in] id_len length of ID
+ * @param[in] mpk_file the filename of the file where the mpk is stored, should end with '\0
+ */
+int ibe_id2point(
+    EC_POINT **point,    
+    char *id, 
+    long id_len,
+    char *mpk_file
+); 
+
 int ibe_setup(
     char *mpk_file,
     char *msk_file,

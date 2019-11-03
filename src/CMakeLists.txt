@@ -19,5 +19,3 @@ add_library(ibe ${MY_SRC})  #指定编译包含的源文件{MY_SRC}中的，生�
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(ibe PUBLIC DEBUG)
 endif(CMAKE_BUILD_TYPE MATCHES Debug)
-
-
