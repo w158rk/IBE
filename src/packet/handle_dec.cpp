@@ -12,6 +12,7 @@ extern "C" {
 #define DEBUG
 #ifdef DEBUG 
 #include<iostream>
+#include<sstream>
 #endif
 
 /**
@@ -29,9 +30,9 @@ void Packet::handle_dec() {
     PacketCTX *ctx = get_ctx();
 
     /* packets */
-    SecPacket *p_sec_packet = ctx->payload.secPacket;
+    SecPacket *p_sec_packet = ctx->get_payload_sec();
 
-    int crypto_type = *(int *)(p_sec_packet->head);
+    int crypto_type = p_sec_packet->get_type();
 
     switch (crypto_type)
     {
@@ -41,52 +42,55 @@ void Packet::handle_dec() {
     case IBE_TYPE:
     {
         // get the cipher length and allocate space for decryption
-        int c_len = *(int *)(p_sec_packet->head+4);
+        int c_len = p_sec_packet->get_length();
         char *m = (char *)malloc(BUFFER_SIZE);
         size_t m_len;
 
-#ifdef DEBUG 
-        //std::cerr << "length before decryption: " << c_len << std::endl;
-#endif
-
         // get the private key from file
         IBEPrivateKey sk = NULL;
-        GENERATE_SK_FILENAME(ctx->dest_id)
+
+        GENERATE_SK_FILENAME((ctx->get_dest_id()))
         get_sk_fp(filename, &sk);
+        FREE_SK_FILENAME
 
         // decrypt
-        if(0 == ibe_decrypt(p_sec_packet->payload.data, c_len, m, &m_len, &sk))
+        if(0 == ibe_decrypt(p_sec_packet->get_payload_byte(), c_len, m, &m_len, 
+                                &sk, get_user_ptr()->get_sk_len()))
         {
+#ifdef DEBUG            
+            std::ostringstream s;
+            s << "ibe decryption failed, length of cipher:" << c_len;
+            interface::IUI::error(s.str());
+
+            FILE* fp = std::fopen("tmp-dec", "wb");
+            std::fwrite(p_sec_packet->get_payload_byte(), c_len, 1, fp);
+            std::fclose(fp);
+#else
+            interface::IUI::error("ibe decryption failed");
+#endif
             throw PacketException("ibe decryption failed");
         }
-        fprintf(stderr, "sk is%s\n", sk);
         std::free(sk);
-        FREE_SK_FILENAME;
-
-#ifdef DEBUG 
-        fprintf(stderr, "message length : %d\n", m_len); 
-        fprintf(stderr, "message : %s\n", m);
-#endif
 
         // organize the message as a app packet 
-        AppPacket *app_packet = new AppPacket;
+        // so the initial sec packet should be released 
+        // after the verification finished
+        // so run a deep copy, no pointers transferred in 
+        // this function 
+        AppPacket *p_app_packet = new AppPacket;
 
         // the head is the first 8 bytes of the decrypted message
-        memcpy(app_packet->head, m, APP_HEAD_LEN);       
+        p_app_packet->set_head(m);
         
         // copy the rest of the message into the payload of app packet
-        int payload_len = *(int *)(m+4);                 
+        int payload_len = p_app_packet->get_length();                 
         char *payload = (char *)std::malloc(payload_len);
         memcpy(payload, m+APP_HEAD_LEN, payload_len);
-        app_packet->payload = payload;     
+        p_app_packet->set_payload(payload);     
 
-#ifdef DEBUG 
-        fprintf(stderr, "payload length : %d\n", payload_len);
-        fprintf(stderr, "payload : %s\n", payload);
-#endif
 
         // add the app packet to the payload of the sec packet 
-        p_sec_packet->payload.appPacket = app_packet;       //把该app_packet包放在ctx->payload.secPacket->payload.appPacket中
+        p_sec_packet->set_payload_app(p_app_packet);       //把该app_packet包放在ctx->payload.secPacket->payload.appPacket中
 
         break;
     }
@@ -99,47 +103,37 @@ void Packet::handle_dec() {
         sm4_setkey_dec(&sm4ctx, (unsigned char*)get_user_ptr()->get_sm4_key());
 
         // allocate space for decryption
-        int length = *(int *)(p_sec_packet->head+4);
-        unsigned char *sm4_msg = (unsigned char *)std::malloc(BUFFER_SIZE);
+        int length = p_sec_packet->get_length();
+        char *sm4_msg = (char *)std::malloc(BUFFER_SIZE);
         int out_len;
 	    sm4_crypt_ecb(&sm4ctx, 
                         DEC_PARAMETER, 
                         length, 
-                        (unsigned char*)(p_sec_packet->payload.data),
-                        sm4_msg,
+                        (unsigned char*)(p_sec_packet->get_payload_byte()),
+                        (unsigned char*)sm4_msg,
                         &out_len);
-#ifdef DEBUG
-        fprintf(stderr, "id为：%s\n",ctx->dest_id->id);
-#endif
         
         // create a new app packet 
         AppPacket *p_app_packet = new AppPacket;
-        p_app_packet->payload = (char *)std::malloc(length-APP_HEAD_LEN);
+        char *payload = (char *)std::malloc(length-APP_HEAD_LEN);
 
         // copy the header and the payload into the app packet
-        memcpy(p_app_packet->head, sm4_msg, APP_HEAD_LEN);        
-        memcpy(p_app_packet->payload, sm4_msg+APP_HEAD_LEN, length-APP_HEAD_LEN);
+        p_app_packet->set_head(sm4_msg);
+        p_app_packet->set_payload(sm4_msg+APP_HEAD_LEN);
 
-        // set the payload of the sec packet        
          try
         {
-            std::free(p_sec_packet->payload.data);
-        }
-        catch(std::exception &e)
-        {
-            std::cerr << e.what() << std::endl;
-        }
-       p_sec_packet->payload.appPacket = p_app_packet;
-
-        // free the temporaries
-        try
-        {
+            std::free(p_sec_packet->get_payload_byte());
             std::free(sm4_msg);
         }
         catch(std::exception &e)
         {
-            std::cerr << e.what() << std::endl;
+            interface::IUI::error(e.what());
+            throw PacketException(e.what());
         }
+
+        // set the payload of the sec packet        
+        p_sec_packet->set_payload_app(p_app_packet);
 
         break;
     }
@@ -148,9 +142,5 @@ void Packet::handle_dec() {
         break;
     }
 
-    ctx->phase = RECV_VERIFY;
-end:
-    //#ifdef DEBUG 
-    fprintf(stderr, "return test\n");
-    //#endif
+    ctx->set_phase(RECV_VERIFY);
 }

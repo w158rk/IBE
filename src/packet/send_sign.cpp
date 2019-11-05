@@ -12,6 +12,6 @@ using namespace packet;
 void Packet::send_sign()
 {
     PacketCTX *ctx = get_ctx();
-    ctx->phase = SEND_ENC;
+    ctx->set_phase (SEND_ENC);
 
 }

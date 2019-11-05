@@ -4,6 +4,9 @@ using namespace packet;
 
 void Packet::handle_verify() {
     PacketCTX *ctx = get_ctx();
-    ctx->phase = RECV_APP_PACKET;
-    ctx->payload.appPacket = ctx->payload.secPacket->payload.appPacket;     //将ctx->payload中的appPacket信息放到secPacket的payload中
+    ctx->set_phase(RECV_APP_PACKET);
+
+    delete ctx->get_payload_sec();
+
+    ctx->set_payload_app(ctx->get_payload_sec()->get_payload_app());
 }

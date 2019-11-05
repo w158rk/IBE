@@ -8,14 +8,12 @@ extern "C" {
 
 }
 
-#ifdef DEBUG
 #include<iostream>
-#endif
 
 void comm::Comm::file_listener_run()
 {
 	if(!m_fread_file | !m_fwrite_file){
-        fprintf(stderr, "[error] flags are not set completely, check the error sig and files\n", __FILE__, __LINE__);
+        interface::IUI::error("[error] flags are not set completely, check the error sig and files");
 		return ;
     }
 	
@@ -38,11 +36,13 @@ void comm::Comm::file_listener_run()
 #endif
 
 	// handle finished
-	// delete this comm
+	// delete this comm and the thread
 	get_user_ptr()->delete_client(this);
+	// get_user_ptr()->delete_thread(get_thread());
 #ifdef DEBUG 
 	fprintf(stderr, "remove the listening comm from the user\n");
 #endif
+	while(true);		// keep it running, because segmentation fault happends when terminiating
 
 }
 

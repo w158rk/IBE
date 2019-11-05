@@ -36,6 +36,7 @@ namespace comm
         GET_AND_SET(interface::IPacket *, packet_ptr)
         GET_AND_SET(interface::IUser *, user_ptr)
         GET_AND_SET(interface::IUI *, ui_ptr)
+        GET_AND_SET(std::thread *, thread)
         GET_AND_SET(char *, err_sig)
 
     private :
@@ -46,6 +47,7 @@ namespace comm
         DECLARE_MEMBER(interface::IUser *, user_ptr)
         DECLARE_MEMBER(char *, err_sig)
         DECLARE_MEMBER(interface::IUI *, ui_ptr)
+        DECLARE_MEMBER(std::thread *, thread)
 
 
         int run_listen_core();

@@ -1,8 +1,8 @@
 #include <packet.hpp>
 #include <string.h>
-#define DEBUG
+
 #ifdef DEBUG
-#include <stdio.h>
+#include <sstream>
 #endif
 
 using namespace packet;
@@ -27,7 +27,8 @@ int Packet::packet_send(PacketCTX* ctx) {
         m_fctx = false;
     }
 
-    free_ctx(ctx);
+    delete ctx->get_payload_sec();
+    delete ctx;
     return 1;
 
 }
@@ -36,11 +37,15 @@ void Packet::packet_send()
 {
     PacketCTX *ctx = get_ctx();
 
-    while(ctx->phase != SEND_DONE) {
-        #ifdef DEBUG 
-        fprintf(stderr, "phase : %d\n", ctx->phase);
-        #endif
-        switch (ctx->phase)
+    while(ctx->get_phase() != SEND_DONE) {
+
+#ifdef DEBUG
+    std::ostringstream s;
+    s << "send phase: " << ctx->get_phase() ;
+    interface::IUI::debug(s.str());
+#endif 
+
+        switch (ctx->get_phase())
         {
         case SEND_APP_PACKET:
             send_ap();
@@ -57,30 +62,20 @@ void Packet::packet_send()
         }
     }
     // 1. send the head 
-	SecPacket *sec_packet = ctx->payload.secPacket;
+	SecPacket *p_sec_packet = ctx->get_payload_sec();
 
-    int len = *(int *)(sec_packet->head+4);
-
-#ifdef DEBUG
-    fprintf(stderr,"the first word of the sec head : %d\n", *(int *)(sec_packet->head));
-    fprintf(stderr,"[%s:%d] the length of the sec packet : %d\n", __FILE__, __LINE__, len);
-#endif
+    int len = p_sec_packet->get_length();
 
     // send the head and payload, together
-    char *data = (char *)std::malloc(len+SEC_HEAD_LEN);
-    memcpy(data, sec_packet->head, SEC_HEAD_LEN);
-    memcpy(data+SEC_HEAD_LEN, sec_packet->payload.data, len);
+    char *data = p_sec_packet->to_bytes();
 
     // send the packet from the comm object
     int length = get_comm_ptr()->send(data, len+SEC_HEAD_LEN);
-#ifdef DEBUG 
-    fprintf(stderr, "length : %d\n", length);
-#endif
     std::free(data);
 
     if (length != len + SEC_HEAD_LEN) {
-        fprintf(stderr,"[%s:%d] error in write file\n", __FILE__, __LINE__);
-        throw std::exception();
+        interface::IUI::error("error in write file");
+        throw PacketException("error in write file");
     }
 
 }

@@ -4,6 +4,8 @@
 #include<ds.hpp>
 #include<utils.h>
 #include<string>
+#include<thread>
+
 
 namespace interface 
 {
@@ -69,11 +71,18 @@ namespace interface
         VIRTUAL_GET_AND_SET(char *, msk_filename)
         VIRTUAL_GET_AND_SET(IComm *, comm_ptr)
         VIRTUAL_GET_AND_SET(IPacket *, packet_ptr)
+        VIRTUAL_GET_AND_SET(std::thread *, thread)
         VIRTUAL_GET_AND_SET(char *, sm4_key)
+        VIRTUAL_GET_AND_SET(char *, msk_len_file)
+        VIRTUAL_GET_AND_SET(char *, mpk_len_file)
+        VIRTUAL_GET_AND_SET(long, mpk_len)
+        VIRTUAL_GET_AND_SET(long, msk_len)
+        VIRTUAL_GET_AND_SET(long, sk_len)
 
         virtual void add_client(IComm *comm) = 0;
         virtual void delete_client(IComm *comm) = 0;
-
+        virtual void add_thread(std::thread *thread) = 0;
+        virtual void delete_thread(std::thread *thread) = 0 ;
     };
 
     class IUI
@@ -81,10 +90,12 @@ namespace interface
 
     public:
         void virtual run() = 0;
-        virtual void print(std::string message) = 0;
-        virtual void error(std::string message) = 0;
-        virtual void print(char *message, int length) = 0;
-        virtual void error(char *message, int length) = 0;
+        static void print(std::string message);
+        static void error(std::string message);
+        static void debug(std::string message);
+        static void print(char *message, int length);
+        static void error(char *message, int length);
+        static void debug(char *message, int length);
         virtual ~IUI() = default;
         VIRTUAL_GET_AND_SET(IUser *, user_ptr)
     };

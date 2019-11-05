@@ -6,7 +6,6 @@
 #include <openssl/ec.h>
 #include <openssl/bn.h>
 #include <string.h>
-#include <openssl/sm9_lcl.h>
 //#include "sm9_lcl.h"
 
 int ibe_sign(const unsigned char *data, size_t data_length, const unsigned char* sign, size_t *sign_length, SM9PrivateKey *sk)

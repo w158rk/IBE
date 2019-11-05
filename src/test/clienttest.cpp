@@ -32,8 +32,13 @@ void runclient(int argc, char *argv[])
     ui::UInterface uinterface;
 
     // bind the client    
-    bind_objects(client, comm, packet, uinterface, &err_sig);
-    add_other_cfg(client, *doc);
+    #define REINTER(type, obj) reinterpret_cast<type *>(&obj)
+    bind_objects(REINTER(interface::IUser, client), 
+                    REINTER(interface::IComm, comm), 
+                    REINTER(interface::IPacket, packet), 
+                    REINTER(interface::IUI, uinterface), 
+                    &err_sig);
+    add_other_cfg(client, doc);
 
     client.run();
 }

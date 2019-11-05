@@ -19,7 +19,7 @@ extern "C" {
 	#include<utils.h>
 }
 
-#define DEBUG
+
 
 using namespace user;
 
@@ -35,8 +35,6 @@ void User::run_send_message(char *dest_ip,
 					ID *dest_id)
 {
 
-	interface::IComm *comm = get_comm_ptr();
-	comm->connect_to_server(dest_ip, dest_port);
 	
 	// try
 	// {
@@ -55,10 +53,6 @@ void User::run_send_message(char *dest_ip,
 	memcpy(filename_message, dest_id->id, dest_id->length);
 	memcpy(filename_message+dest_id->length, "_message.txt", 14);
 
-	#ifdef DEBUG
-	fprintf(stderr, "%s\n", filename_message);
-	#endif
-	
 	/* 读取信息 */
 	FILE *fp;
 	if((fp=fopen(filename_message,"rb+"))==NULL)
@@ -74,10 +68,6 @@ void User::run_send_message(char *dest_ip,
 	}
 	fclose(fp);
 	int len = strlen(message);
-	#ifdef DEBUG
-	fprintf(stderr, "the message is:%s\n", message);
-	fprintf(stderr, "the length of message is:%d\n", len);
-	#endif
 
 	/* 组织包 */
 
@@ -90,27 +80,27 @@ void User::run_send_message(char *dest_ip,
 	 * |	type	|	length of payload	|
 	 * --------------------------------------
 	 */
-	*(int *)(p_app_packet->head) = IBE_MES_TYPE;		//设置标志位
-	*(int *)(p_app_packet->head + 4) = len;
-	p_app_packet->payload = message;
+	p_app_packet->set_type(IBE_MES_TYPE);
+	p_app_packet->set_length(len);
+	p_app_packet->set_payload(message);
 
 	PacketCTX *ctx = new PacketCTX;
 
-	ctx->phase = SEND_APP_PACKET;
-	ctx->payload.appPacket = p_app_packet;
-	ctx->dest_id = dest_id;
+	ctx->set_phase(SEND_APP_PACKET);
+	ctx->set_payload_app (p_app_packet);
+	ctx->set_dest_id(dest_id);
 
 	IBEPublicParameters mpk = NULL;
 	get_mpk_fp(get_mpk_filename(), &mpk);
 
-	ctx->mpk = mpk;		//将sP放入包中
-#ifdef DEBUG 
-	fprintf(stderr, "[%s : %d] phase : %d\n", __FILE__, __LINE__, ctx->phase);
-#endif
+	ctx->set_mpk(&mpk);		//将sP放入包中
 
+	interface::IComm *comm = get_comm_ptr();
+	comm->connect_to_server(dest_ip, dest_port);
+
+	// must connect to the server before this point
 	if(0 == get_packet_ptr()->packet_send(ctx)) {
 		throw UserException("wrong when make the packet to send");
 	}
-
 
 }

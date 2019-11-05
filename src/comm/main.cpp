@@ -9,8 +9,9 @@ using namespace comm;
 
 void Comm::socket_main()
 {
-	std::thread listener(&Comm::socket_listener_run, this);
-	listener.detach();
+	std::thread *listener = new std::thread(&Comm::socket_listener_run, std::ref(*this));
+	get_user_ptr()->set_thread(listener);				// maintain a pointer 
+	// listener->detach();
 }
 
 
@@ -27,7 +28,11 @@ void interface::IComm::file_main(interface::IUser *user,
 	// this must be run before the thread runs
 	user->add_client(comm);
 	// get the listening thread run
-	std::thread listener(&Comm::file_listener_run, comm);
-	listener.detach();
+	std::thread *listener = new std::thread(&Comm::file_listener_run, comm);
+	// add the listener as the member of comm
+	comm->set_thread(listener);
+	// add the thread to the thread pool 
+	user->add_thread(listener);
+	// listener->join();
 	
 }

@@ -35,39 +35,18 @@ int test_set_up() {
 int test_get_public_parameters() {
     printf("[test] get pulic mpk from file\n");
     int ret = get_mpk_fp(mpk_filename, &mpk);
-    #ifdef DEBUG 
-    int i;
-    for(i=0; i<128; i++) {
-        fprintf(stderr, "%02x ", mpk[i] & 0xff);
-    }
-    fprintf(stderr, "\n ", mpk[i] & 0xff);
-    #endif
     return ret; 
 }
 
 int test_get_master_secret() {
     printf("[test] get msk from file\n");
     int ret = get_msk_fp(msk_filename, &msk);   
-    #ifdef DEBUG 
-    int i;
-    for(i=0; i<128; i++) {
-        fprintf(stderr, "%02x ", msk[i] & 0xff);
-    }
-    fprintf(stderr, "\n ", mpk[i] & 0xff);
-    #endif
     return ret; 
 }
 
 int test_extract_private_key() {
     printf("[test] extract private key\n");
     int rtn = ibe_extract(&sk, &msk, id, 6);
-    #ifdef DEBUG 
-    int i;
-    for(i=0; i<IBE_SK_LEN; i++) {
-        fprintf(stderr, "%02x ", sk[i] & 0xff);
-    }
-    fprintf(stderr, "\n ");
-    #endif
     if (!rtn) 
         return 0;
     return 1;

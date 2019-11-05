@@ -4,25 +4,47 @@
 #include<string.h>
 
 #include <iostream>
-#include <iomanip>
+
+#define RESET "\033[0m"
+#define BLACK "\033[30m" 
+#define RED "\033[31m" 
+#define GREEN "\033[32m" 
+#define YELLOW "\033[33m" 
+#define BLUE "\033[34m" 
+#define MAGENTA "\033[35m" 
+#define CYAN "\033[36m" 
+#define WHITE "\033[37m" 
+#define BOLDBLACK "\033[1m\033[30m" 
+#define BOLDRED "\033[1m\033[31m" 
+#define BOLDGREEN "\033[1m\033[32m" 
+#define BOLDYELLOW "\033[1m\033[33m" 
+#define BOLDBLUE "\033[1m\033[34m" 
+#define BOLDMAGENTA "\033[1m\033[35m" 
+#define BOLDCYAN "\033[1m\033[36m" 
+#define BOLDWHITE "\033[1m\033[37m" 
 
 using namespace ui;
+using namespace interface;
 
 void UInterface::run() {
 	socket_interface_run();
 }
 
-int UInterface::socket_interface_run() {
+int UInterface::socket_interface_run() 
+{
 
-	interface::IUser *user = get_user_ptr();
-    ID *user_id = user->get_id();
+	interface::IUser *usr = get_user_ptr();
+    ID *user_id = usr->get_id();
 	
 	while(true)
 	{
+		user::User *user = reinterpret_cast<user::User *>(usr);
 		printf("What do you want to do? %s\n", user_id->id);
 		printf("Choose from :\n");
 		printf("\t1. Extract your Private Key\n");
 		printf("\t2. Send message\n");
+		printf("\t3. Set up your system\n");
+		printf("\t4. Read your system files\n");
 		
 		int choise;
 		scanf("%d", &choise);
@@ -35,10 +57,9 @@ int UInterface::socket_interface_run() {
 		switch (choise) {
 			case 1:
 			{	
-				user::User *client = dynamic_cast<user::User *>(user);
 				try 
 				{
-					client->run_get_private_key(parent->ip, parent->port);
+					user->run_get_private_key(parent->ip, parent->port);
 				}			
 				catch(user::UserException& e)
 				{
@@ -69,6 +90,16 @@ int UInterface::socket_interface_run() {
 				}			
 				break;
 			}
+			case 3:
+			{
+				user->sys_setup();
+				break;
+			}
+			case 4:
+			{
+				user->sys_init();
+				break;
+			}
 			default:
 				break;
 		}
@@ -78,24 +109,39 @@ int UInterface::socket_interface_run() {
 	return 0;
 }
 
-void UInterface::print(char *message, int length) 
+void IUI::print(char *message, int length) 
 {
 	std::string out(message, length);
-	std::cout << "[info]" << out << std::endl;
+	std::cout << BOLDWHITE << "[info] " << RESET << out << std::endl;
 }
 
 
-void UInterface::print(std::string message) 
+void IUI::print(std::string message) 
 {
-	
+	std::cout << BOLDWHITE << "[info] " << RESET << message << std::endl;
 }
 
-void UInterface::error(char *message, int length) 
+void IUI::error(char *message, int length) 
 {
-
+	std::string out(message, length);
+	std::cerr << BOLDRED << "[error] " << RESET << out << std::endl;
 }
 
-void UInterface::error(std::string message) 
+void IUI::error(std::string message) 
 {
-	
+	std::cerr << BOLDRED << "[error] " << RESET << message << std::endl;
 }
+
+void IUI::debug(char *message, int length) 
+{
+	std::string out(message, length);
+	std::cerr << BOLDBLUE << "[debug] " << RESET << out << std::endl;
+}
+
+void IUI::debug(std::string message) 
+{
+	std::cerr << BOLDBLUE << "[debug] " << RESET << message << std::endl;
+}
+
+
+GET_AND_SET_IMPL(UInterface, interface::IUser * , user_ptr)

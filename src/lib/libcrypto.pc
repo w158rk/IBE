@@ -6,7 +6,7 @@ enginesdir=${libdir}/engines-1.1
 
 Name: GmSSL-libcrypto
 Description: GmSSL cryptography library
-Version: 2.5.0
+Version: 2.5.4
 Libs: -L${libdir} -lcrypto
 Libs.private: -ldl 
 Cflags: -I${includedir}

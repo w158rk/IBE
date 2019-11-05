@@ -356,16 +356,10 @@ void sm4_crypt_cbc( sm4_context *ctx,
 
 void set_key(unsigned char *key, FILE* filename){
     srand(time(NULL));
-    #ifdef DEBUG 
-	printf("随机生成的key:");
-    #endif
 
 	for(int i=0;i<16;i++){
 	  int a= rand() % 255;
       key[i]=(unsigned char)a;
-      #ifdef DEBUG 
-      printf("%02x ",key[i]);
-      #endif
 	}
     
 	for(int t=0;t<16;t++)
@@ -374,19 +368,13 @@ void set_key(unsigned char *key, FILE* filename){
 	
 }
 
-void gen_random_sm4key(unsigned char *key)
+void gen_random_sm4(unsigned char *key)
 {
     srand(time(NULL));
-    #ifdef DEBUG 
-	printf("随机生成的key:");
-    #endif
 
 	for(int i=0;i<16;i++){
 	  int a= rand() % 255;
       key[i]=(unsigned char)a;
-      #ifdef DEBUG 
-      printf("%02x ",key[i]);
-      #endif
 	}
 }
 

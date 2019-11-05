@@ -11,15 +11,12 @@ History: ...
 extern "C" {
 	#include <errno.h>
 	#include <config.h>
-	#include <stdio.h>
 	#include <string.h>
 }
 #include <comm.hpp>
-// static long int current_client_id;
 
-#ifdef DEBUG 
-	#include <iostream>
-#endif
+#include <sstream>
+#include <iostream>
 
 using namespace comm;
 
@@ -27,14 +24,9 @@ using namespace comm;
 int Comm::run_listen_core()
 {
 	// init the static variable
-	int current_client_id = -1;
 	ID *entity_id = m_user_ptr->get_id(); 
 	char *entity_id_cstr = entity_id->id;
 	int entity_id_len = entity_id->length; 
-
-#ifdef DEBUG 
-	std::cerr << "listen comm: " << (unsigned long)this << std::endl;
-#endif
 
 	/* now I have got the crypto type, so what I should do is to get the plain text
 		* from the packet 
@@ -42,64 +34,68 @@ int Comm::run_listen_core()
 	char buffer[BUFFER_SIZE];
 
 	// read the data stream and reorganize it as a security packet
-	SecPacket *p_packet = (SecPacket *)malloc(sizeof(SecPacket));
+	// SecPacket *p_packet = (SecPacket *)malloc(sizeof(SecPacket));
 
 	// read the head
 	FILE *read_file = get_read_file();
-	if(!fread(p_packet->head, sizeof(char), SEC_HEAD_LEN, read_file))
+	if(!fread(buffer, sizeof(char), SEC_HEAD_LEN, read_file))
 	{
 		if(feof(read_file))
 		{
-			fprintf(stdout, "client close its connection abruptly\n");
-			return 0;
+			get_ui_ptr()->error("client close its connection abruptly");
+			return -1;
 		}
 		else
 		{
-			fprintf(stderr, "can't get user request: %s\n", strerror(errno));
+			std::ostringstream buffer; 
+			buffer << "can't get user request: " << strerror(errno);
+			get_ui_ptr()->error(buffer.str());
 			return -1;
 		}
 	}
 
 	#ifdef DEBUG 
-	fprintf(stderr, "finish reading the head\n");
-	fprintf(stderr, "type : %d\n", *(int *)(p_packet->head));
-	fprintf(stderr, "length : %d\n", *(int *)(p_packet->head+4));
+	get_ui_ptr()->debug("finish reading the head");
 	#endif
-	// length of the packet without the head
-	int length = *(int *) (p_packet->head+4);
 
-	// read the payload 
-	char *payload = (char *) malloc(length);
-	if(!fread(payload, sizeof(char), length, m_read_file))
+	// length of the packet without the head
+	int length = *(int *) (buffer+4);
+
+	if(!fread(buffer+SEC_HEAD_LEN, sizeof(char), length, m_read_file))
 	{
 		if(feof(m_read_file))
 		{
-			fprintf(stdout, "client close its connection abruptly\n");
-			return 0;
+			get_ui_ptr()->error("client close its connection abruptly");
+			return -1;
 		}
 		else
 		{
-			fprintf(stderr, "can't get user request: %s\n", strerror(errno));
-			return -1;
+			std::ostringstream buffer; 
+			buffer << "can't get user request: " << strerror(errno);
+			get_ui_ptr()->error(buffer.str());
 		}
 	}
 	#ifdef DEBUG 
-	fprintf(stderr, "finish reading the payload\n");
+	get_ui_ptr()->debug("finish reading the payload");
 	#endif
-	p_packet->payload.data = payload;
+	SecPacket *p_sec_packet = SecPacket::from_bytes(buffer);
 
 	// handle the packet
-	PacketCTX *ctx = new PacketCTX;
+	PacketCTX *p_ctx = new PacketCTX;
 
-	ctx->phase = RECV_SEC_PACKET;
-	ctx->payload.secPacket = p_packet;
-	ctx->dest_id = entity_id;				// the id of the runner itself 
+	p_ctx->set_phase(RECV_SEC_PACKET);
+	p_ctx->set_payload_sec(p_sec_packet);
+	p_ctx->set_dest_id(entity_id);
 
-	if(m_packet_ptr->packet_handle(ctx) == -1)
+	if(get_packet_ptr()->packet_handle(p_ctx) == -1)
 	{
-		fprintf(stderr, "handle IBE packet error\n");
+		get_ui_ptr()->error("handle packet received error");
 		return -1;
 	}
+
+#ifdef DEBUG 
+	get_ui_ptr()->debug("handle received packet finished ");
+#endif
 
 	return 0;
 }
