@@ -52,24 +52,44 @@ void Packet::handle_dec() {
         GENERATE_SK_FILENAME((ctx->get_dest_id()))
         get_sk_fp(filename, &sk);
         FREE_SK_FILENAME
+        std::cout<<"cipher is"<<p_sec_packet->get_payload_byte()<<std::endl;
+        std::cout<<"cipher len is"<<c_len<<std::endl;
+        std::cout<<"sk is"<<sk<<std::endl;
+        ibe_decrypt(p_sec_packet->get_payload_byte(), c_len, m, &m_len, 
+                            &sk, 313);
+        std::cout<<"m is"<<m<<std::endl;
+//         size_t m_len;
 
-        // decrypt
-        if(0 == ibe_decrypt(p_sec_packet->get_payload_byte(), c_len, m, &m_len, 
-                                &sk, get_user_ptr()->get_sk_len()))
-        {
-#ifdef DEBUG            
-            std::ostringstream s;
-            s << "ibe decryption failed, length of cipher:" << c_len;
-            interface::IUI::error(s.str());
+//         // get the private key from file
+//         IBEPrivateKey sk = NULL;
 
-            FILE* fp = std::fopen("tmp-dec", "wb");
-            std::fwrite(p_sec_packet->get_payload_byte(), c_len, 1, fp);
-            std::fclose(fp);
-#else
-            interface::IUI::error("ibe decryption failed");
-#endif
-            throw PacketException("ibe decryption failed");
-        }
+//         GENERATE_SK_FILENAME((ctx->get_dest_id()))
+//         get_sk_fp(filename, &sk);
+//         FREE_SK_FILENAME
+
+//         // decrypt
+//         std::cout<<"cipher is"<<p_sec_packet->get_payload_byte()<<std::endl;
+//         std::cout<<"cipher len is"<<c_len<<std::endl;
+//         std::cout<<"sk is"<<sk<<std::endl;
+//         std::cout<<"sk len is"<<get_user_ptr()->get_sk_len()<<std::endl;
+//         char data[BUFFER_SIZE];
+//         memcpy(data, p_sec_packet->get_payload_byte(), c_len+10);
+//         if(0 == ibe_decrypt(data, c_len, m, &m_len, 
+//                                 &sk, get_user_ptr()->get_sk_len()))
+//         {
+// #ifdef DEBUG            
+//             std::ostringstream s;
+//             s << "ibe decryption failed, length of cipher:" << c_len;
+//             interface::IUI::error(s.str());
+
+//             FILE* fp = std::fopen("tmp-dec", "wb");
+//             std::fwrite(p_sec_packet->get_payload_byte(), c_len, 1, fp);
+//             std::fclose(fp);
+// #else
+//             interface::IUI::error("ibe decryption failed");
+// #endif
+//             throw PacketException("ibe decryption failed");
+//         }
         std::free(sk);
 
         // organize the message as a app packet 

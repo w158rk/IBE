@@ -8,10 +8,12 @@
 extern "C" {
     #include <crypto.h>
     #include <string.h>
+    #include <sys.h>
 }
 
 #include<packet.hpp>
 #include<config.h>
+#define DEBUG
 #ifdef DEBUG 
 #include<iostream>
 #include<sstream>
@@ -46,10 +48,13 @@ void Packet::send_enc()
             char *cipher = (char *)std::malloc(BUFFER_SIZE);
             size_t cipher_len = BUFFER_SIZE;
 
-            char *data = p_app_packet->to_bytes();
+            int len = (size_t)app_length+APP_HEAD_LEN;
+            char data[BUFFER_SIZE];
+            memcpy(data, p_app_packet->to_bytes(), len);
+            std::cout<<data<<std::endl;
             // encrypt
             if (!ibe_encrypt(data, 
-                        (size_t)app_length+APP_HEAD_LEN, 
+                        len, 
                         cipher, 
                         &cipher_len, 
                         ctx->get_mpk(), 
@@ -60,6 +65,7 @@ void Packet::send_enc()
                 interface::IUI::error("encrypt failed");
                 throw PacketException("encrypt failed");
             }
+            
 #ifdef DEBUG
             std::ostringstream s;
             s << "ibe encryption finished, length of cipher:" << cipher_len;
@@ -69,6 +75,18 @@ void Packet::send_enc()
             // copy the cipher into the sec packet
             char *tmp = (char *)std::malloc(cipher_len);
             memcpy(tmp, cipher, cipher_len);       //将加密后的数据放到sec_packet的payload.data中
+#ifdef DEBUG
+            char *m = (char *)malloc(BUFFER_SIZE);
+            size_t m_len;
+            IBEPrivateKey sk = NULL;
+            get_sk_fp("sk_Server.conf", &sk);
+            // std::cout<<"cipher is"<<cipher<<std::endl;
+            // std::cout<<"cipher len is"<<cipher_len<<std::endl;
+            // std::cout<<"sk is"<<sk<<std::endl;
+            ibe_decrypt(cipher, cipher_len, m, &m_len, 
+                                &sk, 313);
+            std::cout<<"m is"<<m<<std::endl;
+#endif
             p_sec_packet->set_payload_byte(tmp);
 
 #ifdef DEBUG
@@ -80,8 +98,8 @@ void Packet::send_enc()
             p_sec_packet->set_length((int)cipher_len);
 
             // free the temporaries
-            std::free(data);
-            std::free(cipher);
+            // std::free(data);
+            // std::free(cipher);
 
             /**
              * be careful that the tmp is not freed in this function 
