@@ -113,9 +113,6 @@ void Packet::send_enc()
             sm4_crypt_ecb(sm4ctx, ENC_PARAMETER, app_length + APP_HEAD_LEN, (unsigned char*)sk_data, (unsigned char*)cipher, &c_len);
 #ifdef DEBUG
             fprintf(stderr, "c_len is%d\n", c_len);
-#endif
-                 
-#ifdef DEBUG
             fprintf(stderr, "cipher is:%s\n",cipher);
             /*对生成的cipher进行验证是否正确*/
             sm4_setkey_dec(sm4ctx, (unsigned char*)(ctx->key));

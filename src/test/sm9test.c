@@ -111,7 +111,9 @@ int test_sm9_sign()
 {
     fprintf(stderr, "[test] sign\n");
     size_t data_len = strlen(data2);
-    int ret = ibe_sign(NID_sm3, data2, data_len, &sign_data, &sign_len, &sk);
+    printf("data2 is%s\n", data2);
+    printf("sk is%s\n", sk);
+    int ret = ibe_sign(NID_sm3, data2, data_len, &sign_data, &sign_len, sk);
     fprintf("sign data is%s\n", sign_data);
     return ret;
 }
@@ -125,6 +127,11 @@ int test_sm9_verify()
     return ret;
 }
 
+/*void print(char* data)
+{
+    printf("data is%s\n",data);
+}*/
+
 int main(int argc, char *argv[]) {
 
     if(-1 == test_set_up()) goto end; 
@@ -134,8 +141,14 @@ int main(int argc, char *argv[]) {
     if(-1 == test_sm9_encrypt()) goto end;  //加密
     if(-1 == test_sm9_decrypt()) goto end;  //解密 
 
-    /*int i = test_sm9_sign();
-    int ret = test_sm9_verify();
+    //print(data2);
+    //int i = test_sm9_sign();
+    size_t data_len = strlen(data2);
+    int ret = SM9_sign(NID_sm3, data2, data_len, &sign_data, &sign_len, sk);
+    printf("ret is%d\n", ret);
+    printf("sign is%s\n", sign_data);
+    printf("sign length is%d\n", sign_len);
+    /*int ret = test_sm9_verify();
     printf("ret is%d\n", ret);*/
     
     if(-1 == test_put_private_key()) goto end;  //输出sk于文件中 
