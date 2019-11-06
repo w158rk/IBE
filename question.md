@@ -1,3 +1,8 @@
+## 11.5
+1. 解决IBE加解密的问题
+2. 段错误的问题在于type的值在packet_send的过程中出现了改变
+3. enc中最后直接从app_packet中能读出type，从sec中的app_packet不行
+
 ## 10.30
 1. `crypto.h`中sm4 key生成的函数改为`gen_random_sm4`
 2. sm4的长度问题解决

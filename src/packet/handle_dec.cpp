@@ -56,7 +56,7 @@ void Packet::handle_dec() {
         std::cout<<"cipher len is"<<c_len<<std::endl;
         std::cout<<"sk is"<<sk<<std::endl;
         ibe_decrypt(p_sec_packet->get_payload_byte(), c_len, m, &m_len, 
-                            &sk, 313);
+                            &sk, get_user_ptr()->get_sk_len());
         std::cout<<"m is"<<m<<std::endl;
 //         size_t m_len;
 
@@ -106,6 +106,7 @@ void Packet::handle_dec() {
         int payload_len = p_app_packet->get_length();                 
         char *payload = (char *)std::malloc(payload_len);
         memcpy(payload, m+APP_HEAD_LEN, payload_len);
+        std::cout<<"payload is"<<payload<<std::endl;
         p_app_packet->set_payload(payload);     
 
 
@@ -161,6 +162,5 @@ void Packet::handle_dec() {
     default:
         break;
     }
-
     ctx->set_phase(RECV_VERIFY);
 }
