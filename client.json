@@ -3,7 +3,8 @@
         "log" : "server.log"
     },
     "crypto" : {
-        "mpk_file" : "mpk.conf"
+        "mpk_file" : "mpk.conf",
+        "mpk_len_file" : "mpk-len.conf"
     },
     "id" : {
         "id" : "Client", 
@@ -12,7 +13,7 @@
         "parent" : {
             "id" : "Server", 
             "ip_address" : "127.0.0.1",
-            "port" : 5002,
+            "port" : 5003,
             "parent" : null            
         }
     }

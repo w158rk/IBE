@@ -17,6 +17,7 @@
 #include <openssl/bn.h>
 #include <openssl/ec.h>
 #include <openssl/sm4.h>
+#include <openssl/sm9.h>
 
 /* key lengths */
 #define AES_KEY_BITS            256 
@@ -46,6 +47,7 @@ int ibe_id2point(
     char *mpk_file
 ); 
 
+
 int ibe_setup(
     char *mpk_file,
     char *msk_file,
@@ -74,6 +76,8 @@ int ibe_extract(IBEPrivateKey *sk,
 
 
 void ibe_sk_copy(IBEPrivateKey *dest, IBEPrivateKey *src, long);
+int ibe_sign(const unsigned char *data, size_t data_length, const unsigned char* sign, size_t *sign_length, SM9PrivateKey *sk);
+int ibe_verify(const unsigned char* data, size_t data_length, const unsigned char *sign, size_t sign_length, SM9PublicParameters *mpk, const char *id, size_t id_length);
 
 /*
  * cbc 

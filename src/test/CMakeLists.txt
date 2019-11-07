@@ -11,8 +11,8 @@ include_directories (${PROJECT_INCLUDE_DIR} ../crypto)  #链接库在../crypto�
 
 # add the executable
 
-# add_executable (sm9test sm9test.c)  #添加可执行文件sm9test.c生成sm9test
-# target_link_libraries (sm9test ibe ssl crypto pthread)  #将sm9test与ibe，ctypto，ssl库文件链接
+add_executable (sm9test sm9test.c)  #添加可执行文件sm9test.c生成sm9test
+target_link_libraries (sm9test ibe ssl crypto pthread)  #将sm9test与ibe，ctypto，ssl库文件链接
 add_executable (clienttest clienttest.cpp)    #添加可执行文件clienttest.c生成clienttest
 target_link_libraries (clienttest ibe ssl crypto pthread)   #与库文件链接
 add_executable (servertest servertest.cpp)    #添加可执行文件servertest.c生成servertest

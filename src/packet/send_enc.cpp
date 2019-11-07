@@ -75,18 +75,18 @@ void Packet::send_enc()
             // copy the cipher into the sec packet
             char *tmp = (char *)std::malloc(cipher_len);
             memcpy(tmp, cipher, cipher_len);       //将加密后的数据放到sec_packet的payload.data中
-// #ifdef DEBUG
-//             char *m = (char *)malloc(BUFFER_SIZE);
-//             size_t m_len;
-//             IBEPrivateKey sk = NULL;
-//             get_sk_fp("sk_Server.conf", &sk);
-//             // std::cout<<"cipher is"<<cipher<<std::endl;
-//             // std::cout<<"cipher len is"<<cipher_len<<std::endl;
-//             // std::cout<<"sk is"<<sk<<std::endl;
-//             ibe_decrypt(cipher, cipher_len, m, &m_len, 
-//                                 &sk, 313);
-//             std::cout<<"m is"<<m<<std::endl;
-// #endif
+#ifdef DEBUG
+            char *m = (char *)malloc(BUFFER_SIZE);
+            size_t m_len =BUFFER_SIZE;
+            IBEPrivateKey sk = NULL;
+            get_sk_fp("sk_Server.conf", &sk);
+            // std::cout<<"cipher is"<<cipher<<std::endl;
+            // std::cout<<"cipher len is"<<cipher_len<<std::endl;
+            // std::cout<<"sk is"<<sk<<std::endl;
+            ibe_decrypt(cipher, cipher_len, m, &m_len, 
+                                &sk, 313);
+            std::cout<<"m is"<<m<<std::endl;
+#endif
             p_sec_packet->set_payload_byte(tmp);
 
 #ifdef DEBUG

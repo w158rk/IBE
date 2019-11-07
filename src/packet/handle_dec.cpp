@@ -9,7 +9,6 @@ extern "C" {
 
 #include<packet.hpp>
 
-#define DEBUG
 #ifdef DEBUG 
 #include<iostream>
 #include<sstream>
@@ -44,7 +43,7 @@ void Packet::handle_dec() {
         // get the cipher length and allocate space for decryption
         int c_len = p_sec_packet->get_length();
         char *m = (char *)malloc(BUFFER_SIZE);
-        size_t m_len;
+        size_t m_len = BUFFER_SIZE;
 
         // get the private key from file
         IBEPrivateKey sk = NULL;
@@ -97,21 +96,32 @@ void Packet::handle_dec() {
         // after the verification finished
         // so run a deep copy, no pointers transferred in 
         // this function 
-        AppPacket *p_app_packet = new AppPacket;
+        // AppPacket *p_app_packet = new AppPacket;
+        AppPacket *p_app_packet = AppPacket::from_bytes(m);
 
-        // the head is the first 8 bytes of the decrypted message
-        p_app_packet->set_head(m);
+        // // the head is the first 8 bytes of the decrypted message
+        // p_app_packet->set_head(m);
         
-        // copy the rest of the message into the payload of app packet
-        int payload_len = p_app_packet->get_length();                 
-        char *payload = (char *)std::malloc(payload_len);
-        memcpy(payload, m+APP_HEAD_LEN, payload_len);
-        std::cout<<"payload is"<<payload<<std::endl;
-        p_app_packet->set_payload(payload);     
+        // // copy the rest of the message into the payload of app packet
+
+        // // char *head = (char *)malloc(APP_HEAD_LEN);
+        // // memcpy(head, m, APP_HEAD_LEN);     
+        // // int type = *(int *)head;
+        // // std::cout<<"type is"<<type<<std::endl;
+        // // p_app_packet->set_type(type);
+        // int payload_len = p_app_packet->get_length();                 
+        // char *payload = (char *)std::malloc(payload_len);
+        // memcpy(payload, m+APP_HEAD_LEN, payload_len);
+        // std::cout<<"payload is"<<payload<<std::endl;
+        // p_app_packet->set_payload(payload);     
 
 
         // add the app packet to the payload of the sec packet 
         p_sec_packet->set_payload_app(p_app_packet);       //把该app_packet包放在ctx->payload.secPacket->payload.appPacket中
+#ifdef DEBUG       
+        std::cerr << " type: " << ctx->get_payload_sec()->get_payload_app()->get_type() << std::endl;
+#endif
+        //ctx->set_payload_app(p_app_packet);
 
         break;
     }
@@ -135,23 +145,8 @@ void Packet::handle_dec() {
                         &out_len);
         
         // create a new app packet 
-        AppPacket *p_app_packet = new AppPacket;
-        char *payload = (char *)std::malloc(length-APP_HEAD_LEN);
-
-        // copy the header and the payload into the app packet
-        p_app_packet->set_head(sm4_msg);
-        p_app_packet->set_payload(sm4_msg+APP_HEAD_LEN);
-
-         try
-        {
-            std::free(p_sec_packet->get_payload_byte());
-            std::free(sm4_msg);
-        }
-        catch(std::exception &e)
-        {
-            interface::IUI::error(e.what());
-            throw PacketException(e.what());
-        }
+        // AppPacket *p_app_packet = new AppPacket;
+        AppPacket *p_app_packet = AppPacket::from_bytes(sm4_msg);
 
         // set the payload of the sec packet        
         p_sec_packet->set_payload_app(p_app_packet);
