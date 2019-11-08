@@ -10,7 +10,9 @@
 #include <openssl/ec.h>
 
 /*  the caller should ensure that mpk_file end with '\0' */
-int ibe_id2point(
+/* different from the id-point map in sm9, here the addition with Ppub is cancelled 
+	as at the initial phase, there is no Ppub at all   */
+int ibe_id2point_init(
     EC_POINT **point,    
     char *id, 
     long id_len,
@@ -37,7 +39,6 @@ int ibe_id2point(
     fclose(mpk_fp);
 
 	EC_GROUP *group = NULL;
-	EC_POINT *Ppube = NULL;
 	EC_POINT *C = NULL;
 	BN_CTX *bn_ctx = NULL;
 	BIGNUM *h = NULL;
@@ -59,13 +60,6 @@ int ibe_id2point(
 
 	BN_CTX_start(bn_ctx);
 
-	/* parse Ppube */
-	if (!EC_POINT_oct2point(group, Ppube, ASN1_STRING_get0_data(sm9_mpk->pointPpub),
-		ASN1_STRING_length(sm9_mpk->pointPpub), bn_ctx)) {
-		ERROR("parse Ppub failed");
-		goto end;
-	}
-
 	switch (OBJ_obj2nid(sm9_mpk->hash1)) {
 	case NID_sm9hash1_with_sm3:
 		hash1_md = EVP_sm3();
@@ -78,11 +72,10 @@ int ibe_id2point(
 		goto end;
 	}
 
-	/* parse Q_B = H1(ID_B||hid) * P1 + Ppube */
+	/* parse Q_B = H1(ID_B||hid) * P1 */
 	// we should check mpk->hash1
 	if (!SM9_hash1(hash1_md, &h, id, id_len, SM9_HID_ENC, n, bn_ctx)
-		|| !EC_POINT_mul(group, C, h, NULL, NULL, bn_ctx)
-		|| !EC_POINT_add(group, C, C, Ppube, bn_ctx)) {
+		|| !EC_POINT_mul(group, C, h, NULL, NULL, bn_ctx)) {
 		ERROR("parse QB failed");
 		goto end;
 	}
@@ -92,7 +85,6 @@ int ibe_id2point(
 
 end:
 	EC_GROUP_free(group);
-	EC_POINT_free(Ppube);
 	if (bn_ctx) {
 		BN_CTX_end(bn_ctx);
 	}

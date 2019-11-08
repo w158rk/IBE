@@ -62,6 +62,15 @@ namespace interface
         virtual void run_send_message(char *dest_ip, 
 				        			int dest_port,
 						        	ID *dest_id) = 0;
+        virtual void send_init_message_1(char *buff, 
+				        			int len,
+						        	ID *dest_id) = 0;
+        virtual void send_init_message_2(char *buff, 
+				        			int len,
+						        	ID *dest_id) = 0;
+        virtual void send_init_message_3(char *buff, 
+				        			int len,
+						        	ID *dest_id) = 0;
 
         virtual ~IUser() = default;
 
