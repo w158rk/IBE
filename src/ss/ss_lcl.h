@@ -5,10 +5,10 @@
  * @brief parameters and functions for secret sharing 
  */
 
-#ifndef SS_H 
-#define SS_H 
+#ifndef SS_LCL_H 
+#define SS_LCL_H 
 
-#include <crypto.h>
+#include <ss.h>
 
 
 #endif 

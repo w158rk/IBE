@@ -5,7 +5,7 @@
  * @brief number operations for secret sharing 
  * */
 
-#include "./ss.h"
+#include "./ss_lcl.h"
 #define SWAP(x, y) { temp = x; x = y; y = temp; }
 
 SS_POLY *SS_POLY_new(void) {
@@ -55,6 +55,7 @@ end:
 
 int SS_poly_apply(BIGNUM *value, SS_POLY *poly, BIGNUM *x, BIGNUM *p) {
 
+    int ret = 0;
     int i=0;
     BIGNUM *r = BN_new();
     BN_zero(r);                 /* set as 0*/
@@ -74,13 +75,8 @@ int SS_poly_apply(BIGNUM *value, SS_POLY *poly, BIGNUM *x, BIGNUM *p) {
     if(0 == BN_mod_add(value, r, coeff_list[0], p, add_ctx))
         goto end;
 
-    /* free the allocated space */
-    BN_free(r);
-    BN_free(temp);
-    BN_CTX_free(mul_ctx);
-    BN_CTX_free(add_ctx);
     
-    return 1;
+    ret = 1;
 
 end:    /* something went wrong */
     BN_free(r);
@@ -89,13 +85,14 @@ end:    /* something went wrong */
     BN_CTX_free(add_ctx);
     BN_zero(value);
 
-    return 0;
+    return ret;
 
 }
 
 int SS_lagrange_value(BIGNUM *value, BIGNUM **x_list, unsigned int length,
                         unsigned int i, BIGNUM *x, BIGNUM *p)
 {
+    int ret = 0;
 
     BIGNUM *numerator = BN_new();
     BIGNUM *denominator = BN_new();
@@ -134,13 +131,7 @@ int SS_lagrange_value(BIGNUM *value, BIGNUM **x_list, unsigned int length,
     if(0 == BN_mod_mul(value, d, numerator, p, ctx))
         goto end;
 
-    BN_free(numerator);
-    BN_free(denominator);
-    BN_free(d);
-    BN_free(r);
-    BN_CTX_free(ctx);
-    return 1;
-
+    ret = 1;
 end:
 
     BN_free(numerator);
@@ -148,6 +139,6 @@ end:
     BN_free(d);
     BN_free(r);
     BN_CTX_free(ctx);
-    return 0;
+    return ret;
 
 }
