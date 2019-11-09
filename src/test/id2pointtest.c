@@ -8,7 +8,7 @@
 int main() 
 {
     EC_POINT *point = NULL;
-    int ret = ibe_id2point(
+    int ret = ibe_id2point_init(
         &point,
         TEST_ID, 
         TEST_ID_LEN,

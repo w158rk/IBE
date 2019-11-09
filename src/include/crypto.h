@@ -39,7 +39,7 @@ extern "C" {
  * @param[in] id_len length of ID
  * @param[in] mpk_file the filename of the file where the mpk is stored, should end with '\0
  */
-int ibe_id2point(
+int ibe_id2point_init(
     EC_POINT **point,    
     char *id, 
     long id_len,

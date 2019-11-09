@@ -1,5 +1,5 @@
 /**
- * file: ibe_id2point.c
+ * file: ibe_id2point_init.c
  */
 
 #include <utils.h>
@@ -48,7 +48,6 @@ int ibe_id2point_init(
     /** use sha-256 as default hash function */
 	/** allocate the spaces */
 	if (!(group = EC_GROUP_new_by_curve_name(NID_sm9bn256v1))
-		|| !(Ppube = EC_POINT_new(group))
 		|| !(C = EC_POINT_new(group))
 		|| !(bn_ctx = BN_CTX_new())) {
 		

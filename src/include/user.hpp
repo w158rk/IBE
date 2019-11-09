@@ -3,7 +3,7 @@
 
 #include<string>
 #include<interface.hpp>
-#include<utils.h>
+#include<utils.hpp>
 
 #include<rapidjson/document.h>
 
@@ -26,6 +26,7 @@ namespace user {
         GET_AND_SET(int, port)
         GET_AND_SET(ID*, id)
         GET_AND_SET(char *, err_sig)
+        GET_AND_SET(char *, cfg_filename)
         GET_AND_SET(char *, msk_filename)
         GET_AND_SET(char *, mpk_filename)
         GET_AND_SET(interface::IComm *, comm_ptr)
@@ -51,6 +52,9 @@ namespace user {
         void delete_thread(std::thread *thread);
         void sys_setup();
         void sys_init();
+        void send_init_message_1(char *buff, int length, ID *id);
+        void send_init_message_2(char *buff, int length, ID *id);
+        void send_init_message_3(char *buff, int length, ID *id);
 
     private :
         DECLARE_MEMBER(interface::IUI *, ui_ptr)
@@ -62,6 +66,7 @@ namespace user {
         DECLARE_MEMBER(char *, err_sig)
         DECLARE_MEMBER(char *, msk_filename)
         DECLARE_MEMBER(char *, mpk_filename)
+        DECLARE_MEMBER(char *, cfg_filename)
         DECLARE_MEMBER(char *, msk_len_file)
         DECLARE_MEMBER(char *, mpk_len_file)
         DECLARE_MEMBER(long, mpk_len)
@@ -106,7 +111,6 @@ namespace user {
 
 };
 
-rapidjson::Document* get_cfg_doc(char* filename) ;
 ID* get_id_from_doc(rapidjson::Document& doc);
 void bind_objects(interface::IUser* user, 
                     interface::IComm* comm, 

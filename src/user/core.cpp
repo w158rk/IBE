@@ -104,3 +104,18 @@ void User::run_send_message(char *dest_ip,
 	}
 
 }
+
+void User::send_init_message_1(char *buff, int length, ID *id)
+{
+
+}
+
+void User::send_init_message_2(char *buff, int length, ID *id)
+{
+	
+}
+
+void User::send_init_message_3(char *buff, int length, ID *id)
+{
+	
+}

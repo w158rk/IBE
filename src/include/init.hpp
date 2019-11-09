@@ -20,12 +20,8 @@ namespace init
             GET_AND_SET(BIGNUM*, share)
 
             void run();
-            void read_config();
-            void gen_poly();
-            void cal_fx(char* result, int *len, ID* id);
-            void cal_share();
-            void cal_shareP(char *result, int *len);
-            void cal_shareQ(char *result, int *len, ID* id);
+
+            Initializer(interface::IUser *user);
 
         private:
 
@@ -43,6 +39,12 @@ namespace init
                 std::set<ID*> user_ids;
             }   config;
 
+            void read_config();
+            void gen_poly();
+            void cal_fx(char* result, int *len, ID* id);
+            void cal_share();
+            void cal_shareP(char *result, int *len);
+            void cal_shareQ(char *result, int *len, ID* id);
 
     };
 } // namespace init
