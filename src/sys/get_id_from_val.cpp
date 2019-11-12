@@ -1,11 +1,9 @@
 #include <user.hpp>
 
-ID* get_id_from_doc(rapidjson::Document& doc)
+ID* get_id_from_val(rapidjson::Value& val)
 {
     ID *id = new ID;
     
-    rapidjson::Value& val = doc["id"];
-
     id->id = (char*)val["id"].GetString();
     id->length = val["id"].GetStringLength();
     id->ip = (char *)val["ip_address"].GetString();

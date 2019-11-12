@@ -44,15 +44,26 @@ typedef struct {
 /* functions */
 /* used to unwrap the macro SS_P_BITS*/
 /* TODO why ? */
-#define CONCAT1(a,b)    a##b
-#define CONCAT(a,b)     CONCAT1(a,b)
-
-#define SS_get_p    CONCAT(BN_get0_nist_prime_,SS_P_BITS) 
 /** 
  * @brief allocate space for a polynomial 
  * @return the pointer to the polynomial 
  */
 SS_POLY *SS_POLY_new(void) ;
+
+
+/**
+ * @brief map the id to a number, generally, it's the x-value of the mappoint
+ * 
+ * @return 
+ *      0 if something is wrong 
+ *      1 else 
+ * 
+ * @param[out] x        where to store the number, must be initialized with 
+ *                      BN_new 
+ * @param[in] id        the information
+ * @param[in] filename  the file to store the mpk
+ */
+int SS_id2num_init(BIGNUM *x, ID *id, char *filename);
 
 /**
  * @brief generate a random polynomial
@@ -64,9 +75,8 @@ SS_POLY *SS_POLY_new(void) ;
  * @param[out] poly     where to store the polynomial 
  * @param[in]  length   the number of coefficients (usually 
  *                      equals to the number of the top nodes)
- * @param[in]  p        the prime field idetification 
  */
-int SS_poly_rand(SS_POLY *poly, unsigned int length, BIGNUM *p);
+int SS_poly_rand_sm9(SS_POLY *poly, unsigned int length);
 
 /**
  * @brief get the value of the polynomial given an argument x for that
@@ -78,9 +88,8 @@ int SS_poly_rand(SS_POLY *poly, unsigned int length, BIGNUM *p);
  * @param[out]  value   the result of the application 
  * @param[in]   poly    the polynomial 
  * @param[in]   x       the argument 
- * @param[in]   p       the prime field identification
  */
-int SS_poly_apply(BIGNUM *value, SS_POLY *poly, BIGNUM *x, BIGNUM *p);
+int SS_poly_apply_sm9(BIGNUM *value, SS_POLY *poly, BIGNUM *x);
 
 /**
  * @brief get the Lagrange value give i and x, means get the 

@@ -8,7 +8,7 @@ GET_AND_SET_IMPL(Initializer, interface::IUser *, user)
 GET_AND_SET_IMPL(Initializer, std::set<BIGNUM>, numbers)
 GET_AND_SET_IMPL(Initializer, std::set<EC_POINT>, sp_pub_points)
 GET_AND_SET_IMPL(Initializer, std::set<EC_POINT>, sq_pub_points)
-GET_AND_SET_IMPL(Initializer, SS_POLY, poly)
+GET_AND_SET_IMPL(Initializer, SS_POLY*, poly)
 GET_AND_SET_IMPL(Initializer, BIGNUM*, share)
 
 Initializer::Initializer(interface::IUser *user)
@@ -36,7 +36,15 @@ void Initializer::read_config()
         get_user()->get_ui_ptr()->error("No user ids identified in the config");
     }
 
-    /* CURRENT */
-    /* access the elements in an array */
+    /* read the ids */
+    auto id_list = val.GetArray();
+    for (auto id_val=id_list.Begin(); id_val!=id_list.End(); id_val++)
+    {
+        ID *id = get_id_from_val(*id_val);
+        config.user_ids.insert(id);
+    }
+
+    config.user_cnt = config.user_ids.size();
+    config.is_set = true;
 
 }

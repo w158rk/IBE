@@ -111,7 +111,6 @@ namespace user {
 
 };
 
-ID* get_id_from_doc(rapidjson::Document& doc);
 void bind_objects(interface::IUser* user, 
                     interface::IComm* comm, 
                     interface::IPacket* packet, 

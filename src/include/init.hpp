@@ -16,7 +16,7 @@ namespace init
             GET_AND_SET(std::set<BIGNUM>, numbers)
             GET_AND_SET(std::set<EC_POINT>, sp_pub_points)
             GET_AND_SET(std::set<EC_POINT>, sq_pub_points)
-            GET_AND_SET(SS_POLY, poly)
+            GET_AND_SET(SS_POLY*, poly)
             GET_AND_SET(BIGNUM*, share)
 
             void run();
@@ -30,7 +30,7 @@ namespace init
             DECLARE_MEMBER(std::set<BIGNUM>, numbers)
             DECLARE_MEMBER(std::set<EC_POINT>, sp_pub_points)
             DECLARE_MEMBER(std::set<EC_POINT>, sq_pub_points)
-            DECLARE_MEMBER(SS_POLY, poly)
+            DECLARE_MEMBER(SS_POLY*, poly)
 
             struct config_t 
             {
