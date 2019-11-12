@@ -8,6 +8,7 @@ int SS_poly_rand_sm9(SS_POLY *poly, unsigned int length)
 
     BIGNUM *p = SM9_get0_prime();
     SS_poly_rand(poly, length, p);
+    BN_free(p);
 
 }
 
@@ -16,8 +17,20 @@ int SS_poly_apply_sm9(BIGNUM *value, SS_POLY *poly, BIGNUM *x)
 
     BIGNUM *p = SM9_get0_prime();
     SS_poly_apply(value, poly, x, p);
+    BN_free(p);
 
 }
+
+int BN_mod_add_sm9(BIGNUM *res, BIGNUM* a, BIGNUM* b)
+{
+    BIGNUM *p = SM9_get0_prime();
+    BN_CTX *ctx = BN_CTX_new();
+    BN_mod_add(res, a, b, p, ctx);
+
+    BN_CTX_free(ctx);
+    BN_free(p);
+}
+
 
 int SS_id2num_init(BIGNUM *res, ID *id, char *filename)
 {

@@ -32,6 +32,11 @@ extern "C" {
 #define SS_MAX_ID_LENGTH        256
 #define SS_P_BITS               256
 #define SS_P_LENGTH             (SS_P_BITS/8)
+
+
+/* wrap some library functions */
+#define SS_bn2str(x) BN_bn2hex(x)
+
 /* TODO this should be defined in the configure file */
 // #define SS_POLY_LENGTH           5      
 
@@ -77,6 +82,21 @@ int SS_id2num_init(BIGNUM *x, ID *id, char *filename);
  *                      equals to the number of the top nodes)
  */
 int SS_poly_rand_sm9(SS_POLY *poly, unsigned int length);
+
+/**
+ * @brief add two big numbers, res = a+b (mod p(sm9))
+ *
+ * @return
+ *      0 if something is wrong 
+ *      1 if things go smoothly
+ *
+ * @param[out] res      result 
+ * @param[in]  a    
+ * @param[in]  b    
+ *                      
+ */
+int BN_mod_add_sm9(BIGNUM *res, BIGNUM* a, BIGNUM* b);
+
 
 /**
  * @brief get the value of the polynomial given an argument x for that

@@ -3,13 +3,48 @@
 
 using namespace init;
 
+#define ERROR(x) get_user()->get_ui_ptr()->error(x)
 
 GET_AND_SET_IMPL(Initializer, interface::IUser *, user)
-GET_AND_SET_IMPL(Initializer, std::set<BIGNUM>, numbers)
-GET_AND_SET_IMPL(Initializer, std::set<EC_POINT>, sp_pub_points)
-GET_AND_SET_IMPL(Initializer, std::set<EC_POINT>, sq_pub_points)
+GET_AND_SET_IMPL(Initializer, std::set<BIGNUM*>, numbers)
+GET_AND_SET_IMPL(Initializer, std::set<EC_POINT*>, sp_pub_points)
+GET_AND_SET_IMPL(Initializer, std::set<EC_POINT*>, sq_pub_points)
 GET_AND_SET_IMPL(Initializer, SS_POLY*, poly)
-GET_AND_SET_IMPL(Initializer, BIGNUM*, share)
+
+
+void Initializer::set_share(BIGNUM *share)
+{
+    if(!m_fshare)
+    {
+        m_share = BN_new();
+    }
+
+    BN_copy(m_share, share);
+    m_fshare = true;
+}
+void Initializer::unset_share()
+{
+    if(!m_fshare)
+    {
+        ERROR("share is not set when calling the unset function, but the \
+                program continued");
+    }
+    else 
+    {
+        BN_free(m_share);
+        m_fshare = false;
+    }
+}
+BIGNUM* Initializer::get_share()
+{
+    if(!m_fshare)
+    {
+        ERROR("share is not set when calling the get function");
+        return nullptr;
+    }
+    return m_share;
+}
+
 
 Initializer::Initializer(interface::IUser *user)
 {
