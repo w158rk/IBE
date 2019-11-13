@@ -1,5 +1,6 @@
 #include <config.h>
 #include <init.hpp>
+#include <set>
 
 using namespace init;
 
@@ -21,9 +22,13 @@ void Initializer::run()
     /* send fi(xj) to others and receive fj(xi) from others */
     char buff[BUFFER_SIZE];
     int len = BUFFER_SIZE;
+    int cnt = config.user_cnt-1;
 
     get_user()->get_ui_ptr()->print("round one");
-    while(get_numbers().size() < config.user_cnt-1)
+
+    std::set<ID *> sent_list;
+
+    while(get_numbers().size() < cnt)
     {
 
         /* as the handle of the received packet will be in packet module 
@@ -32,12 +37,36 @@ void Initializer::run()
         for (ID* id : config.user_ids)
         {
 
+            // override the opcode
+            if(ID_equal(id, get_user()->get_id()))
+            {
+                continue;
+            }
+
+            if(sent_list.size() == cnt)
+            {
+                break;
+            }
+            
+            if(sent_list.find(id)  != sent_list.end())
+            {
+                continue;
+            }
             /* there are must some connection error happens here, but we can not 
                 let the program stop by this kind of exception */
             /* one of the solution here is to check if the port is open first, if 
                 it is not, just skip this round and wait for the next send behavior */
             cal_fx(buff, &len, id);
-            get_user()->send_init_message_1(buff, len, id);
+            try
+            {
+                get_user()->send_init_message_1(buff, len, id);
+            }
+            catch(const std::exception& e)
+            {
+                continue;
+            }
+
+            sent_list.insert(id);
 
         }
 

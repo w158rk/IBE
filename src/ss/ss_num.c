@@ -83,7 +83,6 @@ end:    /* something went wrong */
     BN_free(temp);
     BN_CTX_free(mul_ctx);
     BN_CTX_free(add_ctx);
-    BN_zero(value);
 
     return ret;
 

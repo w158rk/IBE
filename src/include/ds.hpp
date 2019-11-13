@@ -1,9 +1,17 @@
 #ifndef DS_HPP 
 #define DS_HPP
 
+extern "C" 
+{
+# include <string.h>
+}
+
 #include <ds.h>
 #include<utils.h>
 #include<crypto.h>
+
+
+
 enum state {
     SEND_APP_PACKET,
     SEND_SIGN,

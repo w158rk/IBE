@@ -2,6 +2,8 @@
 #define UTILS_HPP 
 
 #include<utils.h>
+#include<ds.hpp>
+
 #include<rapidjson/document.h>
 
 rapidjson::Document* get_cfg_doc(char* filename) ;

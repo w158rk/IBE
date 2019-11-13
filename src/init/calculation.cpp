@@ -38,7 +38,8 @@ void Initializer::cal_fx(char* result, int *len, ID* id)
     SS_poly_apply_sm9(res, get_poly(), x);
     
 
-    char *temp = SS_bn2str(res);
+    char *temp = NULL;
+    temp = SS_bn2str(res);
     if(temp == NULL)
     {
         ERROR("cannot convert the big number to string");
@@ -83,4 +84,9 @@ void Initializer::cal_shareP(char *result, int *len)
     // CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT 
     // CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT 
     // CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT 
+}
+
+void Initializer::cal_shareQ(char *result, int *len, ID *id)
+{
+    
 }

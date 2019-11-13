@@ -3,9 +3,10 @@
 
 #include<utils.h>
 #include<ss.h>
-#include<interface.hpp>
 #include<set>
 #include<openssl/bn.h>
+
+# include<interface.hpp>
 
 namespace init
 {
@@ -47,6 +48,32 @@ namespace init
             void cal_shareQ(char *result, int *len, ID* id);
 
     };
+
+    class InitException : public std::exception 
+    {
+    public:
+        InitException(std::string message)
+        {
+            set_message(message);
+        }
+        InitException() = default;
+        ~InitException() = default;
+
+        GET_AND_SET(std::string, message)
+        std::string what(){
+            if(m_fmessage)
+            {
+                std::string rtn("error in Init module : ");
+                rtn.append(m_message);
+                return rtn;
+            }
+            return std::string("error in Init module");
+        }
+    private: 
+        DECLARE_MEMBER(std::string, message)
+    };
+
+
 } // namespace init
 
 

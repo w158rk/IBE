@@ -36,10 +36,6 @@ typedef struct ID_STR{
     struct ID_STR *father_node;
 }ID;
 
-
-
-
-
-void ID_init();
+int ID_equal(ID *a, ID *b);
 
 #endif

@@ -12,6 +12,7 @@
 /*  the caller should ensure that mpk_file end with '\0' */
 /* different from the id-point map in sm9, here the addition with Ppub is cancelled 
 	as at the initial phase, there is no Ppub at all   */
+/* parse Q_B = H1(ID_B||hid) * P1 */
 int ibe_id2point_init(
     EC_POINT **point,    
     char *id, 

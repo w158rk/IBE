@@ -13,6 +13,13 @@ rapidjson::Document* get_cfg_doc(char* filename)
     {
     
         std::FILE* fp = std::fopen(filename, "r");
+        if(!fp)
+        {
+            fprintf(stderr, "%s\n", filename);
+            std::cerr << filename << std::endl;
+            std::cerr << "can not open file: " << filename << std::endl;
+            throw new std::exception;
+        }
 
         char *bp = (char *)std::malloc(BUFFER_SIZE);
 

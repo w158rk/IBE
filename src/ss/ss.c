@@ -1,4 +1,4 @@
-#include<ss_lcl.h>
+#include "ss_lcl.h"
 
 #include<crypto.h>
 #include<openssl/sm9.h>
@@ -8,7 +8,12 @@ int SS_poly_rand_sm9(SS_POLY *poly, unsigned int length)
 
     BIGNUM *p = SM9_get0_prime();
     SS_poly_rand(poly, length, p);
-    BN_free(p);
+
+    // the p cannot be free by BN_free 
+    // SIGSEGV when executing  a->flags |= BN_FLG_FREE in BN_free 
+    // weird thing
+    // possibly, the SM9_get0_prime return a constant value
+    // BN_free((BIGNUM *)p);
 
 }
 
@@ -17,7 +22,7 @@ int SS_poly_apply_sm9(BIGNUM *value, SS_POLY *poly, BIGNUM *x)
 
     BIGNUM *p = SM9_get0_prime();
     SS_poly_apply(value, poly, x, p);
-    BN_free(p);
+    // BN_free(p);
 
 }
 
@@ -28,7 +33,7 @@ int BN_mod_add_sm9(BIGNUM *res, BIGNUM* a, BIGNUM* b)
     BN_mod_add(res, a, b, p, ctx);
 
     BN_CTX_free(ctx);
-    BN_free(p);
+    // BN_free(p);
 }
 
 

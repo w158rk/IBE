@@ -3,7 +3,29 @@
 
 using namespace init;
 
+GET_AND_SET_IMPL(InitException, std::string, message)
+
+// the definition of the initexception methods must be 
+// in front of this definition
 #define ERROR(x) get_user()->get_ui_ptr()->error(x)
+
+Initializer::Initializer(interface::IUser *user)
+{
+    config.is_set = false;
+    config.user_cnt = 0;
+
+    set_user(user);
+    read_config();
+
+    // some members exists from the very beginning to the end of the 
+    // program 
+
+    m_fnumbers = true;
+    m_fsp_pub_points = true;
+    m_fsq_pub_points = true;
+
+}
+
 
 GET_AND_SET_IMPL(Initializer, interface::IUser *, user)
 GET_AND_SET_IMPL(Initializer, std::set<BIGNUM*>, numbers)
@@ -46,19 +68,15 @@ BIGNUM* Initializer::get_share()
 }
 
 
-Initializer::Initializer(interface::IUser *user)
-{
-    config.is_set = false;
-    config.user_cnt = 0;
-
-    set_user(user);
-    read_config();
-
-}
 
 void Initializer::read_config()
 {
-    rapidjson::Document *doc = get_cfg_doc(get_user()->get_cfg_filename());
+    char *filename = get_user()->get_cfg_filename();
+    if(!filename)
+    {
+        throw new InitException("No filename in the user context");
+    }
+    rapidjson::Document *doc = get_cfg_doc(filename);
 
     if(!doc->HasMember("init"))
     {
@@ -72,6 +90,7 @@ void Initializer::read_config()
     }
 
     /* read the ids */
+    val = val["user_ids"];
     auto id_list = val.GetArray();
     for (auto id_val=id_list.Begin(); id_val!=id_list.End(); id_val++)
     {
@@ -81,5 +100,9 @@ void Initializer::read_config()
 
     config.user_cnt = config.user_ids.size();
     config.is_set = true;
+
+#ifdef DEBUG 
+    get_user()->get_ui_ptr()->debug("read user ids finished");
+#endif
 
 }
