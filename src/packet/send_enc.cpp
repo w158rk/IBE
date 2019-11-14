@@ -152,8 +152,14 @@ void Packet::send_enc()
         }
         
     
-    default:
-        break;
+    default:    /* not encrypted */
+    {
+        char *data = p_app_packet->to_bytes();
+        int len = app_length + APP_HEAD_LEN;
+        p_sec_packet->set_payload_byte(data);
+        p_sec_packet->set_length(len);
+    }    
+        
     }
 
     delete p_app_packet;

@@ -38,6 +38,7 @@ namespace user {
         GET_AND_SET(long, mpk_len)
         GET_AND_SET(long, msk_len)
         GET_AND_SET(long, sk_len)
+        GET_AND_SET(init::Initializer*, initializer)
 
         void run_get_private_key(char *server_ip, 
 								int server_port,
@@ -45,13 +46,14 @@ namespace user {
         void run_send_message(char *dest_ip, 
 							int dest_port,
 							ID *dest_id);
+        void sys_init();
 
         void add_client(interface::IComm *comm);
         void delete_client(interface::IComm *comm);
         void add_thread(std::thread *thread);
         void delete_thread(std::thread *thread);
         void sys_setup();
-        void sys_init();
+        void sys_generate();
         void send_init_message_1(char *buff, int length, ID *id);
         void send_init_message_2(char *buff, int length, ID *id);
         void send_init_message_3(char *buff, int length, ID *id);
@@ -74,6 +76,7 @@ namespace user {
         DECLARE_MEMBER(char *, sm4_key)
         DECLARE_MEMBER(std::thread *, thread)
         DECLARE_MEMBER(long, sk_len)
+        DECLARE_MEMBER(init::Initializer*, initializer)
         
         // with no flag with them as they are only used by the object itself
         std::set<interface::IComm *> client_comms;
@@ -85,7 +88,7 @@ namespace user {
 
     };
 
-    class UserException : public std::exception 
+    class UserException : RootException 
     {
     public:
         UserException(std::string message)

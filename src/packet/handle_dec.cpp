@@ -35,9 +35,6 @@ void Packet::handle_dec() {
 
     switch (crypto_type)
     {
-    case NO_ENC_TYPE:
-        /* code */
-        break;
     case IBE_TYPE:
     {
         // get the cipher length and allocate space for decryption
@@ -155,7 +152,12 @@ void Packet::handle_dec() {
     }
         
     default:
-        break;
-    }
+    {/* not encrypted */
+        char *data = p_sec_packet->get_payload_byte();
+        AppPacket *p_app_packet = AppPacket::from_bytes(data);
+        p_sec_packet->set_payload_app(p_app_packet);
+    } //default
+
+    }// switch
     ctx->set_phase(RECV_VERIFY);
 }

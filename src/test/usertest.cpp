@@ -12,7 +12,7 @@
 
 #define ASSERT(exp) std::cerr << (exp) << std::endl
 
-void runserver(int argc, char *argv[])
+void runuser(int argc, char *argv[])
 {
     if(argc < 2) {
         std::cerr << "Please enter the path to config file" << std::endl;
@@ -22,32 +22,33 @@ void runserver(int argc, char *argv[])
     rapidjson::Document* doc = get_cfg_doc(argv[1]);
 
     // initialize the ID
-    ID *server_id = get_id_from_doc(*doc);
+    ID *user_id = get_id_from_doc(*doc);
 
     // initialize the objects at the order 
     char err_sig;
-    user::User server(server_id);
+    user::User user(user_id);
     packet::Packet packet;
     comm::Comm comm;
     ui::UInterface uinterface;
 
-    // bind the server    
+    // bind the user    
     #define REINTER(type, obj) reinterpret_cast<type *>(&obj)
-    bind_objects(REINTER(interface::IUser, server), 
+    bind_objects(REINTER(interface::IUser, user), 
                     REINTER(interface::IComm, comm), 
                     REINTER(interface::IPacket, packet), 
                     REINTER(interface::IUI, uinterface), 
                     &err_sig);
-    add_other_cfg(server, doc);
+    user.set_cfg_filename(argv[1]);
+    add_other_cfg(user, doc);
 
-    server.run();
+    user.run();
 }
 
 int main(int argc, char *argv[]) 
 {
     try 
     {
-        runserver(argc, argv);
+        runuser(argc, argv);
     }
     catch(user::UserException &e)
     {

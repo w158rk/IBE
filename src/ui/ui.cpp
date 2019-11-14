@@ -45,6 +45,7 @@ int UInterface::socket_interface_run()
 		printf("\t2. Send message\n");
 		printf("\t3. Set up your system\n");
 		printf("\t4. Read your system files\n");
+		printf("\t5. Init the whole system\n");
 		
 		int choise;
 		scanf("%d", &choise);
@@ -96,6 +97,11 @@ int UInterface::socket_interface_run()
 				break;
 			}
 			case 4:
+			{
+				user->sys_generate();
+				break;
+			}
+			case 5:
 			{
 				user->sys_init();
 				break;

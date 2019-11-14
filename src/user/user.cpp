@@ -10,6 +10,7 @@ using namespace user;
 User::User(ID* id)
 {
     // init the ID of this user
+    m_initializer = nullptr;
     set_ip_address(id->ip);
     set_port(id->port);
     set_id(id);
@@ -40,3 +41,4 @@ GET_AND_SET_IMPL(UserException, std::string, message)
 GET_AND_SET_IMPL(User, long, mpk_len)
 GET_AND_SET_IMPL(User, long, msk_len)
 GET_AND_SET_IMPL(User, long, sk_len)
+GET_AND_SET_IMPL(User, init::Initializer*, initializer)

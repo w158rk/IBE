@@ -11,6 +11,9 @@
                 __LINE__, __func__, info) 
 // #define ERROR(info)
 
+#ifdef __cplusplus 
+extern "C" {
+#endif
 
 #define GET_AND_SET(type, name) \
     void set_##name(type name); \
@@ -27,11 +30,10 @@
     }\
     type cls::get_##name(){\
         if(!m_f##name){ \
-            ERROR("some members not set");\
+            ERROR("some members not set, return NULL");\
         }   \
         return m_##name;    \
     }
-
 
 #define VIRTUAL_GET_AND_SET(type, name) \
     virtual void set_##name(type name) = 0; \
@@ -40,6 +42,36 @@
 
 #define DECLARE_MEMBER(type, name) \
     type m_##name;          \
+    bool m_f##name = false;
+
+#define GET_AND_SET2(type1, type2, name) \
+    void set_##name(type1, type2 name); \
+    void unset_##name(); \
+    type1, type2 get_##name();
+
+// return the reference
+#define GET_AND_SET_IMPL2(cls, type1, type2, name) \
+    void cls::set_##name(type1, type2 name){ \
+        m_f##name = true;       \
+        m_##name = name;        \
+    }\
+    void cls::unset_##name(){ \
+        m_f##name = false;       \
+    }\
+    type1, type2 cls::get_##name(){\
+        if(!m_f##name){ \
+            ERROR("some members not set");\
+        }   \
+        return m_##name;    \
+    }
+
+#define VIRTUAL_GET_AND_SET2(type1, type2, name) \
+    virtual void set_##name(type1, type2 name) = 0; \
+    virtual void unset_##name() = 0; \
+    virtual type1, type2 get_##name() = 0;
+
+#define DECLARE_MEMBER2(type1, type2, name) \
+    type1, type2 m_##name;          \
     bool m_f##name = false;
 
 #define GENERATE_SK_FILENAME(client_id) \
@@ -95,7 +127,17 @@
 
 #define FREE_SM4_FILENAME free(filename)
 
+/**
+ * @brief set the first 4 bytes of the ptr as the val 
+ */
+void set_int(char *ptr, int val);
+/**
+ * @brief get the first 4 bytes of the ptr as the val 
+ */
+void get_int(char *ptr, int *val);
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif

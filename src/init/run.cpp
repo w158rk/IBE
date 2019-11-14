@@ -1,6 +1,10 @@
+#include <unistd.h>
+#include <set>
+#include <iostream>
+
 #include <config.h>
 #include <init.hpp>
-#include <set>
+#include <comm.hpp>
 
 using namespace init;
 
@@ -19,7 +23,10 @@ if(ID_equal(id, get_user()->get_id())           \
 if(sent_list.size() == cnt){ break; }   
 
 #define TRY_BEGIN try {
-#define TRY_END } catch(const std::exception& e) { continue; }
+#define TRY_END } catch(comm::CommException& e) { \
+    std::cerr << e.what() << std::endl;     \
+    continue; \
+}
 
 void Initializer::run() 
 {
@@ -45,9 +52,13 @@ void Initializer::run()
 
     std::set<ID *> sent_list;
 
-    // while(get_numbers().size() < cnt)
-    {
-
+    
+    do {
+#ifdef DEBUG
+        std::ostringstream s;
+        s << "the size of the numbers: " <<  get_numbers()->size() << std::endl;
+        Debug(s.str());
+#endif
         /* as the handle of the received packet will be in packet module 
             what we do here is just send the N packet to other users */
         
@@ -62,6 +73,13 @@ void Initializer::run()
                 it is not, just skip this round and wait for the next send behavior */
             len = BUFFER_SIZE;
             cal_fx(buff, &len, id);
+#ifdef DEBUG
+{
+    std::ostringstream s;
+    s << "f(x) for " << id->id << ": " << buff << std::endl;
+    Debug(s.str());
+}
+#endif
 
             TRY_BEGIN
                 get_user()->send_init_message_1(buff, len, id);
@@ -70,7 +88,9 @@ void Initializer::run()
 
         }
 
-    }
+        sleep(INIT_SEND_INTERVAL);
+
+    } while(get_numbers()->size() < cnt);
 
     /* get all the numbers needed to calculate the share */
     cal_share();
@@ -106,8 +126,8 @@ void Initializer::run()
 #ifdef DEBUG 
 {
         std::ostringstream s;
-        s << "the length of the EC point is : " << len << std::endl;
-        s << "the EC point is: " << buff << std::endl;
+        s << "the length of the share P is : " << len << std::endl;
+        s << "the share P is: " << buff << std::endl;
         Debug(s.str());
 }        
 #endif

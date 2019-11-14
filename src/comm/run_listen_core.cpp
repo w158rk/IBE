@@ -20,6 +20,8 @@ extern "C" {
 
 using namespace comm;
 
+#define Error(err) throw CommException(err)
+
 /*读取包的内容和处理包的过程*/
 int Comm::run_listen_core()
 {
@@ -49,8 +51,7 @@ int Comm::run_listen_core()
 		{
 			std::ostringstream buffer; 
 			buffer << "can't get user request: " << strerror(errno);
-			get_ui_ptr()->error(buffer.str());
-			return -1;
+			Error(buffer.str());
 		}
 	}
 
@@ -71,8 +72,9 @@ int Comm::run_listen_core()
 		else
 		{
 			std::ostringstream buffer; 
-			buffer << "can't get user request: " << strerror(errno);
-			get_ui_ptr()->error(buffer.str());
+			buffer << "can't get user request: " << strerror(errno) << std::endl;
+			buffer << "the length of reading: " << length << std::endl;
+			Error(buffer.str());
 		}
 	}
 	#ifdef DEBUG 

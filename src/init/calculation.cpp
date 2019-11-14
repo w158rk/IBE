@@ -76,10 +76,10 @@ void Initializer::cal_share()
     BIGNUM *tmp2 = NULL; 
     BN_zero(sum);
 
-    for (BIGNUM* num : get_numbers())
+    for ( auto& num : *get_numbers())
     {
         BN_copy(temp, sum);
-        BN_mod_add_sm9(sum, num, temp);
+        BN_mod_add_sm9(sum, num.second, temp);
     }
 
     char tmp_str[BUFFER_SIZE];

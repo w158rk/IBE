@@ -23,7 +23,7 @@ namespace comm
         Comm() = default;
         ~Comm() = default;
         
-        int connect_to_server(char* ip_addr, int port);
+        void connect_to_server(char* ip_addr, int port);
         int send(const void *vptr, size_t n);
         void socket_main();
         void file_main(interface::IUser *user, 
@@ -52,11 +52,12 @@ namespace comm
 
         int run_listen_core();
         void file_listener_run();
+        void file_listener_run_internal();
         void socket_listener_run();
 
     };
 
-    class CommException : public std::exception 
+    class CommException : RootException 
     {
     public:
         CommException(std::string message)

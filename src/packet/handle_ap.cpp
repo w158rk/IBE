@@ -5,18 +5,22 @@
  * @brief handle the p in the App Packet phase
  */
 
-extern "C" {
-    #include <crypto.h>
-    #include <sys.h>
-    #include <string.h>
-    #include <config.h>
-    #include<utils.h>
-}
+#include <crypto.h>
+#include <sys.h>
+#include <string.h>
+#include <config.h>
+#include <utils.h>
+#include <ss.h>
 
 #include <iostream>
+#include <sstream>
 #include <packet.hpp>
+#include <init.hpp>
 
 using namespace packet;
+
+# define Error(err) throw PacketException(err)
+# define Debug(info) interface::IUI::debug(info)
 
 int handle_m(Packet *target)
 {
@@ -135,7 +139,7 @@ int handle_sk_request(Packet *target)
     interface::IUI::debug("begin sending");
 #endif
     if(0 == target->packet_send(send_ctx)) {
-        ERROR("send the p error");
+        Error("send the p error");
         goto end;
     }
 
@@ -197,7 +201,7 @@ int handle_session_final(Packet *target) {
 
 int handle_message(Packet *target)
 {
-    int rnt = -1;
+    int rnt = 0;
 
     PacketCTX *ctx = target->get_ctx();
     AppPacket *p = ctx->get_payload_app();
@@ -208,7 +212,124 @@ int handle_message(Packet *target)
     interface::IUI::print(message, length);
 
 #ifdef DEBUG
-    interface::IUI::error("receive message done");
+    interface::IUI::print("receive message done");
+#endif
+
+    rnt=1;
+    return rnt;
+}
+
+int handle_init_message_1(Packet *target)
+{
+    int rnt = 0;
+
+    PacketCTX *ctx = target->get_ctx();
+    AppPacket *p = ctx->get_payload_app();
+    int length = p->get_length();
+
+    char *message = p->get_payload();
+    int id_len;
+    get_int(message, &id_len);
+
+    message += 4;
+    char *id = (char *)std::malloc(id_len+1);
+    id[id_len] = '\0';
+    memcpy(id, message, id_len);
+
+    // check if it is necessary to insert the number
+    init::Initializer *initializer = 
+            target->get_user_ptr()->get_initializer();
+    
+    bool init_is_run = true;     // used to trigger the initializer
+    if(!initializer)
+    {
+        init_is_run = false;
+        initializer = new init::Initializer(target->get_user_ptr());
+    }
+
+    auto numbers = initializer->get_numbers();
+
+    bool need_to_insert = true;
+    ID *tmp_id = nullptr;
+    for(auto elem : *(initializer->get_numbers()))
+    {
+        tmp_id = elem.first;
+        if(id_len==tmp_id->length
+            && 0==strncmp(id, tmp_id->id, id_len))
+        {/* there has been a value corresponding to this ID */
+            need_to_insert = false;
+            break;
+        }
+    }
+
+    if(need_to_insert)
+    {
+        ID *insert_id = NULL;
+        for(auto tmp_id : initializer->get_config()->user_ids)
+        {
+            if(id_len==tmp_id->length
+                && 0==strncmp(id, tmp_id->id, id_len))
+            {/* there is an ID correspond to this string */
+                insert_id = tmp_id;
+                break;
+            }
+        }
+
+        if(insert_id)
+        {
+#ifdef DEBUG 
+            Debug("need to insert");
+#endif
+            // insert the number 
+            message += id_len;
+            BIGNUM *bn = NULL;
+            if(!SS_str2bn(&bn, message))
+            {
+                Error("cannot convert string to bn");
+            }
+
+            (*numbers)[insert_id] = bn;
+#ifdef DEBUG 
+            std::ostringstream s;
+            s << "insert already, the size of numbers and the numbers of initializer: ";
+            s << numbers->size() << " , " << initializer->get_numbers()->size();
+            Debug(s.str());
+#endif
+        }
+        
+    }
+
+
+#ifdef DEBUG
+    interface::IUI::print("receive message done");
+#endif
+
+    // [IMPORTANT]
+    // trigger the initializer
+    if(!init_is_run)
+    {
+        initializer->run();
+    }
+
+    rnt=1;
+    return rnt;
+}
+
+
+int handle_init_message_2(Packet *target)
+{
+    int rnt = 0;
+
+    PacketCTX *ctx = target->get_ctx();
+    AppPacket *p = ctx->get_payload_app();
+    int length = p->get_length();
+
+    char *message = p->get_payload();
+
+    interface::IUI::print(message, length);
+
+#ifdef DEBUG
+    interface::IUI::print("receive message done");
 #endif
 
     rnt=1;
@@ -216,54 +337,91 @@ int handle_message(Packet *target)
 }
 
 
-void Packet::handle_ap() {
+int handle_init_message_3(Packet *target)
+{
+    int rnt = 0;
 
-    int rtn = 0;
+    PacketCTX *ctx = target->get_ctx();
+    AppPacket *p = ctx->get_payload_app();
+    int length = p->get_length();
+
+    char *message = p->get_payload();
+
+    interface::IUI::print(message, length);
+
+#ifdef DEBUG
+    interface::IUI::print("receive message done");
+#endif
+
+    rnt=1;
+    return rnt;
+}
+
+
+
+void Packet::handle_ap() 
+{
 
     if(get_ctx()->get_phase() != RECV_APP_PACKET) {
-    interface::IUI::error("call wrong function handle ap");
-        throw PacketException("call wrong function");
+        Error("call wrong function");
     }
+
     PacketCTX *ctx = get_ctx();
     AppPacket *p = ctx->get_payload_app();
     int type = p->get_type();
+    int res = 0;
 
     switch (type)
     {
         case PLAIN_MESSAGE_TYPE:
-            handle_m(this);
+            res = handle_m(this);
             break;
         
         case PRIVATE_KEY_REQUEST_TYPE:
-            handle_sk_request(this);
+            res = handle_sk_request(this);
             break;
         
         case PRIVATE_KEY_RESPONSE_TYPE:
-            handle_sk_response(this);
+            res = handle_sk_response(this);
             break;
         
         case SESSION_KEY_REQUEST_TYPE:
-            handle_session_request(this);
+            res = handle_session_request(this);
             break;
 
         case SESSION_KEY_ACK_TYPE:
-            handle_session_ack(this);
+            res = handle_session_ack(this);
             break;
 
         case SESSION_KEY_FINAL_TYPE:
-            handle_session_final(this);
+            res = handle_session_final(this);
             break;
 
         case IBE_MES_TYPE:
-            handle_message(this);
+            res = handle_message(this);
+            break;
+        
+        case INIT_MESSAGE_1:
+            res = handle_init_message_1(this);
+            break;
+
+        case INIT_MESSAGE_2:
+            res = handle_init_message_2(this);
+            break;
+
+        case INIT_MESSAGE_3:
+            res = handle_init_message_3(this);
             break;
         
         default:
-            ERROR("the p type is invalid");
-            throw std::exception();
+            Error("the p type is invalid");
             break;
+    }
+
+    if(!res)
+    {
+        Error("handle the packet error");
     }
     
     ctx->set_phase (RECV_DONE);
-    rtn = 1;
 }

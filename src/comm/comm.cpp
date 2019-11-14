@@ -10,6 +10,8 @@
 #include<comm.hpp>
 #include<interface.hpp>
 
+#include <sstream>
+
 extern "C" 
 {
     #include"comm_lcl.h"
@@ -18,13 +20,22 @@ extern "C"
 using namespace comm;
 
 
-int Comm::connect_to_server(char* ip_addr, int port)
+#define Error(err) throw CommException(err)
+
+void Comm::connect_to_server(char* ip_addr, int port)
 {
     if(-1 != connect_socket_server(ip_addr, port, &m_read_file, &m_write_file))
     {
         m_fread_file = true;
         m_fwrite_file = true;
+        return ;
     }
+
+    std::ostringstream s;
+    s << "can not connect to server " << ip_addr 
+        << " : " << port << std::endl;
+    Error(s.str());
+
 }
 
 int Comm::send(const void *vptr, size_t n)

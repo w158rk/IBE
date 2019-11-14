@@ -6,16 +6,17 @@
  *      - setup a system by generating the mpk, msk file
 */
 
-#include<user.hpp>
-#ifdef DEBUG 
-#include<sstream>
-#endif
-
 extern "C" {
     #include <sys.h>
     #include <openssl/sm9.h>
     #include <openssl/bio.h>
 }
+
+#include<user.hpp>
+#ifdef DEBUG 
+#include<sstream>
+#endif
+# include <init.hpp>
 
 
 using namespace user;
@@ -98,7 +99,7 @@ void User::sys_setup()
 
 }
 
-void User::sys_init()
+void User::sys_generate()
 {
 
     /* read the length from the mpk-len and msk-len file */
@@ -150,4 +151,16 @@ void User::sys_init()
 #endif
 
 
+}
+
+
+
+void User::sys_init()
+{
+    if(!m_finitializer)
+    {
+        init::Initializer* initializer = new init::Initializer(this);
+    }
+    get_initializer()->run();
+    unset_initializer();
 }

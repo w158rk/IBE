@@ -1,4 +1,5 @@
 #include <comm.hpp>
+#include <packet.hpp>
 
 extern "C" {
 
@@ -11,6 +12,20 @@ extern "C" {
 #include<iostream>
 
 void comm::Comm::file_listener_run()
+{
+	try 
+	{
+		file_listener_run_internal();
+	}catch(comm::CommException &e)
+	{
+		std::cerr << e.what() << std::endl;
+	}catch(packet::PacketException &e)
+	{
+		std::cerr << e.what() << std::endl;
+	}
+}
+
+void comm::Comm::file_listener_run_internal()
 {
 	if(!m_fread_file | !m_fwrite_file){
         interface::IUI::error("[error] flags are not set completely, check the error sig and files");

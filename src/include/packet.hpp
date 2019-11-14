@@ -43,7 +43,7 @@ namespace packet {
     void free_app_packet(AppPacket *packet);
     void free_sec_packet(SecPacket *packet);
 
-    class PacketException : public std::exception 
+    class PacketException : RootException 
     {
     public:
         PacketException(std::string message)

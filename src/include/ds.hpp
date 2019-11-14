@@ -1,15 +1,15 @@
 #ifndef DS_HPP 
 #define DS_HPP
 
-extern "C" 
-{
-# include <string.h>
-}
+// extern "C" 
+// {
+// # include <string.h>
+// }
 
 #include <ds.h>
 #include<utils.h>
 #include<crypto.h>
-
+# include <string>
 
 
 enum state {
@@ -146,6 +146,20 @@ public:
     GET_AND_SET(enum state, phase)
 
 
+};
+
+class RootException : std::exception 
+{
+public:
+    RootException(std::string message)
+    {
+        set_message(message);
+    }
+    RootException() = default;
+    ~RootException() = default;
+
+    GET_AND_SET(std::string, message)
+    virtual std::string what(){}
 };
 
 // typedef struct packet_ctx{

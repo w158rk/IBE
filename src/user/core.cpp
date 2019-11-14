@@ -105,17 +105,54 @@ void User::run_send_message(char *dest_ip,
 
 }
 
-void User::send_init_message_1(char *buff, int length, ID *id)
-{
 
+
+# define MAKE_APP_PACKET(type) \
+	AppPacket *p_app_packet = new AppPacket ; \
+	int id_length = get_id()->length;	\
+	int payload_len = length +  id_length + 4; \
+	/* for convenience, we add a '\0' at the end */\
+	char *buffer = (char *)std::malloc(payload_len+1);	\
+	buffer[payload_len] = '\0';				\
+	set_int(buffer, get_id()->length);	\
+	std::memcpy(buffer+4, get_id()->id, id_length);	\
+	std::memcpy(buffer+4+id_length, buff, length);	\
+	p_app_packet->set_type(type);	\
+	p_app_packet->set_length(payload_len);			\
+	p_app_packet->set_payload(buffer);		
+
+# define MAKE_CTX \
+	PacketCTX *ctx = new PacketCTX;	\
+	ctx->set_phase(SEND_APP_PACKET);	\
+	ctx->set_payload_app (p_app_packet);	\
+	ctx->set_dest_id(dest_id);		
+
+# define CONNECT_AND_SEND(dest_ip, dest_port)	\
+	interface::IComm *comm = get_comm_ptr();	\
+	comm->connect_to_server(dest_ip, dest_port);	\
+	if(0 == get_packet_ptr()->packet_send(ctx)) {	\
+		throw UserException("send the packet error");	\
+	}
+
+
+void User::send_init_message_1(char *buff, int length, ID *dest_id)
+{
+	MAKE_APP_PACKET(INIT_MESSAGE_1)
+	MAKE_CTX
+	CONNECT_AND_SEND(dest_id->ip, dest_id->port)
 }
 
-void User::send_init_message_2(char *buff, int length, ID *id)
+void User::send_init_message_2(char *buff, int length, ID *dest_id)
 {
-	
+	MAKE_APP_PACKET(INIT_MESSAGE_2)
+	MAKE_CTX
+	CONNECT_AND_SEND(dest_id->ip, dest_id->port)	
 }
 
-void User::send_init_message_3(char *buff, int length, ID *id)
+void User::send_init_message_3(char *buff, int length, ID *dest_id)
 {
-	
+	MAKE_APP_PACKET(INIT_MESSAGE_3)
+	MAKE_CTX
+	CONNECT_AND_SEND(dest_id->ip, dest_id->port)	
 }
+

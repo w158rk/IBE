@@ -46,7 +46,21 @@ void runclient(int argc, char *argv[])
 int main(int argc, char *argv[]) 
 {
 
-    runclient(argc, argv);
-
+    try 
+    {
+        runclient(argc, argv);
+    }
+    catch(user::UserException &e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
+    catch(comm::CommException &e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
+    catch(packet::PacketException &e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
 }
 

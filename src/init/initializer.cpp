@@ -15,11 +15,12 @@ Initializer::Initializer(interface::IUser *user)
     config.user_cnt = 0;
 
     set_user(user);
+    user->set_initializer(this);
     read_config();
 
     // some members exists from the very beginning to the end of the 
     // program 
-
+    m_numbers = new std::unordered_map<ID*, BIGNUM*>;
     m_fnumbers = true;
     m_fsp_pub_points = true;
     m_fsq_pub_points = true;
@@ -28,7 +29,7 @@ Initializer::Initializer(interface::IUser *user)
 
 
 GET_AND_SET_IMPL(Initializer, interface::IUser *, user)
-GET_AND_SET_IMPL(Initializer, std::set<BIGNUM*>, numbers)
+GET_AND_SET_IMPL2(Initializer, std::unordered_map<ID*, BIGNUM*>*, numbers)
 GET_AND_SET_IMPL(Initializer, std::set<EC_POINT*>, sp_pub_points)
 GET_AND_SET_IMPL(Initializer, std::set<EC_POINT*>, sq_pub_points)
 GET_AND_SET_IMPL(Initializer, SS_POLY*, poly)
@@ -65,6 +66,10 @@ BIGNUM* Initializer::get_share()
         return nullptr;
     }
     return m_share;
+}
+struct config_t *Initializer::get_config()
+{
+    return &config;
 }
 
 

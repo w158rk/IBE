@@ -6,6 +6,9 @@
 #include<string>
 #include<thread>
 
+namespace init{
+    class Initializer;    
+};
 
 namespace interface 
 {
@@ -13,7 +16,6 @@ namespace interface
     class IComm;
     class IUI;
     class IUser;
-
 
     class IPacket 
     {
@@ -33,7 +35,7 @@ namespace interface
 
     public:
         virtual int send(const void *vptr, size_t n) = 0;
-        virtual int connect_to_server(char* ip_addr, int port) = 0;
+        virtual void connect_to_server(char* ip_addr, int port) = 0;
         
         virtual void socket_main() = 0;
 
@@ -71,6 +73,7 @@ namespace interface
         virtual void send_init_message_3(char *buff, 
 				        			int len,
 						        	ID *dest_id) = 0;
+        virtual void sys_init() = 0;
 
         virtual ~IUser() = default;
 
@@ -88,6 +91,7 @@ namespace interface
         VIRTUAL_GET_AND_SET(long, mpk_len)
         VIRTUAL_GET_AND_SET(long, msk_len)
         VIRTUAL_GET_AND_SET(long, sk_len)
+        VIRTUAL_GET_AND_SET(init::Initializer*, initializer)
 
         virtual void add_client(IComm *comm) = 0;
         virtual void delete_client(IComm *comm) = 0;
