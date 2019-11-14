@@ -36,6 +36,10 @@ extern "C" {
 
 /* wrap some library functions */
 #define SS_bn2str(x) BN_bn2hex(x)
+#define SS_str2bn(a,b) BN_hex2bn(a,b)
+#define SS_ec2str(group, point, ctx) \
+    EC_POINT_point2hex(group, point, POINT_CONVERSION_COMPRESSED, ctx)
+// #define SS_ec2bn(a,b) BN_hex2bn(a,b)
 
 /* TODO this should be defined in the configure file */
 // #define SS_POLY_LENGTH           5      
@@ -120,15 +124,17 @@ int SS_poly_apply_sm9(BIGNUM *value, SS_POLY *poly, BIGNUM *x);
  *      1 if things go smoothly 
  *
  * @param[out]  value           the result of the calculation 
- * @param[in]   poly_list       the list of x_j
+ * @param[in]   num_list        the list of x_j
  * @param[in]   length          the number of the x_j 
  * @param[in]   i               the index of x_i 
  * @param[in]   x               the value of x 
  * @param[in]   p               the field identifier
  */
 
-int SS_lagrange_value(BIGNUM *value, BIGNUM **poly_list, unsigned int length, 
+int SS_lagrange_value(BIGNUM *value, BIGNUM **num_list, unsigned int length, 
                         unsigned int i, BIGNUM* x, BIGNUM *p);
+int SS_lagrange_value_sm9(BIGNUM *value, BIGNUM **num_list, unsigned int length, 
+                        unsigned int i, BIGNUM* x);
 
 /**
  * @brief add two point

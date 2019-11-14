@@ -18,7 +18,7 @@ bool test_id2num(user::User *u)
     for (int i=0; i<10; i++){
         SS_id2num_init(res, u->get_id(), 
                 u->get_mpk_filename());
-        std::cout << BN_bn2hex(res) << std::endl;
+        std::cout << SS_bn2str(res) << std::endl;
     }
     return true;
 }

@@ -57,3 +57,10 @@ int SS_id2num_init(BIGNUM *res, ID *id, char *filename)
     }
 
 }
+
+int SS_lagrange_value_sm9(BIGNUM *value, BIGNUM **num_list, unsigned int length, 
+                        unsigned int i, BIGNUM* x)
+{
+    BIGNUM *p = SM9_get0_prime();
+    SS_lagrange_value(value, num_list, length, i, x, p);
+}

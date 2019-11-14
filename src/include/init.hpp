@@ -46,7 +46,7 @@ namespace init
             void cal_share();
             void cal_shareP(char *result, int *len);
             void cal_shareQ(char *result, int *len, ID* id);
-
+            void cal_share_with_lp();
     };
 
     class InitException : public std::exception 

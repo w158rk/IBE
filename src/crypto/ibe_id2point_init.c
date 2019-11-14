@@ -6,8 +6,7 @@
 #include <crypto.h>
 
 #include <openssl/sm9.h>
-#include <openssl/bn.h>
-#include <openssl/ec.h>
+
 
 /*  the caller should ensure that mpk_file end with '\0' */
 /* different from the id-point map in sm9, here the addition with Ppub is cancelled 

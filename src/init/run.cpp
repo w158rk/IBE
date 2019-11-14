@@ -4,6 +4,23 @@
 
 using namespace init;
 
+#define Error(err) get_user()->get_ui_ptr()->error(err)
+#define Print(err) get_user()->get_ui_ptr()->print(err)
+
+# ifdef DEBUG
+# include <sstream>
+# define Debug(err) get_user()->get_ui_ptr()->debug(err)
+# endif
+
+# define FOR_BLOCK_CHECK \
+if(ID_equal(id, get_user()->get_id())           \
+    ||sent_list.find(id)  != sent_list.end())   \
+{ continue; }           \
+if(sent_list.size() == cnt){ break; }   
+
+#define TRY_BEGIN try {
+#define TRY_END } catch(const std::exception& e) { continue; }
+
 void Initializer::run() 
 {
     if(!config.is_set)
@@ -16,7 +33,7 @@ void Initializer::run()
         gen_poly();
     }
     
-    get_user()->get_ui_ptr()->print("begin to initialize the system");
+    Print("begin to initialize the system");
 
     /* round one */
     /* send fi(xj) to others and receive fj(xi) from others */
@@ -24,7 +41,7 @@ void Initializer::run()
     int len = BUFFER_SIZE;
     int cnt = config.user_cnt-1;
 
-    get_user()->get_ui_ptr()->print("round one");
+    Print("round one");
 
     std::set<ID *> sent_list;
 
@@ -33,39 +50,22 @@ void Initializer::run()
 
         /* as the handle of the received packet will be in packet module 
             what we do here is just send the N packet to other users */
-
+        
         for (ID* id : config.user_ids)
         {
 
-            // override the opcode
-            if(ID_equal(id, get_user()->get_id()))
-            {
-                continue;
-            }
-
-            if(sent_list.size() == cnt)
-            {
-                break;
-            }
+            FOR_BLOCK_CHECK
             
-            if(sent_list.find(id)  != sent_list.end())
-            {
-                continue;
-            }
             /* there are must some connection error happens here, but we can not 
                 let the program stop by this kind of exception */
             /* one of the solution here is to check if the port is open first, if 
                 it is not, just skip this round and wait for the next send behavior */
+            len = BUFFER_SIZE;
             cal_fx(buff, &len, id);
-            try
-            {
-                get_user()->send_init_message_1(buff, len, id);
-            }
-            catch(const std::exception& e)
-            {
-                continue;
-            }
 
+            TRY_BEGIN
+                get_user()->send_init_message_1(buff, len, id);
+            TRY_END
             sent_list.insert(id);
 
         }
@@ -75,20 +75,51 @@ void Initializer::run()
     /* get all the numbers needed to calculate the share */
     cal_share();
 
+#ifdef DEBUG
+{
+    std::ostringstream s;
+    s << "the share is: " << SS_bn2str(get_share()) << std::endl;
+    Debug(s.str());
+}
+#endif
+
+    cal_share_with_lp();
+#ifdef DEBUG
+{
+    std::ostringstream s;
+    s << "the share with lagrange polynomial is: " << SS_bn2str(get_share()) << std::endl;
+    Debug(s.str());
+}
+#endif
+    
 
     /* round two */
     /* send F(xi)li(0)P to others and receive F(xj)lj(0)P from others*/
-
-    get_user()->get_ui_ptr()->print("round two");
-    while(get_sp_pub_points().size() < cnt)
+    Print("round two");
+    sent_list.clear();
+    // while(get_sp_pub_points().size() < cnt)
     {
 
         len = BUFFER_SIZE;
         cal_shareP(buff, &len);
+
+#ifdef DEBUG 
+{
+        std::ostringstream s;
+        s << "the length of the EC point is : " << len << std::endl;
+        s << "the EC point is: " << buff << std::endl;
+        Debug(s.str());
+}        
+#endif
+
         for (ID *id : config.user_ids)
         {
+            FOR_BLOCK_CHECK
 
-            get_user()->send_init_message_2(buff, len, id);
+            TRY_BEGIN
+                get_user()->send_init_message_2(buff, len, id);
+            TRY_END
+            sent_list.insert(id);
 
         }
         
@@ -96,16 +127,32 @@ void Initializer::run()
 
     /* round three */
     /* send F(xi)li(0)Q to others and receive F(xj)lj(0)Q from others*/
-    get_user()->get_ui_ptr()->print("round three");
+    Print("round three");
+    sent_list.clear();
+
     while(get_sq_pub_points().size() < config.user_cnt-1)
     {
         
-        len = BUFFER_SIZE;
         for (ID *id : config.user_ids)
         {
+            FOR_BLOCK_CHECK
 
+            len = BUFFER_SIZE;
             cal_shareQ(buff, &len, id);
+#ifdef DEBUG 
+{
+            std::ostringstream s;
+            s << "the length of the EC point is : " << len << std::endl;
+            s << "the EC point is: " << buff << std::endl;
+            Debug(s.str());
+}        
+#endif
+
+            TRY_BEGIN
             get_user()->send_init_message_3(buff, len, id);
+            TRY_END
+
+            sent_list.insert(id);
         }
 
     }

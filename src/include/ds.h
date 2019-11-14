@@ -1,6 +1,11 @@
 #ifndef DS_H 
 #define DS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #include<stdio.h>
 #include<openssl/ec.h>
 #include<openssl/bn.h>
@@ -37,5 +42,9 @@ typedef struct ID_STR{
 }ID;
 
 int ID_equal(ID *a, ID *b);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

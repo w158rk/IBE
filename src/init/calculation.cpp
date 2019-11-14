@@ -8,7 +8,7 @@
 
 using namespace init;
 
-#define ERROR(err) get_user()->get_ui_ptr()->error(err)
+#define Error(err) throw InitException(err)
 
 # ifdef DEBUG
 # define Debug(err) get_user()->get_ui_ptr()->debug(err)
@@ -21,7 +21,7 @@ void Initializer::gen_poly()
 
     if(!SS_poly_rand_sm9(poly, config.user_cnt))
     {
-        ERROR("can not generate a polynomial");
+        Error("can not generate a polynomial");
     }
 
     set_poly(poly);
@@ -33,7 +33,7 @@ void Initializer::cal_fx(char* result, int *len, ID* id)
     // pre-condition, the poly is set 
     if(!m_fpoly)
     {
-        ERROR("the polynomial is not set");
+        Error("the polynomial is not set");
     }
 
 
@@ -47,7 +47,7 @@ void Initializer::cal_fx(char* result, int *len, ID* id)
     temp = SS_bn2str(res);
     if(temp == NULL)
     {
-        ERROR("cannot convert the big number to string");
+        Error("cannot convert the big number to string");
     }
 
     /* we assume the function will return a string end with '\0' */
@@ -94,7 +94,7 @@ void Initializer::cal_share()
     Debug((s.str()));
 # endif
 
-    if(!BN_hex2bn(&tmp2, tmp_str))
+    if(!SS_str2bn(&tmp2, tmp_str))
     {
         throw InitException("can not convert hex to bn");
     }
@@ -109,14 +109,115 @@ void Initializer::cal_share()
     BN_free(sum);
 }
 
+void Initializer::cal_share_with_lp()
+{
+    //update the share as share = share * lp 
+    // first, calculate the value hashed from all of the id 
+    // hj = id2num(IDj)
+    BIGNUM **num_list = (BIGNUM **)std::malloc(config.user_cnt * sizeof(BIGNUM *));
+    int j=0, i=-1;
+    for (ID *id : config.user_ids)
+    {
+        if(ID_equal(id, get_user()->get_id()))
+        {
+            i = j;
+        }
+        num_list[j] = BN_new();
+        SS_id2num_init(num_list[j], id, get_user()->get_mpk_filename());
+        j ++;
+    }
+
+    if(i < 0)
+    {
+        Error("the list of hash values does not include the original user's");
+    }
+
+    // calculate li(0)
+    BIGNUM *res = BN_new();
+    BIGNUM *zero = BN_new();
+    BN_zero(zero);
+    SS_lagrange_value_sm9(res, num_list, config.user_cnt, i, zero);
+    set_share(res);
+
+    // free the values
+    for (j=0; j<config.user_cnt; j++)
+    {
+        BN_free(num_list[j]);
+    }
+    BN_free(res);
+    BN_free(zero);
+
+}
+
 void Initializer::cal_shareP(char *result, int *len)
 {
-    // CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT 
-    // CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT 
-    // CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT 
+    // calculate share * P
+    EC_POINT *point = NULL;
+    EC_GROUP *group = NULL;
+    BN_CTX *ctx = BN_CTX_new();
+    if(!ibe_cal_xP(&group, &point, get_share(), get_user()->get_mpk_filename()))
+    {
+        Error("calculate the xP failed");
+    }
+
+    char *temp = SS_ec2str(group, point, ctx);
+    int length = strlen(temp);
+    if (*len < length)
+    {
+        std::free(temp);
+        EC_POINT_free(point);
+        EC_GROUP_free(group);
+        BN_CTX_free(ctx);
+
+        Error("the buffer allocated is not enough");
+    }
+    *len = length;
+    std::memcpy(result, temp, *len);
+
+    std::free(temp);
+    EC_POINT_free(point);
+    EC_GROUP_free(group);
+    BN_CTX_free(ctx);
+
 }
 
 void Initializer::cal_shareQ(char *result, int *len, ID *id)
 {
+
+    // calculate share * Q
+    EC_POINT *point = NULL;
+    EC_GROUP *group = NULL;
+    EC_POINT *Q = NULL;
+    BN_CTX *ctx = BN_CTX_new();
+    if(!ibe_id2point_init(&Q, id->id, id->length, get_user()->get_mpk_filename()))
+    {
+        Error("calculate the Q failed");
+    }
+
+    if(!ibe_cal_xQ(&group, &point, get_share(), Q, get_user()->get_mpk_filename()))
+    {
+        Error("calculate the xP failed");
+    }
+
+    char *temp = SS_ec2str(group, point, ctx);
+    int length = strlen(temp);
+
+    if (*len < length)
+    {
+        std::free(temp);
+        EC_POINT_free(point);
+        EC_GROUP_free(group);
+        BN_CTX_free(ctx);
+
+        Error("the buffer allocated is not enough");
+    }
+    *len = length;
+    std::memcpy(result, temp, *len);
+
+    std::free(temp);
+    EC_POINT_free(point);
+    EC_POINT_free(Q);
+    EC_GROUP_free(group);
+    BN_CTX_free(ctx);
     
 }
