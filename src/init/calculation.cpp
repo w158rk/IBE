@@ -1,3 +1,4 @@
+#include <config.h>
 #include <utils.hpp>
 #include <init.hpp>
 
@@ -8,6 +9,10 @@
 using namespace init;
 
 #define ERROR(err) get_user()->get_ui_ptr()->error(err)
+
+# ifdef DEBUG
+# define Debug(err) get_user()->get_ui_ptr()->debug(err)
+# endif
 
 void Initializer::gen_poly()
 {
@@ -54,8 +59,11 @@ void Initializer::cal_fx(char* result, int *len, ID* id)
     get_user()->get_ui_ptr()->debug(s.str());
 #endif
 
+    // set the results
+    std:memcpy(result, temp, length);
     *len = length;
 
+    std::free(temp);
     BN_free(x);
     BN_free(res);
 }
@@ -65,6 +73,7 @@ void Initializer::cal_share()
     // just add all of the values in the vector `numbers`
     BIGNUM *sum = BN_new();
     BIGNUM *temp = BN_new();
+    BIGNUM *tmp2 = NULL; 
     BN_zero(sum);
 
     for (BIGNUM* num : get_numbers())
@@ -73,10 +82,31 @@ void Initializer::cal_share()
         BN_mod_add_sm9(sum, num, temp);
     }
 
+    char tmp_str[BUFFER_SIZE];
+    int length;
+
+    // calc fi(xi) 
+    cal_fx(tmp_str, &length, get_user()->get_id());
+
+# ifdef DEBUG
+    std::ostringstream s;
+    s << "the length of the BN string: " << length << std::endl;
+    Debug((s.str()));
+# endif
+
+    if(!BN_hex2bn(&tmp2, tmp_str))
+    {
+        throw InitException("can not convert hex to bn");
+    }
+
+    // add to the sum
+    BN_copy(temp, sum);
+    BN_mod_add_sm9(sum, tmp2, temp);
     set_share(sum);
 
-    BN_free(sum);
     BN_free(temp);
+    BN_free(tmp2);
+    BN_free(sum);
 }
 
 void Initializer::cal_shareP(char *result, int *len)

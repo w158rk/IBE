@@ -28,7 +28,7 @@ void Initializer::run()
 
     std::set<ID *> sent_list;
 
-    while(get_numbers().size() < cnt)
+    // while(get_numbers().size() < cnt)
     {
 
         /* as the handle of the received packet will be in packet module 
@@ -80,7 +80,7 @@ void Initializer::run()
     /* send F(xi)li(0)P to others and receive F(xj)lj(0)P from others*/
 
     get_user()->get_ui_ptr()->print("round two");
-    while(get_sp_pub_points().size() < config.user_cnt-1)
+    while(get_sp_pub_points().size() < cnt)
     {
 
         len = BUFFER_SIZE;
