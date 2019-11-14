@@ -29,3 +29,5 @@ __pycache__/
 *.txt
 *.pyc
 docs/
+
+src/lib

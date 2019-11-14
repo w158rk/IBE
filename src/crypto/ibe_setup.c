@@ -1,4 +1,3 @@
-
 #include <crypto.h>
 #include <openssl/sm9.h>
 #include <openssl/bio.h>
@@ -19,6 +18,7 @@ int ibe_setup(
    	SM9PublicParameters *mpk = NULL;
 	SM9MasterSecret *msk = NULL;
 
+    /*NID_sm9encrypt/NID_sm9sign/NID_sm9keyagreement*/
    	if (!SM9_setup(NID_sm9bn256v1, NID_sm9encrypt, NID_sm9hash1_with_sm3, &mpk, &msk)) {
         ERROR(" sm9 set up failed");
         goto end;
@@ -53,10 +53,12 @@ int ibe_setup(
 
     fseek(msk_fp, 0, SEEK_END);
     long msk_len = ftell(msk_fp);
+    printf("msk_len is\n", msk_len);
     fclose(msk_fp);
 
     /* open the msk len file and output*/
     FILE *msk_len_fp = fopen(msk_len_file, "wb");
+    printf("msk_len is\n", sizeof(msk_len));
     fwrite(&msk_len, sizeof(msk_len), 1, msk_len_fp);
     fclose(msk_len_fp);
 

@@ -26,7 +26,7 @@ char out[BUFFER_SIZE] = {'\0'};
 char out_read[BUFFER_SIZE] = {'\0'};
 char sign_data[BUFFER_SIZE] = {'\0'};
 
-size_t c_len, out_len, sign_len;
+size_t c_len, out_len, *sign_len;
 
 IBEPublicParameters mpk = NULL;
 IBEMasterSecret msk = NULL;
@@ -112,26 +112,40 @@ end:
 
 int test_sm9_sign()
 {
+    int ret =1;
     fprintf(stderr, "[test] sign\n");
-    size_t data_len = strlen(data2);
-    printf("data2 is %s\n", data2);
-    printf("sk is %s\n", sk);
-    SM9PrivateKey *sm9_sk = NULL;
-    d2i_SM9PrivateKey(&sm9_sk, &sk, 313);
-    fprintf(stderr, "sm9_sk: %ld\n", sm9_sk);
-    fprintf(stderr, "data_len: %d\n", data_len);
-    int ret = SM9_sign(NID_sm3, data2, data_len, sign_data, &sign_len, sm9_sk);
-    fprintf(stderr, "ret: %d\n", ret);
-    fprintf(stderr, "sign_len: %d\n", sign_len);
+
+    IBEPublicParameters mpk2 = NULL;
+    IBEMasterSecret msk2 = NULL;
+
+    ibe_setup_sign(MPK_FILENAME, MSK_FILENAME,MPK_LEN_FILENAME, MSK_LEN_FILENAME);
+    get_mpk_fp(MPK_FILENAME, &mpk2);
+    get_msk_fp(MSK_FILENAME, &msk2);
+    fprintf(stderr, "mpk: %ld\n", mpk2);
+    fprintf(stderr, "msk: %ld\n", msk2);
+    IBEPrivateKey sk2 = NULL;
+    long len2 = 0;
+    sign_len = ibe_extract_sign(&sk2, &len2, &msk2, 204, SERVER_ID, SERVER_ID_LEN, &sign_data);
+    fprintf(stderr,"sign is: %ld\n", sign_data);
+    fprintf(stderr, "sign len: %ld\n", sign_len);
+    // int ret3 = 0;
+    // ret3 = SM9_verify(NID_sha256, "Hello", 5, sign_data, sign_len, &mpk, "Server", 6);
+    // fprintf(stderr, "ret3: %d\n", ret3);
     return ret;
 }
 
 int test_sm9_verify()
 {
     printf("[test] sign verify\n");
-    size_t data_len = strlen(data2);
-    size_t sign_len = strlen(sign_data);
-    int ret = SM9_verify(NID_sm3, data2, data_len, sign_data, sign_len, &mpk, SERVER_ID, SERVER_ID_LEN);
+    int ret = 0;
+    SM9PublicParameters *sm9_mpk = NULL;
+    FILE *mpk_fp = fopen("mpk.conf", "rb");
+    if (!d2i_SM9PublicParameters_fp(mpk_fp, &sm9_mpk)){
+		ERR_print_errors_fp(stderr);
+    }
+    fprintf(stderr, "mpk is %s\n", sm9_mpk);
+    ret = SM9_verify(NID_sha256, "Hello", 5, sign_data, sign_len, &sm9_mpk, SERVER_ID, SERVER_ID_LEN);
+    fprintf(stderr, "ret3: %d\n", ret);
     return ret;
 }
 
@@ -141,19 +155,24 @@ int test_sm9_verify()
 }*/
 
 int main(int argc, char *argv[]) {
+    int ret = 0;
 
-    if(-1 == test_set_up()) goto end; 
-    if(-1 == test_get_public_parameters()) goto end;    //获取sP，并输出文件
-    if(-1 == test_get_master_secret()) goto end;    //获取s，并输出文件
-    if(-1 == test_extract_private_key()) goto end;  //获取sk
-    if(-1 == test_sm9_encrypt()) goto end;  //加密
-    if(-1 == test_sm9_decrypt()) goto end;  //解密 
     if(-1 == test_sm9_sign()) goto end;  //解密 
+    if(-1 == test_set_up()) goto end;
+    // if(-1 == test_get_public_parameters()) goto end;    //获取sP，并输出文件
+    // if(-1 == test_get_master_secret()) goto end;    //获取s，并输出文件
+    // // printf("msk: %ld\n", msk); 
+    
+    // if(-1 == test_extract_private_key()) goto end;  //获取sk
+    // if(-1 == test_sm9_encrypt()) goto end;  //加密
+    // if(-1 == test_sm9_decrypt()) goto end;  //解密 
+
+    
     if(-1 == test_sm9_verify()) goto end;  //解密 
 
     //print(data2);
     //int i = test_sm9_sign();
-    size_t data_len = strlen(data2);
+    // size_t data_len = strlen(data2);
     // int ret = SM9_sign(NID_sm3, data2, data_len, &sign_data, &sign_len, sk);
     // printf("ret is%d\n", ret);
     // printf("sign is%s\n", sign_data);
@@ -161,8 +180,8 @@ int main(int argc, char *argv[]) {
     /*int ret = test_sm9_verify();
     printf("ret is%d\n", ret);*/
     
-    if(-1 == test_put_private_key()) goto end;  //输出sk于文件中 
-    if(-1 == test_get_private_key()) goto end;  //从文件中读取sk
+    // if(-1 == test_put_private_key()) goto end;  //输出sk于文件中 
+    // if(-1 == test_get_private_key()) goto end;  //从文件中读取sk
 
     printf("[test] pass \n");
     return 0; 

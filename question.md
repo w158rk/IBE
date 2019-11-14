@@ -1,3 +1,16 @@
+## 11.14
+1. sm9签名已经实现
+2. sm9 verify不通过，`sm9test.c`第141到146行需要获取SM9PublicParameters，但是看起来似乎获取的不对
+
+## 11.13
+sign的问题出在SM9_SignFinal中的判断ASN1_STRING_length(sk->pointPpub)是否等于129，sk->pointPpub长度输出得到是65
+
+SM9PrivateKey *sk->pointPpub和SM9MasterSecret *msk->pointPpub的值是相同的，可能是msk在生成的过程中的问题
+
+原因len = EC_POINT_point2oct(group, Ppube, point_form, buf, len, ctx)中len由129变成了65
+
+sign中msk的长度为204
+
 ## 11.5
 1. 解决IBE加解密的问题
 2. 段错误的问题在于type的值在packet_send的过程中出现了改变

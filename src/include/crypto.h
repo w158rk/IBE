@@ -53,6 +53,13 @@ int ibe_setup(
     char *mpk_len_file,
     char *msk_len_file
 );
+
+int ibe_setup_sign(
+    char *mpk_file,
+    char *msk_file,
+    char *mpk_len_file,
+    char *msk_len_file
+);
 int ibe_encrypt(const  char* data, size_t data_len,  char* c_buf, size_t *c_len, 
     IBEPublicParameters *mpk, long mpk_len, const char *id, size_t id_len);
 int ibe_decrypt(const  char* c_buf, size_t c_len,  char* m_buff, size_t *m_len, 
@@ -72,6 +79,14 @@ int ibe_extract(IBEPrivateKey *sk,
                 long msk_len,
                 const char* id,
                 size_t id_len);
+
+int ibe_extract_sign(IBEPrivateKey *sk,
+                        long *sk_len,
+                        IBEMasterSecret* msk,
+                        long msk_len, 
+                        const char* id,
+                        size_t id_len,
+                        char *sign_data);
 
 
 void ibe_sk_copy(IBEPrivateKey *dest, IBEPrivateKey *src, long);
