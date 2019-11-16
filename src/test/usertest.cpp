@@ -1,10 +1,11 @@
 #include<iostream>
 
-#include<user.hpp>
-#include<comm.hpp>
-#include<ui.hpp>
-#include<packet.hpp>
-#include<config.h>
+# include<user.hpp>
+# include<comm.hpp>
+# include<init.hpp>
+# include<ui.hpp>
+# include<packet.hpp>
+# include<config.h>
 
 #include<rapidjson/document.h>
 #include<rapidjson/reader.h>
@@ -59,6 +60,10 @@ int main(int argc, char *argv[])
         std::cerr << e.what() << std::endl;
     }
     catch(packet::PacketException &e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
+    catch(init::InitException &e)
     {
         std::cerr << e.what() << std::endl;
     }

@@ -1,5 +1,6 @@
 #include "ss_lcl.h"
 
+#include <string.h>
 #include<crypto.h>
 #include<openssl/sm9.h>
 
@@ -21,7 +22,7 @@ int SS_poly_apply_sm9(BIGNUM *value, SS_POLY *poly, BIGNUM *x)
 {
 
     BIGNUM *p = SM9_get0_prime();
-    SS_poly_apply(value, poly, x, p);
+    return SS_poly_apply(value, poly, x, p);
     // BN_free(p);
 
 }
@@ -63,4 +64,53 @@ int SS_lagrange_value_sm9(BIGNUM *value, BIGNUM **num_list, unsigned int length,
 {
     BIGNUM *p = SM9_get0_prime();
     SS_lagrange_value(value, num_list, length, i, x, p);
+}
+
+/**
+ *  @brief the res will be changed no matter the return value is 1 or not
+ */
+int SS_poly2str(char *res, int *len, SS_POLY *poly)
+{
+    int ret = 0;
+
+    BIGNUM **coeff = poly->coeff;
+    BIGNUM *cur_bn = NULL;
+    char *cur_str = NULL;
+    char *cur_ptr = res;
+    int cur_len = 0;
+    int cnt = poly->length;
+    int length = 0;
+    int i = 0;
+
+    for (i=0; i<cnt; i++)
+    {
+
+        cur_bn = coeff[i];
+        cur_str = BN_bn2str(cur_bn);
+        cur_len = strlen(cur_str);
+        length += cur_len + 1;
+
+        if(*len < length)
+        {
+            goto end;
+        }
+
+        memcpy(cur_ptr, cur_str, cur_len);
+        cur_ptr += cur_len;
+        *cur_ptr = '\n';
+        cur_ptr++;
+
+    }
+
+    *len = length;
+    ret = 1;
+
+end:
+    if(cur_str)
+    {
+        free(cur_str);
+    }
+    return ret;
+
+
 }

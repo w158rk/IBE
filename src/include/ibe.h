@@ -66,5 +66,8 @@ int ibe_cal_xQ(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, EC_POINT *Q, c
 int ibe_sign(const unsigned char *data, size_t data_length, const unsigned char* sign, size_t *sign_length, SM9PrivateKey *sk);
 int ibe_verify(const unsigned char* data, size_t data_length, const unsigned char *sign, size_t sign_length, SM9PublicParameters *mpk, const char *id, size_t id_length);
 
+/* replace the sP in the mpk file with point */
+int ibe_store_sP(EC_POINT *point, char *mpk_file);
+int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file);
 
 #endif

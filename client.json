@@ -3,7 +3,7 @@
         "log" : "server.log"
     },
     "crypto" : {
-        "mpk_file" : "mpk.conf",
+        "mpk_file" : "mpk-Client.conf",
         "mpk_len_file" : "mpk-len.conf"
     },
     "id" : {

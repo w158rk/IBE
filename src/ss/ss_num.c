@@ -6,7 +6,10 @@
  * */
 
 #include "./ss_lcl.h"
-#define SWAP(x, y) { temp = x; x = y; y = temp; }
+
+# define SWAP(x, y) { temp = x; x = y; y = temp; }
+# define Debug(info) fprintf(stderr, "%s\n", info)
+# define Debug2(a, b) fprintf(stderr, "%s:%s\n", a, b)
 
 SS_POLY *SS_POLY_new(void) {
     
@@ -68,12 +71,26 @@ int SS_poly_apply(BIGNUM *value, SS_POLY *poly, BIGNUM *x, BIGNUM *p) {
     for (i=poly->length-1; i>0; --i) {
         if(0 == BN_mod_add(temp, r, coeff_list[i], p, add_ctx))
             goto end;
+#ifdef DEBUG 
+        Debug2("add with", BN_bn2str(coeff_list[i]));
+        Debug2("mod", BN_bn2str(p));
+        Debug2("result", BN_bn2str(temp));
+#endif
         if(0 == BN_mod_mul(r, temp, x, p, mul_ctx))
             goto end;
+#ifdef DEBUG 
+        Debug2("mult with", BN_bn2str(x));
+        Debug2("mod", BN_bn2str(p));
+        Debug2("result", BN_bn2str(r));
+#endif
     }    
 
     if(0 == BN_mod_add(value, r, coeff_list[0], p, add_ctx))
         goto end;
+#ifdef DEBUG 
+        Debug2("add with", BN_bn2str(coeff_list[0]));
+        Debug2("result", BN_bn2str(value));
+#endif
 
     
     ret = 1;

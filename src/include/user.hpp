@@ -66,6 +66,12 @@ namespace user {
         DECLARE_MEMBER(int, port)
         DECLARE_MEMBER(ID*, id)
         DECLARE_MEMBER(char *, err_sig)
+        DECLARE_MEMBER(char *, sm4_key)
+        DECLARE_MEMBER(std::thread *, thread)
+        DECLARE_MEMBER(long, sk_len)
+        DECLARE_MEMBER(init::Initializer*, initializer)
+
+        // files
         DECLARE_MEMBER(char *, msk_filename)
         DECLARE_MEMBER(char *, mpk_filename)
         DECLARE_MEMBER(char *, cfg_filename)
@@ -73,11 +79,7 @@ namespace user {
         DECLARE_MEMBER(char *, mpk_len_file)
         DECLARE_MEMBER(long, mpk_len)
         DECLARE_MEMBER(long, msk_len)
-        DECLARE_MEMBER(char *, sm4_key)
-        DECLARE_MEMBER(std::thread *, thread)
-        DECLARE_MEMBER(long, sk_len)
-        DECLARE_MEMBER(init::Initializer*, initializer)
-        
+
         // with no flag with them as they are only used by the object itself
         std::set<interface::IComm *> client_comms;
         std::set<interface::IPacket *> client_packets;

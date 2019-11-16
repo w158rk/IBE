@@ -283,7 +283,7 @@ int handle_init_message_1(Packet *target)
             // insert the number 
             message += id_len;
             BIGNUM *bn = NULL;
-            if(!SS_str2bn(&bn, message))
+            if(!BN_str2bn(&bn, message))
             {
                 Error("cannot convert string to bn");
             }
@@ -325,8 +325,76 @@ int handle_init_message_2(Packet *target)
     int length = p->get_length();
 
     char *message = p->get_payload();
+    int id_len;
+    get_int(message, &id_len);
 
-    interface::IUI::print(message, length);
+    message += 4;
+    char *id = (char *)std::malloc(id_len+1);
+    id[id_len] = '\0';
+    memcpy(id, message, id_len);
+
+    // check if it is necessary to insert the point
+    init::Initializer *initializer = 
+            target->get_user_ptr()->get_initializer();
+    
+
+    auto sp_points = initializer->get_sp_pub_points();
+
+    bool need_to_insert = true;
+    ID *tmp_id = nullptr;
+    for(auto elem : *sp_points)
+    {
+        tmp_id = elem.first;
+        if(id_len==tmp_id->length
+            && 0==strncmp(id, tmp_id->id, id_len))
+        {/* there has been a value corresponding to this ID */
+            need_to_insert = false;
+            break;
+        }
+    }
+
+    if(need_to_insert)
+    {
+        ID *insert_id = NULL;
+        for(auto tmp_id : initializer->get_config()->user_ids)
+        {
+            if(id_len==tmp_id->length
+                && 0==strncmp(id, tmp_id->id, id_len))
+            {/* there is an ID correspond to this string */
+                insert_id = tmp_id;
+                break;
+            }
+        }
+
+        if(insert_id)
+        {
+#ifdef DEBUG 
+            Debug("need to insert");
+#endif
+            // insert the number 
+            message += id_len;
+            
+            BN_CTX *ctx = BN_CTX_new();
+            EC_POINT *pnt = EC_POINT_new_sm9();
+
+            if(!EC_str2ec(message, pnt, ctx))
+            {
+                Error("cannot convert string to bn");
+            }
+
+            (*sp_points)[insert_id] = pnt;
+            BN_CTX_free(ctx);
+
+#ifdef DEBUG 
+            std::ostringstream s;
+            s << "insert already, the size of sp points and the points of initializer: ";
+            s << sp_points->size() << " , " << initializer->get_sp_pub_points()->size();
+            Debug(s.str());
+#endif
+        }
+        
+    }
+
 
 #ifdef DEBUG
     interface::IUI::print("receive message done");
@@ -346,8 +414,76 @@ int handle_init_message_3(Packet *target)
     int length = p->get_length();
 
     char *message = p->get_payload();
+    int id_len;
+    get_int(message, &id_len);
 
-    interface::IUI::print(message, length);
+    message += 4;
+    char *id = (char *)std::malloc(id_len+1);
+    id[id_len] = '\0';
+    memcpy(id, message, id_len);
+
+    // check if it is necessary to insert the point
+    init::Initializer *initializer = 
+            target->get_user_ptr()->get_initializer();
+    
+
+    auto sq_points = initializer->get_sq_pub_points();
+
+    bool need_to_insert = true;
+    ID *tmp_id = nullptr;
+    for(auto elem : *sq_points)
+    {
+        tmp_id = elem.first;
+        if(id_len==tmp_id->length
+            && 0==strncmp(id, tmp_id->id, id_len))
+        {/* there has been a value corresponding to this ID */
+            need_to_insert = false;
+            break;
+        }
+    }
+
+    if(need_to_insert)
+    {
+        ID *insert_id = NULL;
+        for(auto tmp_id : initializer->get_config()->user_ids)
+        {
+            if(id_len==tmp_id->length
+                && 0==strncmp(id, tmp_id->id, id_len))
+            {/* there is an ID correspond to this string */
+                insert_id = tmp_id;
+                break;
+            }
+        }
+
+        if(insert_id)
+        {
+#ifdef DEBUG 
+            Debug("need to insert");
+#endif
+            // insert the number 
+            message += id_len;
+            
+            BN_CTX *ctx = BN_CTX_new();
+            EC_POINT *pnt = EC_POINT_new_sm9();
+
+            if(!EC_str2ec(message, pnt, ctx))
+            {
+                Error("cannot convert string to bn");
+            }
+
+            (*sq_points)[insert_id] = pnt;
+            BN_CTX_free(ctx);
+
+#ifdef DEBUG 
+            std::ostringstream s;
+            s << "insert already, the size of sq points and the points of initializer: ";
+            s << sq_points->size() << " , " << initializer->get_sq_pub_points()->size();
+            Debug(s.str());
+#endif
+        }
+        
+    }
+
 
 #ifdef DEBUG
     interface::IUI::print("receive message done");

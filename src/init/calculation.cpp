@@ -24,6 +24,13 @@ void Initializer::gen_poly()
         Error("can not generate a polynomial");
     }
 
+#ifdef DEBUG 
+{
+    BIGNUM **dbg_coeff = poly->coeff;
+    BN_one(dbg_coeff[1]);
+}
+#endif
+
     set_poly(poly);
 
 }
@@ -40,12 +47,15 @@ void Initializer::cal_fx(char* result, int *len, ID* id)
     BIGNUM *x = BN_new();
     SS_id2num_init(x, id, get_user()->get_mpk_filename());
     BIGNUM *res = BN_new();
-    SS_poly_apply_sm9(res, get_poly(), x);
+    if(0 == SS_poly_apply_sm9(res, get_poly(), x))
+    {
+        Error("can not apply the x to the polynomial");
+    }
     
 
-    char *temp = NULL;
-    temp = SS_bn2str(res);
-    if(temp == NULL)
+    char *temp = nullptr;
+    temp = BN_bn2str(res);
+    if(temp == nullptr)
     {
         Error("cannot convert the big number to string");
     }
@@ -55,7 +65,7 @@ void Initializer::cal_fx(char* result, int *len, ID* id)
 
 #ifdef DEBUG
     std::ostringstream s;
-    s << "the length of the BN string: " << length << std::endl;
+    s << "the length of the fx: " << length << std::endl;
     get_user()->get_ui_ptr()->debug(s.str());
 #endif
 
@@ -73,7 +83,7 @@ void Initializer::cal_share()
     // just add all of the values in the vector `numbers`
     BIGNUM *sum = BN_new();
     BIGNUM *temp = BN_new();
-    BIGNUM *tmp2 = NULL; 
+    BIGNUM *tmp2 = nullptr; 
     BN_zero(sum);
 
     for ( auto& num : *get_numbers())
@@ -94,7 +104,7 @@ void Initializer::cal_share()
     Debug((s.str()));
 # endif
 
-    if(!SS_str2bn(&tmp2, tmp_str))
+    if(!BN_str2bn(&tmp2, tmp_str))
     {
         throw InitException("can not convert hex to bn");
     }
@@ -152,15 +162,15 @@ void Initializer::cal_share_with_lp()
 void Initializer::cal_shareP(char *result, int *len)
 {
     // calculate share * P
-    EC_POINT *point = NULL;
-    EC_GROUP *group = NULL;
+    EC_POINT *point = nullptr;
+    EC_GROUP *group = nullptr;
     BN_CTX *ctx = BN_CTX_new();
     if(!ibe_cal_xP(&group, &point, get_share(), get_user()->get_mpk_filename()))
     {
         Error("calculate the xP failed");
     }
 
-    char *temp = SS_ec2str(group, point, ctx);
+    char *temp = EC_ec2str(point, ctx);
     int length = strlen(temp);
     if (*len < length)
     {
@@ -185,9 +195,9 @@ void Initializer::cal_shareQ(char *result, int *len, ID *id)
 {
 
     // calculate share * Q
-    EC_POINT *point = NULL;
-    EC_GROUP *group = NULL;
-    EC_POINT *Q = NULL;
+    EC_POINT *point = nullptr;
+    EC_GROUP *group = nullptr;
+    EC_POINT *Q = nullptr;
     BN_CTX *ctx = BN_CTX_new();
     if(!ibe_id2point_init(&Q, id->id, id->length, get_user()->get_mpk_filename()))
     {
@@ -199,7 +209,7 @@ void Initializer::cal_shareQ(char *result, int *len, ID *id)
         Error("calculate the xP failed");
     }
 
-    char *temp = SS_ec2str(group, point, ctx);
+    char *temp = EC_ec2str(point, ctx);
     int length = strlen(temp);
 
     if (*len < length)
@@ -220,4 +230,94 @@ void Initializer::cal_shareQ(char *result, int *len, ID *id)
     EC_GROUP_free(group);
     BN_CTX_free(ctx);
     
+}
+
+void Initializer::cal_sP()
+{
+    // add the points in the sp_point with the product of the share and the P point 
+
+    // calculate share * P
+    EC_POINT *point = nullptr;
+    EC_GROUP *group = nullptr;
+    BN_CTX *ctx = BN_CTX_new();
+    if(!ibe_cal_xP(&group, &point, get_share(), get_user()->get_mpk_filename()))
+    {
+        Error("calculate the xP failed");
+    }
+
+    EC_POINT *res = EC_POINT_new(group);
+    EC_POINT *tmp = nullptr;
+    for (auto elem : *get_sp_pub_points())
+    {
+        tmp = elem.second;
+        if(!EC_POINT_add(group, res, point, tmp, ctx)
+            ||!EC_POINT_copy(point, res)
+            ||!EC_POINT_add(group, res, point, tmp, ctx))
+        {
+
+            Error("calculate the sP failed in the loop");
+        }
+    }
+
+    set_sP(point);
+    EC_GROUP_free(group);
+    BN_CTX_free(ctx);
+
+
+}
+
+void Initializer::cal_sQ()
+{
+    // add the points in the sq_point with the product of the share and the Q point 
+
+    // calculate share * Q
+    EC_POINT *point = nullptr;
+    EC_POINT *Q = nullptr;
+    EC_GROUP *group = nullptr;
+    BN_CTX *ctx = BN_CTX_new();
+    
+    if(!ibe_id2point_init(&Q, get_user()->get_id()->id, get_user()->get_id()->length, get_user()->get_mpk_filename())
+        ||!ibe_cal_xQ(&group, &point, get_share(), Q, get_user()->get_mpk_filename()))
+    {
+        Error("calculate the xQ failed");
+    }
+
+    EC_POINT *res = EC_POINT_new(group);
+    EC_POINT *tmp = nullptr;
+    for (auto elem : *get_sq_pub_points())
+    {
+        tmp = elem.second;
+        if(!EC_POINT_add(group, res, point, tmp, ctx)
+            ||!EC_POINT_copy(point, res)
+            ||!EC_POINT_add(group, res, point, tmp, ctx))
+        {
+
+            Error("calculate the sQ failed in the loop");
+        }
+    }
+
+    bool is_to_free_point = true;
+    if(!m_fsP)
+    {
+        set_sP(point);
+        is_to_free_point = false;
+    }
+    else 
+    {
+        if(!EC_POINT_copy(m_sP, point))
+        {
+            Error("can not set the sP");
+        }
+    }
+
+    if(is_to_free_point)
+    {
+        EC_POINT_free(point);
+    }
+
+    EC_GROUP_free(group);
+    EC_POINT_free(Q);
+    BN_CTX_free(ctx);
+
+
 }

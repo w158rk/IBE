@@ -40,11 +40,23 @@ void Initializer::run()
         gen_poly();
     }
     
+#ifdef DEBUG
+{
+    char dbg_buff[BUFFER_SIZE] = {'\0'};
+    int len = BUFFER_SIZE;
+    SS_poly2str(dbg_buff, &len, m_poly);
+    std::ostringstream s;
+    s << "the polynomial generated" << std::endl;
+    s << dbg_buff;
+    Debug(s.str());
+}
+#endif
+
     Print("begin to initialize the system");
 
     /* round one */
     /* send fi(xj) to others and receive fj(xi) from others */
-    char buff[BUFFER_SIZE];
+    char buff[BUFFER_SIZE] = {'\0'};
     int len = BUFFER_SIZE;
     int cnt = config.user_cnt-1;
 
@@ -55,9 +67,11 @@ void Initializer::run()
     
     do {
 #ifdef DEBUG
+{        
         std::ostringstream s;
         s << "the size of the numbers: " <<  get_numbers()->size() << std::endl;
         Debug(s.str());
+}
 #endif
         /* as the handle of the received packet will be in packet module 
             what we do here is just send the N packet to other users */
@@ -98,7 +112,7 @@ void Initializer::run()
 #ifdef DEBUG
 {
     std::ostringstream s;
-    s << "the share is: " << SS_bn2str(get_share()) << std::endl;
+    s << "the share is: " << BN_bn2str(get_share()) << std::endl;
     Debug(s.str());
 }
 #endif
@@ -107,7 +121,7 @@ void Initializer::run()
 #ifdef DEBUG
 {
     std::ostringstream s;
-    s << "the share with lagrange polynomial is: " << SS_bn2str(get_share()) << std::endl;
+    s << "the share with lagrange polynomial is: " << BN_bn2str(get_share()) << std::endl;
     Debug(s.str());
 }
 #endif
@@ -117,7 +131,7 @@ void Initializer::run()
     /* send F(xi)li(0)P to others and receive F(xj)lj(0)P from others*/
     Print("round two");
     sent_list.clear();
-    // while(get_sp_pub_points().size() < cnt)
+    do
     {
 
         len = BUFFER_SIZE;
@@ -142,15 +156,32 @@ void Initializer::run()
             sent_list.insert(id);
 
         }
+
+        sleep(INIT_SEND_INTERVAL);
         
-    }
+    }while(get_sp_pub_points()->size() < cnt);
+
+    cal_sP();
+
+#ifdef DEBUG
+{
+    BN_CTX *ctx = BN_CTX_new();
+    std::ostringstream s;
+    s << " the sP is: ";
+    s << EC_ec2str(get_sP(), ctx) << std::endl;
+    Debug(s.str());
+    BN_CTX_free(ctx);
+}
+#endif
+
+    store_sP();
 
     /* round three */
     /* send F(xi)li(0)Q to others and receive F(xj)lj(0)Q from others*/
     Print("round three");
     sent_list.clear();
 
-    while(get_sq_pub_points().size() < config.user_cnt-1)
+    do
     {
         
         for (ID *id : config.user_ids)
@@ -175,7 +206,29 @@ void Initializer::run()
             sent_list.insert(id);
         }
 
-    }
+        sleep(INIT_SEND_INTERVAL);
 
+    }while(get_sq_pub_points()->size() < config.user_cnt-1);
+
+    // [IMPORTANT]
+    /**
+     * the sP and sQ share the same member variable 
+     * so in cal_SQ, instead of using set_SQ, 
+     * we use EC_POINT_copy when necessary 
+     */
+    cal_sQ();
+
+#ifdef DEBUG
+{
+    BN_CTX *ctx = BN_CTX_new();
+    std::ostringstream s;
+    s << " the sQ is: ";
+    s << EC_ec2str(get_sP(), ctx) << std::endl;
+    Debug(s.str());
+    BN_CTX_free(ctx);
+}
+#endif
+
+    store_sQ();
 
 }

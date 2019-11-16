@@ -7,7 +7,7 @@ GET_AND_SET_IMPL(InitException, std::string, message)
 
 // the definition of the initexception methods must be 
 // in front of this definition
-#define ERROR(x) get_user()->get_ui_ptr()->error(x)
+#define Error(x) get_user()->get_ui_ptr()->error(x)
 
 Initializer::Initializer(interface::IUser *user)
 {
@@ -21,6 +21,8 @@ Initializer::Initializer(interface::IUser *user)
     // some members exists from the very beginning to the end of the 
     // program 
     m_numbers = new std::unordered_map<ID*, BIGNUM*>;
+    m_sp_pub_points = new std::unordered_map<ID*, EC_POINT*>;
+    m_sq_pub_points = new std::unordered_map<ID*, EC_POINT*>;
     m_fnumbers = true;
     m_fsp_pub_points = true;
     m_fsq_pub_points = true;
@@ -30,9 +32,10 @@ Initializer::Initializer(interface::IUser *user)
 
 GET_AND_SET_IMPL(Initializer, interface::IUser *, user)
 GET_AND_SET_IMPL2(Initializer, std::unordered_map<ID*, BIGNUM*>*, numbers)
-GET_AND_SET_IMPL(Initializer, std::set<EC_POINT*>, sp_pub_points)
-GET_AND_SET_IMPL(Initializer, std::set<EC_POINT*>, sq_pub_points)
+GET_AND_SET_IMPL2(Initializer, std::unordered_map<ID*, EC_POINT*>*, sp_pub_points)
+GET_AND_SET_IMPL2(Initializer, std::unordered_map<ID*, EC_POINT*>*, sq_pub_points)
 GET_AND_SET_IMPL(Initializer, SS_POLY*, poly)
+GET_AND_SET_IMPL(Initializer, EC_POINT*, sP)
 
 
 void Initializer::set_share(BIGNUM *share)
@@ -49,7 +52,7 @@ void Initializer::unset_share()
 {
     if(!m_fshare)
     {
-        ERROR("share is not set when calling the unset function, but the \
+        Error("share is not set when calling the unset function, but the \
                 program continued");
     }
     else 
@@ -62,11 +65,14 @@ BIGNUM* Initializer::get_share()
 {
     if(!m_fshare)
     {
-        ERROR("share is not set when calling the get function");
+        Error("share is not set when calling the get function");
         return nullptr;
     }
     return m_share;
 }
+
+
+
 struct config_t *Initializer::get_config()
 {
     return &config;

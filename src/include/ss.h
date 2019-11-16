@@ -34,12 +34,6 @@ extern "C" {
 #define SS_P_LENGTH             (SS_P_BITS/8)
 
 
-/* wrap some library functions */
-#define SS_bn2str(x) BN_bn2hex(x)
-#define SS_str2bn(a,b) BN_hex2bn(a,b)
-#define SS_ec2str(group, point, ctx) \
-    EC_POINT_point2hex(group, point, POINT_CONVERSION_COMPRESSED, ctx)
-// #define SS_ec2bn(a,b) BN_hex2bn(a,b)
 
 /* TODO this should be defined in the configure file */
 // #define SS_POLY_LENGTH           5      
@@ -86,6 +80,8 @@ int SS_id2num_init(BIGNUM *x, ID *id, char *filename);
  *                      equals to the number of the top nodes)
  */
 int SS_poly_rand_sm9(SS_POLY *poly, unsigned int length);
+
+int SS_poly2str(char *res, int *len, SS_POLY *poly);
 
 /**
  * @brief add two big numbers, res = a+b (mod p(sm9))
@@ -146,9 +142,6 @@ int SS_lagrange_value_sm9(BIGNUM *value, BIGNUM **num_list, unsigned int length,
  * @param[in]   right   
  */ 
 
-/*!
- * @todo scalar multiplication of a point and a scalar
- */
 #ifdef __cplusplus
 }
 #endif

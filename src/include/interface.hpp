@@ -8,6 +8,7 @@
 
 namespace init{
     class Initializer;    
+    class InitException;
 };
 
 namespace interface 
