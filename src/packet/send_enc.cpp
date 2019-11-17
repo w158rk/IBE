@@ -84,7 +84,7 @@ void Packet::send_enc()
             // std::cout<<"cipher len is"<<cipher_len<<std::endl;
             // std::cout<<"sk is"<<sk<<std::endl;
             ibe_decrypt(cipher, cipher_len, m, &m_len, 
-                                &sk, 313);
+                                &sk, 380);
             std::cout<<"m is"<<m<<std::endl;
 #endif
             p_sec_packet->set_payload_byte(tmp);

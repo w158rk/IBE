@@ -18,7 +18,7 @@ SS_POLY *SS_POLY_new(void) {
 
 }
 
-int SS_poly_rand(SS_POLY* poly, unsigned int length, BIGNUM *p) {
+int SS_poly_rand(SS_POLY* poly, unsigned int length, const BIGNUM *p) {
     /**
      * @todo the check of the validation of the coefficient 
      */
@@ -56,7 +56,7 @@ end:
 
 }
 
-int SS_poly_apply(BIGNUM *value, SS_POLY *poly, BIGNUM *x, BIGNUM *p) {
+int SS_poly_apply(BIGNUM *value, SS_POLY *poly, BIGNUM *x, const BIGNUM *p) {
 
     int ret = 0;
     int i=0;
@@ -106,7 +106,7 @@ end:    /* something went wrong */
 }
 
 int SS_lagrange_value(BIGNUM *value, BIGNUM **x_list, unsigned int length,
-                        unsigned int i, BIGNUM *x, BIGNUM *p)
+                        unsigned int i, BIGNUM *x, const BIGNUM *p)
 {
     int ret = 0;
 

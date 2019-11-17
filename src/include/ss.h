@@ -79,12 +79,12 @@ int SS_id2num_init(BIGNUM *x, ID *id, char *filename);
  * @param[in]  length   the number of coefficients (usually 
  *                      equals to the number of the top nodes)
  */
-int SS_poly_rand_sm9(SS_POLY *poly, unsigned int length);
+int SS_poly_rand_smx(SS_POLY *poly, unsigned int length);
 
 int SS_poly2str(char *res, int *len, SS_POLY *poly);
 
 /**
- * @brief add two big numbers, res = a+b (mod p(sm9))
+ * @brief add two big numbers, res = a+b (mod p(smx))
  *
  * @return
  *      0 if something is wrong 
@@ -95,7 +95,7 @@ int SS_poly2str(char *res, int *len, SS_POLY *poly);
  * @param[in]  b    
  *                      
  */
-int BN_mod_add_sm9(BIGNUM *res, BIGNUM* a, BIGNUM* b);
+int BN_mod_add_smx(BIGNUM *res, BIGNUM* a, BIGNUM* b);
 
 
 /**
@@ -109,7 +109,7 @@ int BN_mod_add_sm9(BIGNUM *res, BIGNUM* a, BIGNUM* b);
  * @param[in]   poly    the polynomial 
  * @param[in]   x       the argument 
  */
-int SS_poly_apply_sm9(BIGNUM *value, SS_POLY *poly, BIGNUM *x);
+int SS_poly_apply_smx(BIGNUM *value, SS_POLY *poly, BIGNUM *x);
 
 /**
  * @brief get the Lagrange value give i and x, means get the 
@@ -124,12 +124,9 @@ int SS_poly_apply_sm9(BIGNUM *value, SS_POLY *poly, BIGNUM *x);
  * @param[in]   length          the number of the x_j 
  * @param[in]   i               the index of x_i 
  * @param[in]   x               the value of x 
- * @param[in]   p               the field identifier
  */
 
-int SS_lagrange_value(BIGNUM *value, BIGNUM **num_list, unsigned int length, 
-                        unsigned int i, BIGNUM* x, BIGNUM *p);
-int SS_lagrange_value_sm9(BIGNUM *value, BIGNUM **num_list, unsigned int length, 
+int SS_lagrange_value_smx(BIGNUM *value, BIGNUM **num_list, unsigned int length, 
                         unsigned int i, BIGNUM* x);
 
 /**
@@ -141,6 +138,7 @@ int SS_lagrange_value_sm9(BIGNUM *value, BIGNUM **num_list, unsigned int length,
  * @param[in]   left 
  * @param[in]   right   
  */ 
+
 
 #ifdef __cplusplus
 }

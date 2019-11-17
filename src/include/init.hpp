@@ -26,9 +26,11 @@ namespace init
             GET_AND_SET(interface::IUser *, user)
             GET_AND_SET2(std::unordered_map<ID*, BIGNUM*>*, numbers)
             GET_AND_SET2(std::unordered_map<ID*, EC_POINT*>*, sp_pub_points)
+            GET_AND_SET2(std::unordered_map<ID*, point_t*>*, sp2_pub_points)
             GET_AND_SET2(std::unordered_map<ID*, EC_POINT*>*, sq_pub_points)
             GET_AND_SET(SS_POLY*, poly)
             GET_AND_SET(BIGNUM*, share)
+            GET_AND_SET(point_t*, Ppub2)
             GET_AND_SET(EC_POINT*, sP)
 
             void run();
@@ -41,8 +43,10 @@ namespace init
             DECLARE_MEMBER(interface::IUser *, user)
             DECLARE_MEMBER(BIGNUM*, share)
             DECLARE_MEMBER(EC_POINT*, sP)
+            DECLARE_MEMBER(point_t*, Ppub2)
             DECLARE_MEMBER2(std::unordered_map<ID*, BIGNUM*>*, numbers)
             DECLARE_MEMBER2(std::unordered_map<ID*, EC_POINT*>*, sp_pub_points)
+            DECLARE_MEMBER2(std::unordered_map<ID*, point_t*>*, sp2_pub_points)
             DECLARE_MEMBER2(std::unordered_map<ID*, EC_POINT*>*, sq_pub_points)
             DECLARE_MEMBER(SS_POLY*, poly)
 
@@ -58,7 +62,8 @@ namespace init
              */
             void store_sP();
             void store_sQ();
-            void cal_shareP(char *result, int *len);
+            void cal_shareP1(char *result, int *len);
+            void cal_shareP2(char *result, int *len);
             void cal_shareQ(char *result, int *len, ID* id);
             void cal_share_with_lp();
     };

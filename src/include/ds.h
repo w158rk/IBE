@@ -30,7 +30,7 @@ extern "C" {
 typedef char    *IBEPublicParameters;
 typedef char    *IBEPrivateKey;
 typedef char    *IBEMasterSecret;
-
+typedef struct point_t point_t;
 
 /** 
  * protocol packets

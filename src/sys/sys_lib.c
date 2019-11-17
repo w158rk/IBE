@@ -12,34 +12,34 @@
 #endif
 
 #include <openssl/bio.h>
-#include <openssl/sm9.h>
+#include <openssl/smx.h>
 #include <sys.h>
 
 int get_mpk_fp(const char* mpk_filename, IBEPublicParameters* mpk) {
 
-    SM9PublicParameters *sm9_mpk = NULL;
+    SMXPublicParameters *smx_mpk = NULL;
 
     FILE *mpk_fp = fopen(mpk_filename, "rb");
-    if (!d2i_SM9PublicParameters_fp(mpk_fp, &sm9_mpk)){
+    if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
 		ERR_print_errors_fp(stderr);
         goto end;
     }
     
     fclose(mpk_fp);
     
-    int rtn = i2d_SM9PublicParameters(sm9_mpk, mpk);
+    int rtn = i2d_SMXPublicParameters(smx_mpk, mpk);
 
     if(!rtn) {
         ERROR("i2d public parameters fails (openssl)");
         goto end;
     }
     
-    SM9PublicParameters_free(sm9_mpk);
+    SMXPublicParameters_free(smx_mpk);
     return 1;
 
 end: 
     fclose(mpk_fp);
-    SM9PublicParameters_free(sm9_mpk);
+    SMXPublicParameters_free(smx_mpk);
     return 0;
 }
 
@@ -47,17 +47,17 @@ int get_msk_fp(const char* msk_filename, IBEMasterSecret* msk) {
 
     int ret = 0;
     FILE *msk_fp = fopen(msk_filename, "rb");
-    SM9MasterSecret *sm9_msk = NULL;
+    SMXMasterSecret *smx_msk = NULL;
 
 
-    if (!d2i_SM9MasterSecret_fp(msk_fp, &sm9_msk)) {
+    if (!d2i_SMXMasterSecret_fp(msk_fp, &smx_msk)) {
 		ERR_print_errors_fp(stderr);
         goto end;
     }
 
     fclose(msk_fp);
 
-    int rtn = i2d_SM9MasterSecret(sm9_msk, msk);
+    int rtn = i2d_SMXMasterSecret(smx_msk, msk);
 
     if(!rtn) {
         ERROR("i2d master secret fails (openssl)");
@@ -68,45 +68,45 @@ int get_msk_fp(const char* msk_filename, IBEMasterSecret* msk) {
 
 end:
     fclose(msk_fp);
-    SM9MasterSecret_free(sm9_msk);
+    SMXMasterSecret_free(smx_msk);
     return ret;
 }
 
 int put_sk_fp(const char* sk_filename, IBEPrivateKey* sk, long sk_len) {
     
-    SM9PrivateKey *sm9_sk = NULL;
-    if(!d2i_SM9PrivateKey(&sm9_sk, sk, sk_len)) {
+    SMXPrivateKey *smx_sk = NULL;
+    if(!d2i_SMXPrivateKey(&smx_sk, sk, sk_len)) {
         ERROR("convert from bytes to private key fails");
         goto end;
     }
 
     FILE *sk_fp = fopen(sk_filename, "wb");
     
-    if (!i2d_SM9PrivateKey_fp(sk_fp, sm9_sk)) {
+    if (!i2d_SMXPrivateKey_fp(sk_fp, smx_sk)) {
 		ERR_print_errors_fp(stderr);
         goto end;
     }
 
     fclose(sk_fp);
-    SM9PrivateKey_free(sm9_sk);
+    SMXPrivateKey_free(smx_sk);
 
     return 1;
 
 end:
     fclose(sk_fp);
-    SM9PrivateKey_free(sm9_sk);
+    SMXPrivateKey_free(smx_sk);
     return 0;    
 }
 
 int get_sk_fp(const char* sk_filename, IBEPrivateKey* sk) {
-    SM9PrivateKey *sm9_sk = NULL;
+    SMXPrivateKey *smx_sk = NULL;
     FILE *sk_fp = fopen(sk_filename, "rb");
-    if (!d2i_SM9PrivateKey_fp(sk_fp, &sm9_sk)) {
+    if (!d2i_SMXPrivateKey_fp(sk_fp, &smx_sk)) {
 		ERR_print_errors_fp(stderr);
         goto end;
     }
 
-    i2d_SM9PrivateKey(sm9_sk, sk);
+    i2d_SMXPrivateKey(smx_sk, sk);
 
     return 1;
 

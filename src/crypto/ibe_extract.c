@@ -12,7 +12,7 @@
 
 #include <crypto.h>
 
-#include <openssl/sm9.h>
+#include "smx_lcl.h"
 #include <openssl/bio.h>
 
 int ibe_extract(IBEPrivateKey *sk,
@@ -23,13 +23,13 @@ int ibe_extract(IBEPrivateKey *sk,
                 size_t id_len)
 {
     int ret = 0;
-    SM9MasterSecret *sm9_ms = NULL;
+    SMXMasterSecret *sm9_ms = NULL;
 
-    d2i_SM9MasterSecret(&sm9_ms, msk, msk_len);
+    d2i_SMXMasterSecret(&sm9_ms, msk, msk_len);
 
-    SM9PrivateKey *sm9_sk = SM9_extract_private_key(sm9_ms, id, id_len);
+    SMXPrivateKey *sm9_sk = SMX_extract_private_key(sm9_ms, id, id_len);
 
-    int len = i2d_SM9PrivateKey(sm9_sk, sk);
+    int len = i2d_SMXPrivateKey(sm9_sk, sk);
     if (0 == len) {
         ERROR("extract the private key fail, please try it again");
         goto end;
@@ -39,8 +39,8 @@ int ibe_extract(IBEPrivateKey *sk,
     ret = 1;
 
 end : 
-    SM9_MASTER_KEY_free(sm9_ms);
-    SM9PrivateKey_free(sm9_sk);
+    SMX_MASTER_KEY_free(sm9_ms);
+    SMXPrivateKey_free(sm9_sk);
 
     return ret;
 }

@@ -23,6 +23,7 @@ extern "C" {
 
 using namespace user;
 
+#define Debug(info) get_ui_ptr()->debug(info)
 
 /* 
  * internal functions
@@ -142,9 +143,25 @@ void User::send_init_message_1(char *buff, int length, ID *dest_id)
 	CONNECT_AND_SEND(dest_id->ip, dest_id->port)
 }
 
-void User::send_init_message_2(char *buff, int length, ID *dest_id)
+void User::send_init_message_2(char *buff, int len1, int len2, ID *dest_id)
 {
-	MAKE_APP_PACKET(INIT_MESSAGE_2)
+	AppPacket *p_app_packet = new AppPacket ; 
+	int id_length = get_id()->length;	
+	int payload_len = len1 + len2 +  id_length + 1 + 12; 
+	/* for convenience, we add a '\0' at the end */
+	char *buffer = (char *)std::malloc(payload_len);	
+	buffer[payload_len-1] = '\0';				
+
+	set_int(buffer, get_id()->length);	
+	set_int(buffer+4, len1);	
+	set_int(buffer+8, len2);	
+	std::memcpy(buffer+12, get_id()->id, id_length);	
+	std::memcpy(buffer+12+id_length, buff, len1+len2);	
+
+	p_app_packet->set_type(INIT_MESSAGE_2);	
+	p_app_packet->set_length(payload_len);			
+	p_app_packet->set_payload(buffer);		
+
 	MAKE_CTX
 	CONNECT_AND_SEND(dest_id->ip, dest_id->port)	
 }

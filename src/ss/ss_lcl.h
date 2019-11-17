@@ -15,7 +15,6 @@
 #define CONCAT1(a,b)    a##b
 #define CONCAT(a,b)     CONCAT1(a,b)
 
-#define SS_get_p    CONCAT(BN_get0_nist_prime_,SS_P_BITS) 
 
 /**
  * @brief generate a random polynomial
@@ -29,7 +28,7 @@
  *                      equals to the number of the top nodes)
  * @param[in]  p        the prime field idetification 
  */
-int SS_poly_rand(SS_POLY *poly, unsigned int length, BIGNUM *p);
+int SS_poly_rand(SS_POLY *poly, unsigned int length, const BIGNUM *p);
 
 /**
  * @brief get the value of the polynomial given an argument x for that
@@ -43,7 +42,7 @@ int SS_poly_rand(SS_POLY *poly, unsigned int length, BIGNUM *p);
  * @param[in]   x       the argument 
  * @param[in]   p       the prime field identification
  */
-int SS_poly_apply(BIGNUM *value, SS_POLY *poly, BIGNUM *x, BIGNUM *p);
+int SS_poly_apply(BIGNUM *value, SS_POLY *poly, BIGNUM *x, const BIGNUM *p);
 
 /**
  * @brief get the Lagrange value give i and x, means get the 
@@ -62,7 +61,7 @@ int SS_poly_apply(BIGNUM *value, SS_POLY *poly, BIGNUM *x, BIGNUM *p);
  */
 
 int SS_lagrange_value(BIGNUM *value, BIGNUM **poly_list, unsigned int length, 
-                        unsigned int i, BIGNUM* x, BIGNUM *p);
+                        unsigned int i, BIGNUM* x, const BIGNUM *p);
 
 /**
  * @brief add two point

@@ -55,7 +55,7 @@ namespace user {
         void sys_setup();
         void sys_generate();
         void send_init_message_1(char *buff, int length, ID *id);
-        void send_init_message_2(char *buff, int length, ID *id);
+        void send_init_message_2(char *buff, int length, int, ID *id);
         void send_init_message_3(char *buff, int length, ID *id);
 
     private :

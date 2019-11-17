@@ -325,11 +325,23 @@ int handle_init_message_2(Packet *target)
     int length = p->get_length();
 
     char *message = p->get_payload();
-    int id_len;
+    char *id = NULL;
+    char *pPub1 = NULL;
+    char *pPub2 = NULL;
+    int id_len, len_pPub1, len_pPub2;
+    
+    
     get_int(message, &id_len);
+    get_int(message+4, &len_pPub1);
+    get_int(message+8, &len_pPub2);
 
-    message += 4;
-    char *id = (char *)std::malloc(id_len+1);
+    if(id_len+len_pPub1+len_pPub2+13 != length)
+    {
+        Error("the length of the packet is in wrong format");
+    }
+
+    message += 12;
+    id = (char *)std::malloc(id_len+1);
     id[id_len] = '\0';
     memcpy(id, message, id_len);
 
@@ -339,6 +351,7 @@ int handle_init_message_2(Packet *target)
     
 
     auto sp_points = initializer->get_sp_pub_points();
+    auto sp2_points = initializer->get_sp2_pub_points();
 
     bool need_to_insert = true;
     ID *tmp_id = nullptr;
@@ -372,17 +385,28 @@ int handle_init_message_2(Packet *target)
             Debug("need to insert");
 #endif
             // insert the number 
-            message += id_len;
+            pPub1 = message + id_len;
+            pPub2 = pPub1 + len_pPub1;
             
             BN_CTX *ctx = BN_CTX_new();
             EC_POINT *pnt = EC_POINT_new_sm9();
 
-            if(!EC_str2ec(message, pnt, ctx))
+            if(!EC_str2ec(pPub1, pnt, ctx))
             {
-                Error("cannot convert string to bn");
+                Error("cannot convert string to EC point");
             }
 
             (*sp_points)[insert_id] = pnt;
+
+            // malloc a new space for the pPub2 in case it will 
+            // be freed somewhere 
+            point_t *point2 = NULL;
+            if(!ibe_point_from_octets(&point2, pPub2))
+            {
+                Error("cannot convert pPub2 from string");
+            }
+            
+            (*sp2_points)[insert_id] = point2;
             BN_CTX_free(ctx);
 
 #ifdef DEBUG 

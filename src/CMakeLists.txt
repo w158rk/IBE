@@ -1,16 +1,16 @@
 #设置可执行文件
 
-aux_source_directory(./comm TEMP_SRC)   #将./comm目录下的所有源文件赋值为TEMP_SRC
-SET (MY_SRC ${TEMP_SRC})
 aux_source_directory(./crypto TEMP_SRC) #添加./crypto目录下的源文件
-SET (MY_SRC ${TEMP_SRC})
-aux_source_directory(./packet TEMP_SRC) #添加.packet目录下的源文件
 SET (MY_SRC ${TEMP_SRC})
 aux_source_directory(./ss TEMP_SRC)
 SET (MY_SRC ${TEMP_SRC})
+aux_source_directory(./sys TEMP_SRC)    #添加./sys目录下的源文件
+SET (MY_SRC ${TEMP_SRC})
+aux_source_directory(./comm TEMP_SRC)   #将./comm目录下的所有源文件赋值为TEMP_SRC
+SET (MY_SRC ${TEMP_SRC})
 aux_source_directory(./init TEMP_SRC)
 SET (MY_SRC ${TEMP_SRC})
-aux_source_directory(./sys TEMP_SRC)    #添加./sys目录下的源文件
+aux_source_directory(./packet TEMP_SRC) #添加.packet目录下的源文件
 SET (MY_SRC ${TEMP_SRC})
 aux_source_directory(./ui TEMP_SRC)    #添加./sys目录下的源文件
 SET (MY_SRC ${TEMP_SRC})

@@ -1,69 +1,69 @@
-#include "ss_lcl.h"
 
 #include <string.h>
-#include<crypto.h>
-#include<openssl/sm9.h>
+#include <crypto.h>
+#include<openssl/smx.h>
+#include "ss_lcl.h"
 
-int SS_poly_rand_sm9(SS_POLY *poly, unsigned int length)
+int SS_poly_rand_smx(SS_POLY *poly, unsigned int length)
 {
 
-    BIGNUM *p = SM9_get0_prime();
-    SS_poly_rand(poly, length, p);
+    const BIGNUM *n = IBE_get0_order();
+    SS_poly_rand(poly, length, n);
 
-    // the p cannot be free by BN_free 
+    // the n cannot be free by BN_free 
     // SIGSEGV when executing  a->flags |= BN_FLG_FREE in BN_free 
     // weird thing
-    // possibly, the SM9_get0_prime return a constant value
-    // BN_free((BIGNUM *)p);
+    // possibly, the IBE_get0_order return a constant value
+    // BN_free((BIGNUM *)n);
 
 }
 
-int SS_poly_apply_sm9(BIGNUM *value, SS_POLY *poly, BIGNUM *x)
+int SS_poly_apply_smx(BIGNUM *value, SS_POLY *poly, BIGNUM *x)
 {
 
-    BIGNUM *p = SM9_get0_prime();
-    return SS_poly_apply(value, poly, x, p);
-    // BN_free(p);
+    const BIGNUM *n = IBE_get0_order();
+    return SS_poly_apply(value, poly, x, n);
+    // BN_free(n);
 
 }
 
-int BN_mod_add_sm9(BIGNUM *res, BIGNUM* a, BIGNUM* b)
+int BN_mod_add_smx(BIGNUM *res, BIGNUM* a, BIGNUM* b)
 {
-    BIGNUM *p = SM9_get0_prime();
+    const BIGNUM *n = IBE_get0_order();
     BN_CTX *ctx = BN_CTX_new();
-    BN_mod_add(res, a, b, p, ctx);
+    BN_mod_add(res, a, b, n, ctx);
 
     BN_CTX_free(ctx);
-    // BN_free(p);
+    // BN_free(n);
 }
 
 
 int SS_id2num_init(BIGNUM *res, ID *id, char *filename)
 {
     EC_POINT *point = NULL;
-    ibe_id2point_init(&point, id->id, id->length, filename);
+    ibe_id2point(&point, id->id, id->length, filename);
 
     // get the x and z of the point 
     BIGNUM *X = point->X;
     BIGNUM *Z = point->Z;
     
     // calculate the result as X * Z^2
-    BIGNUM *p = SM9_get0_prime();
+    const BIGNUM *n = IBE_get0_order();
     BIGNUM *tmp = BN_new();
     BN_CTX *ctx = BN_CTX_new();
-    if(!BN_mod_sqr(tmp, Z, p, ctx)
-        ||!BN_mod_mul(res, X, tmp, p, ctx))
+    if(!BN_mod_sqr(tmp, Z, n, ctx)
+        ||!BN_mod_mul(res, X, tmp, n, ctx))
     {
         ERROR("error in calculating X*Z^2");
     }
 
 }
 
-int SS_lagrange_value_sm9(BIGNUM *value, BIGNUM **num_list, unsigned int length, 
+int SS_lagrange_value_smx(BIGNUM *value, BIGNUM **num_list, unsigned int length, 
                         unsigned int i, BIGNUM* x)
 {
-    BIGNUM *p = SM9_get0_prime();
-    SS_lagrange_value(value, num_list, length, i, x, p);
+    const BIGNUM *n = IBE_get0_order();
+    SS_lagrange_value(value, num_list, length, i, x, n);
 }
 
 /**

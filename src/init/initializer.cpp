@@ -22,9 +22,11 @@ Initializer::Initializer(interface::IUser *user)
     // program 
     m_numbers = new std::unordered_map<ID*, BIGNUM*>;
     m_sp_pub_points = new std::unordered_map<ID*, EC_POINT*>;
+    m_sp2_pub_points = new std::unordered_map<ID*, point_t*>;
     m_sq_pub_points = new std::unordered_map<ID*, EC_POINT*>;
     m_fnumbers = true;
     m_fsp_pub_points = true;
+    m_fsp2_pub_points = true;
     m_fsq_pub_points = true;
 
 }
@@ -33,9 +35,11 @@ Initializer::Initializer(interface::IUser *user)
 GET_AND_SET_IMPL(Initializer, interface::IUser *, user)
 GET_AND_SET_IMPL2(Initializer, std::unordered_map<ID*, BIGNUM*>*, numbers)
 GET_AND_SET_IMPL2(Initializer, std::unordered_map<ID*, EC_POINT*>*, sp_pub_points)
+GET_AND_SET_IMPL2(Initializer, std::unordered_map<ID*, point_t*>*, sp2_pub_points)
 GET_AND_SET_IMPL2(Initializer, std::unordered_map<ID*, EC_POINT*>*, sq_pub_points)
 GET_AND_SET_IMPL(Initializer, SS_POLY*, poly)
 GET_AND_SET_IMPL(Initializer, EC_POINT*, sP)
+GET_AND_SET_IMPL(Initializer, point_t*, Ppub2)
 
 
 void Initializer::set_share(BIGNUM *share)

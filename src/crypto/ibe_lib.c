@@ -1,4 +1,4 @@
-# include <openssl/sm9.h>
+# include "smx_lcl.h"
 
 #include <crypto.h>
 #include <utils.h>
@@ -16,7 +16,7 @@ int ibe_get_group_id()
     return NID_sm9bn256v1; 
 }
 
-int ibe_cal_xP(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, char *mpk_file)
+int ibe_cal_xP1(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, char *mpk_file)
 {
 
     int ret = 0;
@@ -28,20 +28,10 @@ int ibe_cal_xP(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, char *mpk_file
 
     // read the mpk from file 
 
-    SM9PublicParameters *sm9_mpk = NULL;
-
-    FILE *mpk_fp = fopen(mpk_file, "rb");
-    if (!d2i_SM9PublicParameters_fp(mpk_fp, &sm9_mpk)){
-		ERROR(" get mpk failed");
-        goto end;
-    }
-    
-    fclose(mpk_fp);
-
 	EC_GROUP *group = NULL;
 	EC_POINT *C = NULL;
 	BN_CTX *bn_ctx = NULL;
-	const BIGNUM *n = SM9_get0_order();
+	const BIGNUM *n = SMX_get0_order();
 
 	/** allocate the spaces */
 	if (!(group = EC_GROUP_new_by_curve_name(NID_sm9bn256v1))
@@ -73,6 +63,46 @@ end:
 
 }
 
+int ibe_cal_xP2(point_t *res, BIGNUM *x, char *mpk_file)
+{
+
+    int ret = 0;
+	point_t point;
+
+	BN_CTX *bn_ctx = NULL;
+	const BIGNUM *p = SMX_get0_prime();
+
+	/** allocate the spaces */
+	if(!(bn_ctx = BN_CTX_new()))
+	{
+		ERROR(" the allocation failed");
+		goto end;
+	}
+
+	BN_CTX_start(bn_ctx);
+
+    // calculate C = xP
+	if (!point_init_smx(&point, bn_ctx)
+		||!point_mul_smx_generator(&point, x, p, bn_ctx)
+		||!point_is_on_curve_smx(&point, p, bn_ctx)) {
+		ERROR("calculate xP2 failed");
+		goto end;
+	}
+
+	point_copy_smx(res, &point);
+
+	ret = 1;
+
+end:
+	if (bn_ctx) {
+		BN_CTX_end(bn_ctx);
+	}
+	BN_CTX_free(bn_ctx);
+	return ret;
+
+}
+
+
 int ibe_cal_xQ(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, EC_POINT *Q, char *mpk_file)
 {
 
@@ -85,10 +115,10 @@ int ibe_cal_xQ(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, EC_POINT *Q, c
 
     // read the mpk from file 
 
-    SM9PublicParameters *sm9_mpk = NULL;
+    SMXPublicParameters *smx_mpk = NULL;
 
     FILE *mpk_fp = fopen(mpk_file, "rb");
-    if (!d2i_SM9PublicParameters_fp(mpk_fp, &sm9_mpk)){
+    if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
 		ERROR(" get mpk failed");
         goto end;
     }
@@ -98,7 +128,7 @@ int ibe_cal_xQ(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, EC_POINT *Q, c
 	EC_GROUP *group = NULL;
 	EC_POINT *C = NULL;
 	BN_CTX *bn_ctx = NULL;
-	const BIGNUM *n = SM9_get0_order();
+	const BIGNUM *n = SMX_get0_order();
 
 	/** allocate the spaces */
 	if (!(group = EC_GROUP_new_by_curve_name(NID_sm9bn256v1))
@@ -139,11 +169,11 @@ int ibe_store_sP(EC_POINT *point, char *mpk_file)
 		goto end;
 	}
 
-    SM9PublicParameters *sm9_mpk = NULL;
+    SMXPublicParameters *smx_mpk = NULL;
 
     FILE *mpk_fp = NULL;
 	mpk_fp = fopen(mpk_file, "rb");
-	if (!d2i_SM9PublicParameters_fp(mpk_fp, &sm9_mpk)){
+	if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
 		ERROR(" get mpk failed");
         goto end;
     }
@@ -163,14 +193,14 @@ int ibe_store_sP(EC_POINT *point, char *mpk_file)
 	}
 
 	// set the param
-	sm9_mpk->pointPpub = ASN1_OCTET_STRING_new();
-	if(!sm9_mpk->pointPpub)
+	smx_mpk->pointPpub1 = ASN1_OCTET_STRING_new();
+	if(!smx_mpk->pointPpub1)
 	{
 		ERROR("can not allocate for the ASN string");
         goto end;
 	}
 
-	if(!ASN1_OCTET_STRING_set(sm9_mpk->pointPpub, buff, length))
+	if(!ASN1_OCTET_STRING_set(smx_mpk->pointPpub1, buff, length))
 	{
 		ERROR("can not set the pointPpub in sm9 mpk");
         goto end;
@@ -178,7 +208,7 @@ int ibe_store_sP(EC_POINT *point, char *mpk_file)
 
 	// output
     mpk_fp = fopen(mpk_file, "wb");
-	if (!i2d_SM9PublicParameters_fp(mpk_fp, sm9_mpk)){
+	if (!i2d_SMXPublicParameters_fp(mpk_fp, smx_mpk)){
 		ERROR(" output mpk failed");
         goto end;
     }
@@ -196,14 +226,14 @@ end:
 int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file)
 {
 	/* before this point, the file of the private key is not exist */
-	/* so we generate a new SM9PrivateKey for it */
+	/* so we generate a new SMXPrivateKey for it */
 	int ret = 0;
 
 
-	SM9PrivateKey *sk = NULL;
+	SMXPrivateKey *sk = NULL;
 	EC_GROUP *group = NULL;
-	const BIGNUM *p = SM9_get0_prime();
-	const BIGNUM *n = SM9_get0_order();
+	const BIGNUM *p = SMX_get0_prime();
+	const BIGNUM *n = SMX_get0_order();
 	int scheme;
 	unsigned char hid;
 	const EVP_MD *md;
@@ -213,10 +243,10 @@ int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file)
 	unsigned char buf[129];
 	size_t len = sizeof(buf);
 
-    SM9PublicParameters *sm9_mpk = NULL;
+    SMXPublicParameters *smx_mpk = NULL;
     FILE *mpk_fp = NULL;
 	mpk_fp = fopen(mpk_file, "rb");
-	if (!d2i_SM9PublicParameters_fp(mpk_fp, &sm9_mpk)){
+	if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
 		ERROR(" get mpk failed");
         goto end;
     }
@@ -229,23 +259,23 @@ int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file)
 	}
 
 	/* check scheme */
-	scheme = OBJ_obj2nid(sm9_mpk->scheme);
+	scheme = OBJ_obj2nid(smx_mpk->scheme);
 	switch (scheme) {
 	case NID_sm9sign:
-		hid = SM9_HID_SIGN;
+		hid = SMX_HID_SIGN;
 		break;
 	case NID_sm9keyagreement:
-		hid = SM9_HID_EXCH;
+		hid = SMX_HID_EXCH;
 		break;
 	case NID_sm9encrypt:
-		hid = SM9_HID_ENC;
+		hid = SMX_HID_ENC;
 		break;
 	default:
 		return NULL;
 	}
 
 	/* check hash1 and set hash1 md */
-	switch (OBJ_obj2nid(sm9_mpk->hash1)) {
+	switch (OBJ_obj2nid(smx_mpk->hash1)) {
 	case NID_sm9hash1_with_sm3:
 		md = EVP_sm3();
 		break;
@@ -259,7 +289,7 @@ int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file)
 
 
 	/* malloc */
-	if (!(sk = SM9PrivateKey_new())
+	if (!(sk = SMXPrivateKey_new())
 		|| !(group = EC_GROUP_new_by_curve_name(NID_sm9bn256v1))
 		|| !(ctx = BN_CTX_new())) {
 		ERROR("cannot allocate for the params");
@@ -267,10 +297,11 @@ int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file)
 	}
 	BN_CTX_start(ctx);
 
-	if (!(sk->pairing = sm9_mpk->pairing)
-		|| !(sk->scheme = sm9_mpk->scheme)
-		|| !(sk->hash1 = sm9_mpk->hash1)
-		|| !(sk->pointPpub = ASN1_OCTET_STRING_dup(sm9_mpk->pointPpub))
+	if (!(sk->pairing = smx_mpk->pairing)
+		|| !(sk->scheme = smx_mpk->scheme)
+		|| !(sk->hash1 = smx_mpk->hash1)
+		|| !(sk->pointPpub1 = ASN1_OCTET_STRING_dup(smx_mpk->pointPpub1))
+		|| !(sk->pointPpub2 = ASN1_OCTET_STRING_dup(smx_mpk->pointPpub2))
 		|| !(sk->identity = ASN1_OCTET_STRING_new())
 		|| !ASN1_OCTET_STRING_set(sk->identity, (unsigned char *)id->id, id->length)
 		|| !(sk->publicPoint = ASN1_OCTET_STRING_new())
@@ -280,7 +311,7 @@ int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file)
 	}
 
 	/* h1 = H1(id||HID) */
-	if (!SM9_hash1(md, &t, id->id, id->length, hid, n, ctx)) {
+	if (!SMX_hash1(md, &t, id->id, id->length, hid, n, ctx)) {
 		ERROR("error in hash");
 		goto end;
 	}
@@ -294,8 +325,8 @@ int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file)
 			|| !(point = EC_POINT_new(group))
 			|| !(Ppube = EC_POINT_new(group))
 			|| !EC_POINT_oct2point(group, Ppube,
-				ASN1_STRING_get0_data(sm9_mpk->pointPpub),
-				ASN1_STRING_length(sm9_mpk->pointPpub), ctx)
+				ASN1_STRING_get0_data(smx_mpk->pointPpub1),
+				ASN1_STRING_length(smx_mpk->pointPpub1), ctx)
 			|| !EC_POINT_mul(group, point, t, NULL, NULL, ctx)
 			|| !EC_POINT_add(group, point, point, Ppube, ctx)
 			|| !(len = EC_POINT_point2oct(group, point, point_form, buf, len, ctx))
@@ -334,7 +365,7 @@ int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file)
 	// output
 	GENERATE_SK_FILENAME(id)
     FILE *sk_fp = fopen(filename, "wb");
-	if (!i2d_SM9PublicParameters_fp(mpk_fp, sm9_mpk)){
+	if (!i2d_SMXPublicParameters_fp(mpk_fp, smx_mpk)){
 		ERROR(" output mpk failed");
         goto end;
     }
@@ -343,7 +374,7 @@ int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file)
 	ret = 1;
 
 end:
-	SM9PrivateKey_free(sk);
+	SMXPrivateKey_free(sk);
 	EC_GROUP_clear_free(group);
 	if (ctx) {
 		BN_CTX_end(ctx);
@@ -355,3 +386,9 @@ end:
 
 
 }
+
+const BIGNUM *IBE_get0_order(void)
+{
+	return SMX_get0_order();
+}
+

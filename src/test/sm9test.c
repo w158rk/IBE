@@ -50,8 +50,8 @@ int test_get_master_secret() {
 
 int test_extract_private_key() {
     printf("[test] extract private key\n");
-    long len;
-    if (0 == ibe_extract(&sk, &len, &msk, 139, SERVER_ID, SERVER_ID_LEN))  //生成私钥存放在sk中
+    long len = BUFFER_SIZE;
+    if (0 == ibe_extract(&sk, &len, &msk, 273, SERVER_ID, SERVER_ID_LEN))  //生成私钥存放在sk中
         return -1;
     return 0;
 }
@@ -65,7 +65,7 @@ int test_get_private_key() {
 
     // 用读取的密钥解密一次结果
     out_len = BUFFER_SIZE;
-    if(-1 == ibe_decrypt(c_buf, c_len, out_read, &out_len, &sk_read, 313))     // 解密 
+    if(-1 == ibe_decrypt(c_buf, c_len, out_read, &out_len, &sk_read, 380))     // 解密 
         return -1;
 
     printf("\t%s\n", data);
@@ -77,21 +77,22 @@ int test_get_private_key() {
 
 int test_put_private_key() {
     printf("[test] put private key\n");
-    return put_sk_fp(sk_filename, &sk, 313); //将sk输出在sk_Server.conf中
+    return put_sk_fp(sk_filename, &sk, 380); //将sk输出在sk_Server.conf中
 }
 
-int test_sm9_encrypt() {
+int test_smx_encrypt() {
     printf("[test] encrypt\n");
     size_t data_len = strlen(data);
-    return ibe_encrypt(data, data_len, c_buf, &c_len, &mpk,104, SERVER_ID, SERVER_ID_LEN);  //ibe加密算法
+    c_len = BUFFER_SIZE;
+    return ibe_encrypt(data, data_len, c_buf, &c_len, &mpk,239, SERVER_ID, SERVER_ID_LEN);  //ibe加密算法
 }
 
-int test_sm9_decrypt() {
+int test_smx_decrypt() {
     printf("[test] decrypt\n");
     size_t data_len = strlen(data);
 
     out_len = BUFFER_SIZE;             // 坑！ 这个必须选个大一些的值，不然会出现buff太小的错
-    int ret = ibe_decrypt(c_buf, c_len, out, &out_len, &sk, 313);    //解密算法
+    int ret = ibe_decrypt(c_buf, c_len, out, &out_len, &sk, 380);    //解密算法
     printf("\t%s\n", data);
     printf("\t%s\n", out);
     
@@ -110,28 +111,28 @@ end:
     return -1;
 }
 
-int test_sm9_sign()
+int test_smx_sign()
 {
     fprintf(stderr, "[test] sign\n");
     size_t data_len = strlen(data2);
     printf("data2 is %s\n", data2);
     printf("sk is %s\n", sk);
-    SM9PrivateKey *sm9_sk = NULL;
-    d2i_SM9PrivateKey(&sm9_sk, &sk, 313);
-    fprintf(stderr, "sm9_sk: %ld\n", sm9_sk);
+    SMXPrivateKey *smx_sk = NULL;
+    d2i_SMXPrivateKey(&smx_sk, &sk, 380);
+    fprintf(stderr, "smx_sk: %ld\n", smx_sk);
     fprintf(stderr, "data_len: %d\n", data_len);
-    int ret = SM9_sign(NID_sm3, data2, data_len, sign_data, &sign_len, sm9_sk);
+    int ret = SMX_sign(NID_sm3, data2, data_len, sign_data, &sign_len, smx_sk);
     fprintf(stderr, "ret: %d\n", ret);
     fprintf(stderr, "sign_len: %d\n", sign_len);
     return ret;
 }
 
-int test_sm9_verify()
+int test_smx_verify()
 {
     printf("[test] sign verify\n");
     size_t data_len = strlen(data2);
     size_t sign_len = strlen(sign_data);
-    int ret = SM9_verify(NID_sm3, data2, data_len, sign_data, sign_len, &mpk, SERVER_ID, SERVER_ID_LEN);
+    int ret = SMX_verify(NID_sm3, data2, data_len, sign_data, sign_len, &mpk, SERVER_ID, SERVER_ID_LEN);
     return ret;
 }
 
@@ -146,19 +147,21 @@ int main(int argc, char *argv[]) {
     if(-1 == test_get_public_parameters()) goto end;    //获取sP，并输出文件
     if(-1 == test_get_master_secret()) goto end;    //获取s，并输出文件
     if(-1 == test_extract_private_key()) goto end;  //获取sk
-    if(-1 == test_sm9_encrypt()) goto end;  //加密
-    if(-1 == test_sm9_decrypt()) goto end;  //解密 
-    if(-1 == test_sm9_sign()) goto end;  //解密 
-    if(-1 == test_sm9_verify()) goto end;  //解密 
+    if(-1 == test_smx_encrypt()) goto end;  //加密
+    if(-1 == test_smx_decrypt()) goto end;  //解密 
+    if(-1 == test_put_private_key()) goto end;  //加密
+    if(-1 == test_get_private_key()) goto end;  //解密 
+    if(-1 == test_smx_sign()) goto end;  //解密 
+    if(-1 == test_smx_verify()) goto end;  //解密 
 
     //print(data2);
-    //int i = test_sm9_sign();
+    //int i = test_smx_sign();
     size_t data_len = strlen(data2);
-    // int ret = SM9_sign(NID_sm3, data2, data_len, &sign_data, &sign_len, sk);
+    // int ret = SMX_sign(NID_sm3, data2, data_len, &sign_data, &sign_len, sk);
     // printf("ret is%d\n", ret);
     // printf("sign is%s\n", sign_data);
     // printf("sign length is%d\n", sign_len);
-    /*int ret = test_sm9_verify();
+    /*int ret = test_smx_verify();
     printf("ret is%d\n", ret);*/
     
     if(-1 == test_put_private_key()) goto end;  //输出sk于文件中 

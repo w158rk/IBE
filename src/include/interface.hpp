@@ -69,7 +69,8 @@ namespace interface
 				        			int len,
 						        	ID *dest_id) = 0;
         virtual void send_init_message_2(char *buff, 
-				        			int len,
+				        			int len1,
+                                    int len2,
 						        	ID *dest_id) = 0;
         virtual void send_init_message_3(char *buff, 
 				        			int len,

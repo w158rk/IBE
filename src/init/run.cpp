@@ -58,6 +58,7 @@ void Initializer::run()
     /* send fi(xj) to others and receive fj(xi) from others */
     char buff[BUFFER_SIZE] = {'\0'};
     int len = BUFFER_SIZE;
+    int len2 = 0;           // in round 2, there are two string supposed to be sent, so the two length are necessary both
     int cnt = config.user_cnt-1;
 
     Print("round one");
@@ -135,23 +136,16 @@ void Initializer::run()
     {
 
         len = BUFFER_SIZE;
-        cal_shareP(buff, &len);
-
-#ifdef DEBUG 
-{
-        std::ostringstream s;
-        s << "the length of the share P is : " << len << std::endl;
-        s << "the share P is: " << buff << std::endl;
-        Debug(s.str());
-}        
-#endif
+        cal_shareP1(buff, &len);
+        len2 = BUFFER_SIZE - len;
+        cal_shareP2(buff+len, &len2);
 
         for (ID *id : config.user_ids)
         {
             FOR_BLOCK_CHECK
 
             TRY_BEGIN
-                get_user()->send_init_message_2(buff, len, id);
+                get_user()->send_init_message_2(buff, len, len2, id);
             TRY_END
             sent_list.insert(id);
 
@@ -163,6 +157,9 @@ void Initializer::run()
 
     cal_sP();
 
+// CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT 
+// CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT 
+// CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT 
 #ifdef DEBUG
 {
     BN_CTX *ctx = BN_CTX_new();

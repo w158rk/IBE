@@ -19,7 +19,7 @@ void Initializer::gen_poly()
 
     SS_POLY *poly = SS_POLY_new();
 
-    if(!SS_poly_rand_sm9(poly, config.user_cnt))
+    if(!SS_poly_rand_smx(poly, config.user_cnt))
     {
         Error("can not generate a polynomial");
     }
@@ -47,7 +47,7 @@ void Initializer::cal_fx(char* result, int *len, ID* id)
     BIGNUM *x = BN_new();
     SS_id2num_init(x, id, get_user()->get_mpk_filename());
     BIGNUM *res = BN_new();
-    if(0 == SS_poly_apply_sm9(res, get_poly(), x))
+    if(0 == SS_poly_apply_smx(res, get_poly(), x))
     {
         Error("can not apply the x to the polynomial");
     }
@@ -89,7 +89,7 @@ void Initializer::cal_share()
     for ( auto& num : *get_numbers())
     {
         BN_copy(temp, sum);
-        BN_mod_add_sm9(sum, num.second, temp);
+        BN_mod_add_smx(sum, num.second, temp);
     }
 
     char tmp_str[BUFFER_SIZE];
@@ -111,7 +111,7 @@ void Initializer::cal_share()
 
     // add to the sum
     BN_copy(temp, sum);
-    BN_mod_add_sm9(sum, tmp2, temp);
+    BN_mod_add_smx(sum, tmp2, temp);
     set_share(sum);
 
     BN_free(temp);
@@ -146,7 +146,7 @@ void Initializer::cal_share_with_lp()
     BIGNUM *res = BN_new();
     BIGNUM *zero = BN_new();
     BN_zero(zero);
-    SS_lagrange_value_sm9(res, num_list, config.user_cnt, i, zero);
+    SS_lagrange_value_smx(res, num_list, config.user_cnt, i, zero);
     set_share(res);
 
     // free the values
@@ -159,13 +159,13 @@ void Initializer::cal_share_with_lp()
 
 }
 
-void Initializer::cal_shareP(char *result, int *len)
+void Initializer::cal_shareP1(char *result, int *len)
 {
     // calculate share * P
     EC_POINT *point = nullptr;
     EC_GROUP *group = nullptr;
     BN_CTX *ctx = BN_CTX_new();
-    if(!ibe_cal_xP(&group, &point, get_share(), get_user()->get_mpk_filename()))
+    if(!ibe_cal_xP1(&group, &point, get_share(), get_user()->get_mpk_filename()))
     {
         Error("calculate the xP failed");
     }
@@ -191,6 +191,42 @@ void Initializer::cal_shareP(char *result, int *len)
 
 }
 
+void Initializer::cal_shareP2(char *out, int *outlen)
+{
+    // calculate share * P
+
+	point_t *point = ibe_point_new();
+	int length = *outlen;
+	char buf[150];
+
+
+	if(!out)
+	{
+		Error("the out buffer is not set");
+	}
+	if(length<129)
+	{
+		Error("the out buffer is not big enough");
+	}
+	length = 129;
+
+    // calculate C = xP
+	if (!ibe_cal_xP2(point, get_share(), get_user()->get_mpk_filename())) {
+		Error("parse xP2 failed");
+	}
+
+
+	if(!(ibe_point_to_octets(point, buf)))
+	{
+		Error("cannot convert the point to a string");
+	}
+
+	memcpy(out, buf, length);
+	*outlen = length;
+
+}
+
+
 void Initializer::cal_shareQ(char *result, int *len, ID *id)
 {
 
@@ -199,7 +235,7 @@ void Initializer::cal_shareQ(char *result, int *len, ID *id)
     EC_GROUP *group = nullptr;
     EC_POINT *Q = nullptr;
     BN_CTX *ctx = BN_CTX_new();
-    if(!ibe_id2point_init(&Q, id->id, id->length, get_user()->get_mpk_filename()))
+    if(!ibe_id2point(&Q, id->id, id->length, get_user()->get_mpk_filename()))
     {
         Error("calculate the Q failed");
     }
@@ -236,34 +272,74 @@ void Initializer::cal_sP()
 {
     // add the points in the sp_point with the product of the share and the P point 
 
-    // calculate share * P
-    EC_POINT *point = nullptr;
-    EC_GROUP *group = nullptr;
-    BN_CTX *ctx = BN_CTX_new();
-    if(!ibe_cal_xP(&group, &point, get_share(), get_user()->get_mpk_filename()))
-    {
-        Error("calculate the xP failed");
-    }
+    // calculate Ppub1 
 
-    EC_POINT *res = EC_POINT_new(group);
-    EC_POINT *tmp = nullptr;
-    for (auto elem : *get_sp_pub_points())
-    {
-        tmp = elem.second;
-        if(!EC_POINT_add(group, res, point, tmp, ctx)
-            ||!EC_POINT_copy(point, res)
-            ||!EC_POINT_add(group, res, point, tmp, ctx))
+    {    
+        EC_POINT *point = nullptr;
+        EC_GROUP *group = nullptr;
+        BN_CTX *ctx = BN_CTX_new();
+        EC_POINT *res = EC_POINT_new(group);
+        EC_POINT *tmp = nullptr;
+
+        // point = share * P1
+        if(!ibe_cal_xP1(&group, &point, get_share(), get_user()->get_mpk_filename()))
         {
-
-            Error("calculate the sP failed in the loop");
+            Error("calculate the xP failed");
         }
+
+        for (auto elem : *get_sp_pub_points())
+        {
+            tmp = elem.second;
+            if(!EC_POINT_add(group, res, point, tmp, ctx)       
+                ||!EC_POINT_copy(point, res))
+            {
+                EC_GROUP_free(group);
+                BN_CTX_free(ctx);
+                Error("calculate the sP failed in the loop");
+            }
+        }
+
+        set_sP(res);
+        EC_POINT_free(point);
+        BN_CTX_free(ctx);
+
+    }    
+    
+    // Ppub2
+    {
+        point_t *point = ibe_point_new();
+        point_t *res = ibe_point_new();
+
+        // point = share * P2
+        try 
+        {
+            if(!ibe_cal_xP2(point, get_share(), get_user()->get_mpk_filename()))
+            {
+                Error("calculate the xP failed");
+            }
+
+            for (auto elem : *get_sp2_pub_points())
+            {
+                point_t *tmp = elem.second;
+                if(!ibe_point_add(res, point, tmp)
+                    ||!ibe_point_copy(point, res))
+                {
+                    Error("calculate the sP failed in the loop");
+                }
+            }
+        }
+        catch (InitException &e)
+        {
+            ibe_point_free(point);
+            ibe_point_free(res);
+            throw e;
+        }
+
+        set_Ppub2(res);
+        ibe_point_free(point);
+        
     }
-
-    set_sP(point);
-    EC_GROUP_free(group);
-    BN_CTX_free(ctx);
-
-
+    
 }
 
 void Initializer::cal_sQ()
@@ -276,7 +352,7 @@ void Initializer::cal_sQ()
     EC_GROUP *group = nullptr;
     BN_CTX *ctx = BN_CTX_new();
     
-    if(!ibe_id2point_init(&Q, get_user()->get_id()->id, get_user()->get_id()->length, get_user()->get_mpk_filename())
+    if(!ibe_id2point(&Q, get_user()->get_id()->id, get_user()->get_id()->length, get_user()->get_mpk_filename())
         ||!ibe_cal_xQ(&group, &point, get_share(), Q, get_user()->get_mpk_filename()))
     {
         Error("calculate the xQ failed");
