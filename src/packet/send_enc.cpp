@@ -21,7 +21,8 @@ extern "C" {
 
 using namespace packet;
 
-
+#define Error(err) throw PacketException(err)
+#define Debug(info) get_user_ptr()->get_ui_ptr()->debug(info)
 // at this phase, there is a sec packet in the 
 // ctx object, so the app packet is in the payload 
 // of that sec packet
@@ -53,39 +54,60 @@ void Packet::send_enc()
             memcpy(data, p_app_packet->to_bytes(), len);
             std::cout<<data<<std::endl;
             // encrypt
+            IBEPublicParameters mpk = NULL;
+#ifdef DEBUG 
+{
+            std::ostringstream s;
+            s << "Get mpk file: " << get_user_ptr()->get_mpk_filename() << std::endl;
+            Debug(s.str()); 
+}
+#endif
+            if(!get_mpk_fp(get_user_ptr()->get_mpk_filename(), &mpk))
+            {
+                Error("cannot get mpk from file");
+            }
+#ifdef DEBUG 
+{
+            std::ostringstream s;
+            s << "size of data: " << len;
+            Debug(s.str());
+}
+#endif
             if (!ibe_encrypt(data, 
                         len, 
                         cipher, 
                         &cipher_len, 
-                        ctx->get_mpk(), 
+                        &mpk,
                         get_user_ptr()->get_mpk_len(),
                         ctx->get_dest_id()->id, 
                         ctx->get_dest_id()->length))
             {
-                interface::IUI::error("encrypt failed");
-                throw PacketException("encrypt failed");
+                Error("encrypt failed");
             }
             
 #ifdef DEBUG
             std::ostringstream s;
-            s << "ibe encryption finished, length of cipher:" << cipher_len;
-            s << ". ID used in the process: " << ctx->get_dest_id()->id;
+            s << "ibe encryption finished, length of cipher:" << cipher_len << std::endl;
+            s << ". ID used in the process: " << ctx->get_dest_id()->id << std::endl;
             interface::IUI::debug(s.str());
 #endif
             // copy the cipher into the sec packet
             char *tmp = (char *)std::malloc(cipher_len);
             memcpy(tmp, cipher, cipher_len);       //将加密后的数据放到sec_packet的payload.data中
+
 #ifdef DEBUG
+{
             char *m = (char *)malloc(BUFFER_SIZE);
             size_t m_len =BUFFER_SIZE;
             IBEPrivateKey sk = NULL;
             get_sk_fp("sk_Server.conf", &sk);
-            // std::cout<<"cipher is"<<cipher<<std::endl;
-            // std::cout<<"cipher len is"<<cipher_len<<std::endl;
-            // std::cout<<"sk is"<<sk<<std::endl;
+            std::cout<<"cipher is "<<cipher<<std::endl;
+            std::cout<<"cipher len is "<<cipher_len<<std::endl;
+            std::cout<<"sk is "<<sk<<std::endl;
             ibe_decrypt(cipher, cipher_len, m, &m_len, 
                                 &sk, 380);
-            std::cout<<"m is"<<m<<std::endl;
+            std::cout<<"m is "<<m<<std::endl;
+}
 #endif
             p_sec_packet->set_payload_byte(tmp);
 
@@ -98,8 +120,7 @@ void Packet::send_enc()
             p_sec_packet->set_length((int)cipher_len);
 
             // free the temporaries
-            // std::free(data);
-            // std::free(cipher);
+            std::free(cipher);
 
             /**
              * be careful that the tmp is not freed in this function 

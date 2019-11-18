@@ -9,7 +9,7 @@
 #include <config.h>
 #include <sys.h>
 
-#define MPK_FILENAME "mpk.conf"
+#define MPK_FILENAME "mpk-Server.conf"
 #define MSK_FILENAME "msk.conf"
 #define MSK_LEN_FILENAME "msk-len.conf"
 #define MPK_LEN_FILENAME "mpk-len.conf"
@@ -53,6 +53,9 @@ int test_extract_private_key() {
     long len = BUFFER_SIZE;
     if (0 == ibe_extract(&sk, &len, &msk, 273, SERVER_ID, SERVER_ID_LEN))  //生成私钥存放在sk中
         return -1;
+#ifdef DEBUG 
+    fprintf(stderr, "len of sk: %ld\n", len);
+#endif
     return 0;
 }
 
@@ -60,12 +63,13 @@ int test_get_private_key() {
     printf("[test] get private key\n");
     size_t data_len = strlen(data);
 
-    if(-1 == get_sk_fp(sk_filename, &sk_read))  //从sk_Server.conf读取私钥放入sk_read中
+    sk_read = NULL;
+    if(!get_sk_fp(sk_filename, &sk_read))  //从sk_Server.conf读取私钥放入sk_read中
         return -1;    
 
     // 用读取的密钥解密一次结果
     out_len = BUFFER_SIZE;
-    if(-1 == ibe_decrypt(c_buf, c_len, out_read, &out_len, &sk_read, 380))     // 解密 
+    if(!ibe_decrypt(c_buf, c_len, out_read, &out_len, &sk_read, 380))     // 解密 
         return -1;
 
     printf("\t%s\n", data);
@@ -143,29 +147,37 @@ int test_smx_verify()
 
 int main(int argc, char *argv[]) {
 
-    if(-1 == test_set_up()) goto end; 
+    // if(-1 == test_set_up()) goto end; 
     if(-1 == test_get_public_parameters()) goto end;    //获取sP，并输出文件
-    if(-1 == test_get_master_secret()) goto end;    //获取s，并输出文件
-    if(-1 == test_extract_private_key()) goto end;  //获取sk
+    // if(-1 == test_get_master_secret()) goto end;    //获取s，并输出文件
+    // if(-1 == test_extract_private_key()) goto end;  //获取sk
+
+    // if(-1 == test_smx_encrypt()) goto end;  //加密
+    // if(-1 == test_smx_decrypt()) goto end;  //解密 
+
     if(-1 == test_smx_encrypt()) goto end;  //加密
-    if(-1 == test_smx_decrypt()) goto end;  //解密 
-    if(-1 == test_put_private_key()) goto end;  //加密
+    // if(-1 == test_smx_decrypt()) goto end;  //解密 
+    // if(-1 == test_put_private_key()) goto end;  //加密
     if(-1 == test_get_private_key()) goto end;  //解密 
-    if(-1 == test_smx_sign()) goto end;  //解密 
-    if(-1 == test_smx_verify()) goto end;  //解密 
+
+    // if(-1 == test_smx_encrypt()) goto end;  //加密
+    // if(-1 == test_smx_decrypt()) goto end;  //解密 
+
+    // if(-1 == test_smx_encrypt()) goto end;  //加密
+    // if(-1 == test_put_private_key()) goto end;  //加密
+    // if(-1 == test_get_private_key()) goto end;  //解密 
+    // if(-1 == test_smx_sign()) goto end;  //解密 
+    // if(-1 == test_smx_verify()) goto end;  //解密 
 
     //print(data2);
     //int i = test_smx_sign();
-    size_t data_len = strlen(data2);
+    // size_t data_len = strlen(data2);
     // int ret = SMX_sign(NID_sm3, data2, data_len, &sign_data, &sign_len, sk);
     // printf("ret is%d\n", ret);
     // printf("sign is%s\n", sign_data);
     // printf("sign length is%d\n", sign_len);
     /*int ret = test_smx_verify();
     printf("ret is%d\n", ret);*/
-    
-    if(-1 == test_put_private_key()) goto end;  //输出sk于文件中 
-    if(-1 == test_get_private_key()) goto end;  //从文件中读取sk
 
     printf("[test] pass \n");
     return 0; 

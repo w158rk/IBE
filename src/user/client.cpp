@@ -77,10 +77,9 @@ void User::run_get_private_key(char *server_ip,
 	// this code is a little weird, but it works 
 	// to get the mpk into the ctx
 
-	IBEPublicParameters mpk = NULL;
-	get_mpk_fp(get_mpk_filename(), &mpk);		//从文件中读出sP的值
+	// IBEPublicParameters mpk = NULL;
+	// get_mpk_fp(get_mpk_filename(), &mpk);		//从文件中读出sP的值
 	
-	ctx->set_mpk(&mpk);		//将sP放入包中
 
 	if(0 == get_packet_ptr()->packet_send(ctx)) {
 		throw UserException("wrong when make the packet to send");
