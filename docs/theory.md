@@ -25,9 +25,9 @@ $N$个$(ID_i, pk_i)$对。对IBE系统来说，系统参数只是$P_{pub}$，甚
 
 ### SM9
 
-公钥 ： $Q = H(hid||id)P_1 + P_{pub} = (h+s)P_1$($H$是sha256或sm3)
+公钥 ： $Q = H(hid||id)P_1 + P_{pub} = (h'+s)P_1$($H$是sha256或sm3)
 
-私钥 ： $de = \frac{s}{s+h}P_2$
+私钥 ： $de = \frac{s}{s+h'}P_2$
 
 加密 ： 
 
@@ -37,15 +37,39 @@ $C_2 = m \oplus \hat{e}(P_{pub}, P_2)^r = m \oplus \hat{e}(sP_1, P_2)^r$
 
 解密 ：
 
-$m' = C_2 \oplus \hat{e}(C_1, de) = C_2 \oplus \hat{e}(r(h+s)P_1, \frac{s}{s+h}P_2) = m$
+$m' = C_2 \oplus \hat{e}(C_1, de) = C_2 \oplus \hat{e}(r(h'+s)P_1, \frac{s}{s+h'}P_2) = m$
 
 这种情况的de是无法用秘密共享算的
+
+签名：
+
+$h = {H_2}(M\parallel e{({P_1},{P_{pub}})^r},N)$
+
+$S = (r - h)\frac{{s{P_1}}}{{h' + s}}$
+
+其中，$h' = {H_1}(ID\parallel hid,N)$
+
+签名的验证：
+
+验证H是否等于h，其中$H = {H_2}(M'||w',N)$，即验证M'是否等于M，w'是否等于$e{({P_1},{P_{pub}})^r}$
+
+其中，$P = h'{P_2} + {P_{pub}}$，$g = e({P_1},{P_{pub}})$
+
+若正确：
+
+$\begin{array}{l}
+w' = e(S,P) \cdot {g^h}\\
+ = e{(\frac{{s{P_1}}}{{h' + s}},h'{P_2} + s{P_2})^{r - h}} \cdot e{({P_1},{P_{pub}})^h}\\
+ = e{({P_1},s{P_2})^{r - h}} \cdot e{({P_1},s{P_2})^h} = e{({P_1},s{P_2})^r}
+\end{array}$
+
+---
 
 ### SMX
 
 公钥 ： 不变 
 
-私钥 ： $de = sQ = s(s+h)P_1$ 
+私钥 ： $de = sQ = s(s+h')P_1$ 
 
 加密 ： 
 
@@ -57,4 +81,22 @@ $C_2 = m \oplus \hat{e}(Q, P_{pub2})^r$ ($P_{pub2} = sP_2$)
 
 $m' = C_2 \oplus \hat{e}(de, C_1) = C_2 \oplus \hat{e}(sQ, rP_2) = m$
 
+签名：
 
+$h = {H_2}(M\parallel e{(Q,{P_{pub}})^r},N)$
+
+$S = (r - h){s_k} = (r - h) \cdot s{P_1} \cdot (h' + s)$
+
+签名的验证：
+
+验证H是否等于h，其中$H = {H_2}(M'||w',N)$，即验证M'是否等于M，w'是否等于$e{(Q,{P_{pub}})^r}$
+
+其中，$g = e(h'{P_2} + {P_{pub}},s{P_1})$
+
+若正确：
+
+$\begin{array}{l}
+w' = e(S,{P_2}) \cdot {g^h}\\
+ = e{(s{P_1} \cdot (h' + s),{P_2})^{r - h}} \cdot e{(h'{P_2} + s{P_2},s{P_1})^h}\\
+ = e{((s + h'){P_1},s{P_2})^{r - h}} \cdot e{((s + h'){P_1},s{P_2})^h} = e{(Q,s{P_2})^r}
+\end{array}$
