@@ -74,6 +74,7 @@ int ibe_cal_xQ(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, EC_POINT *Q, c
 
 /* replace the sP in the mpk file with point */
 int ibe_store_sP(EC_POINT *point, char *mpk_file);
+int ibe_store_Ppub2(point_t *point, char *mpk_file);
 int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file);
 
 // wrap for point_t
@@ -83,6 +84,7 @@ int ibe_point_copy(point_t *to, point_t *from);
 point_t *ibe_point_new(void);
 void ibe_point_free(point_t *);
 int ibe_point_add(point_t *res, point_t *a, point_t *b);
+int ibe_point_is_on_curve(point_t *point);
 
 
 const BIGNUM *IBE_get0_generator2_x0(void);

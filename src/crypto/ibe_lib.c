@@ -63,6 +63,34 @@ end:
 
 }
 
+int ibe_point_is_on_curve(point_t *point)
+{
+	if(!point)
+	{
+		return 0;
+	}
+
+	int ret = 0;
+	const BIGNUM *p = SMX_get0_prime();
+	BN_CTX *bn_ctx = NULL;
+	if(!(bn_ctx = BN_CTX_new()))
+	{
+		ERROR(" the allocation failed");
+		goto end;
+	}
+
+	BN_CTX_start(bn_ctx);
+
+	ret = point_is_on_curve_smx(point, p, bn_ctx);
+
+end:
+	if (bn_ctx) {
+		BN_CTX_end(bn_ctx);
+	}
+	BN_CTX_free(bn_ctx);
+	return ret;
+}
+
 int ibe_cal_xP2(point_t *res, BIGNUM *x, char *mpk_file)
 {
 
@@ -91,13 +119,36 @@ int ibe_cal_xP2(point_t *res, BIGNUM *x, char *mpk_file)
 
 	point_copy_smx(res, &point);
 
+#ifdef DEBUG 
+	if(!point_is_on_curve_smx(res, p, bn_ctx))
+	{
+		ERROR("res is not on the curve");
+	}
+	else 
+	{
+		ERROR("res is on the curve");
+	}
+	fprintf(stderr, "location of the res: 0x%lx\n", res);
+	if(!point_is_on_curve_smx(res, p, bn_ctx))
+	{
+		ERROR("res is not on the curve");
+	}
+	else 
+	{
+		ERROR("res is on the curve");
+	}
+	fprintf(stderr, "location of the res: 0x%lx\n", res);
+#endif
+
 	ret = 1;
 
 end:
 	if (bn_ctx) {
 		BN_CTX_end(bn_ctx);
 	}
-	BN_CTX_free(bn_ctx);
+	// this free will make the res not work 
+	// but how to free the ctx safely is unknown so far 
+	// BN_CTX_free(bn_ctx);
 	return ret;
 
 }
@@ -109,7 +160,7 @@ int ibe_cal_xQ(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, EC_POINT *Q, c
     int ret = 0;
 	if(*point != NULL || *group_ptr != NULL)
 	{
-		ERROR("[ibe_cal_xp] the input point or group is not NULL");
+		ERROR("[ibe_cal_xq] the input point or group is not NULL");
 		goto end;
 	}
 
@@ -206,6 +257,17 @@ int ibe_store_sP(EC_POINT *point, char *mpk_file)
         goto end;
 	}
 
+#ifdef DEBUG
+{
+	char data[10] = "1234567890";
+	char cipher[BUFFER_SIZE] = {0};
+	int datalen = 10;
+	int cipherlen = BUFFER_SIZE;
+	fprintf(stderr, "encrypt: %d\n", SMX_encrypt(NID_sm9encrypt_with_sm3_xor, data, datalen, cipher, &cipherlen, smx_mpk, "Server", 6));
+
+}
+#endif
+
 	// output
     mpk_fp = fopen(mpk_file, "wb");
 	if (!i2d_SMXPublicParameters_fp(mpk_fp, smx_mpk)){
@@ -222,6 +284,92 @@ end:
 	return ret;
 
 }
+
+int ibe_store_Ppub2(point_t *point, char *mpk_file)
+{
+	int ret = 0;
+	if(!point)
+	{
+		ERROR("point used to store in the mpk is null");
+		goto end;
+	}
+
+    SMXPublicParameters *smx_mpk = NULL;
+
+    FILE *mpk_fp = NULL;
+	char buff[BUFFER_SIZE];
+	int flag = 0;
+	BN_CTX* ctx = BN_CTX_new();
+
+	mpk_fp = fopen(mpk_file, "rb");
+	if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
+		ERROR(" get mpk failed");
+        goto end;
+    }
+    fclose(mpk_fp);
+#ifdef DEBUG
+{
+	char data[10] = "1234567890";
+	char cipher[BUFFER_SIZE] = {0};
+	int datalen = 10;
+	int cipherlen = BUFFER_SIZE;
+	fprintf(stderr, "encrypt: %d\n", SMX_encrypt(NID_sm9encrypt_with_sm3_xor, data, datalen, cipher, &cipherlen, smx_mpk, "Server", 6));
+
+}
+#endif
+
+	flag = point_to_octets_smx(point, buff, ctx);
+#ifdef DEBUG 
+	fprintf(stderr, "[IMPORTANT]the flag of the string: %d\n", flag);
+#endif
+	if(!flag)
+	{
+		ERROR("can not convert the point to oct string");
+        goto end;
+	}
+	int length = 129;
+
+	// set the param
+	smx_mpk->pointPpub2 = ASN1_OCTET_STRING_new();
+	if(!smx_mpk->pointPpub2)
+	{
+		ERROR("can not allocate for the ASN string");
+        goto end;
+	}
+
+	if(!ASN1_OCTET_STRING_set(smx_mpk->pointPpub2, buff, length))
+	{
+		ERROR("can not set the pointPpub in sm9 mpk");
+        goto end;
+	}
+
+#ifdef DEBUG
+{
+	char data[10] = "1234567890";
+	char cipher[BUFFER_SIZE] = {0};
+	int datalen = 10;
+	int cipherlen = BUFFER_SIZE;
+	fprintf(stderr, "encrypt: %d\n", SMX_encrypt(NID_sm9encrypt_with_sm3_xor, data, datalen, cipher, &cipherlen, smx_mpk, "Server", 6));
+
+}
+#endif
+
+	// output
+    mpk_fp = fopen(mpk_file, "wb");
+	if (!i2d_SMXPublicParameters_fp(mpk_fp, smx_mpk)){
+		ERROR(" output mpk failed");
+        goto end;
+    }
+    fclose(mpk_fp);
+
+	ret = 1;
+
+end:
+	BN_CTX_free(ctx);
+	return ret;
+
+}
+
 
 int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file)
 {
@@ -271,7 +419,7 @@ int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file)
 		hid = SMX_HID_ENC;
 		break;
 	default:
-		return NULL;
+		return 0;
 	}
 
 	/* check hash1 and set hash1 md */
@@ -284,7 +432,7 @@ int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file)
 		break;
 	default:
 		ERROR("hash1 is not set appropriately");
-		return NULL;
+		return 0;
 	}
 
 
@@ -362,11 +510,26 @@ int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file)
 
 	}
 
+		// try encrypt and decrypt with the given keys 
+#ifdef DEBUG
+{
+	char data[10] = "1234567890";
+	char cipher[BUFFER_SIZE] = {0};
+	char ddata[BUFFER_SIZE] = {0};
+	int datalen = 10;
+	int cipherlen = BUFFER_SIZE;
+	int ddata_len = BUFFER_SIZE;
+	fprintf(stderr, "encrypt: %d\n", SMX_encrypt(NID_sm9encrypt_with_sm3_xor, data, datalen, cipher, &cipherlen, smx_mpk, "Server", 6));
+	fprintf(stderr, "decrypt: %d\n", SMX_decrypt(NID_sm9encrypt_with_sm3_xor, cipher, cipherlen, ddata, &ddata_len, sk));
+
+}
+#endif
+
 	// output
 	GENERATE_SK_FILENAME(id)
     FILE *sk_fp = fopen(filename, "wb");
-	if (!i2d_SMXPublicParameters_fp(mpk_fp, smx_mpk)){
-		ERROR(" output mpk failed");
+	if (!i2d_SMXPrivateKey_fp(sk_fp, sk)){
+		ERROR(" output sk failed");
         goto end;
     }
     fclose(sk_fp);

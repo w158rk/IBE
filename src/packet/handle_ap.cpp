@@ -382,7 +382,14 @@ int handle_init_message_2(Packet *target)
         if(insert_id)
         {
 #ifdef DEBUG 
+{
+            std::ostringstream s;
+            s << "the length of id: " << id_len << std::endl;
+            s << "the length of p1: " << len_pPub1  << std::endl;
+            s << "the length of p2: " << len_pPub2 << std::endl;
             Debug("need to insert");
+            Debug(s.str());
+}           
 #endif
             // insert the number 
             pPub1 = message + id_len;
@@ -401,13 +408,19 @@ int handle_init_message_2(Packet *target)
             // malloc a new space for the pPub2 in case it will 
             // be freed somewhere 
             point_t *point2 = NULL;
-            if(!ibe_point_from_octets(&point2, pPub2))
+            if(!ibe_point_from_octets(&point2, pPub2) || !ibe_point_is_on_curve(point2))
             {
                 Error("cannot convert pPub2 from string");
             }
+#ifdef DEBUG 
+            {
+                Debug("the point inserted is on the curve");
+            }
+#endif
             
             (*sp2_points)[insert_id] = point2;
-            BN_CTX_free(ctx);
+
+            BN_CTX_free(ctx);        
 
 #ifdef DEBUG 
             std::ostringstream s;

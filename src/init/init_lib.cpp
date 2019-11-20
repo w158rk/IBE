@@ -17,6 +17,8 @@ void Initializer::store_sP()
 {
     EC_POINT *sP = get_sP();
     ibe_store_sP(sP, get_user()->get_mpk_filename());
+    point_t *pPub2 = get_Ppub2();
+    ibe_store_Ppub2(pPub2, get_user()->get_mpk_filename());
 }
 
 void Initializer::store_sQ()

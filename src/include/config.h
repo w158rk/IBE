@@ -42,7 +42,7 @@
 #define SM4_TYPE                    2
 
 /* time */
-# define INIT_SEND_INTERVAL                  10u
+# define INIT_SEND_INTERVAL                  1u
 
 #endif
 

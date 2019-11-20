@@ -27,6 +27,7 @@ if(sent_list.size() == cnt){ break; }
     std::cerr << e.what() << std::endl;     \
     continue; \
 }
+#undef DEBUG
 
 void Initializer::run() 
 {
@@ -127,7 +128,7 @@ void Initializer::run()
 }
 #endif
     
-
+#define DEBUG
     /* round two */
     /* send F(xi)li(0)P to others and receive F(xj)lj(0)P from others*/
     Print("round two");
@@ -139,6 +140,15 @@ void Initializer::run()
         cal_shareP1(buff, &len);
         len2 = BUFFER_SIZE - len;
         cal_shareP2(buff+len, &len2);
+
+#ifdef DEBUG 
+{
+        std::ostringstream s;
+        s << "len1: " << len << std::endl;
+        s << "len2: " << len2 << std::endl;
+        Debug(s.str());
+}
+#endif
 
         for (ID *id : config.user_ids)
         {
@@ -164,10 +174,18 @@ void Initializer::run()
 {
     BN_CTX *ctx = BN_CTX_new();
     std::ostringstream s;
-    s << " the sP is: ";
+    s << " the sP1 is: ";
     s << EC_ec2str(get_sP(), ctx) << std::endl;
     Debug(s.str());
     BN_CTX_free(ctx);
+}
+{
+    std::ostringstream s;
+    char buf[150];
+    s << "the sP2 is: ";
+    ibe_point_to_octets(get_Ppub2(), buf);
+    s << buf << std::endl;
+    Debug(s.str());
 }
 #endif
 

@@ -105,21 +105,52 @@ int ibe_point_to_octets(point_t *point, char *buf)
 {
 	int rtn = 0;
 
-	if(point || buf)
+	if(!point || !buf)
 	{
 		ERROR("point or out buffer is NULL at the beginning");
 		return 0;
 	}
 
-	const BIGNUM *p = SMX_get0_prime();
 	BN_CTX *bn_ctx = BN_CTX_new();
 	BN_CTX_start(bn_ctx);
+
+#ifdef DEBUG 
+{
+	const BIGNUM *p = SMX_get0_prime();
+	if(!point_is_on_curve_smx(point, p, bn_ctx))
+	{
+		ERROR("P is not in the group G2");
+	}
+	else
+	{
+		ERROR("P is on the curve");
+	}
+	
+}
+#endif
 
 	if(!point_to_octets_smx(point, buf, bn_ctx))
 	{
 		ERROR("cannot convert P in G2 to string");
 		goto end;
 	}
+
+#ifdef DEBUG 
+{
+	const BIGNUM *p = SMX_get0_prime();
+	point_t dbg_point;
+
+	if(!point_init_smx(&dbg_point, bn_ctx)
+		|| !point_from_octets_smx(&dbg_point, buf, p, bn_ctx))
+	{
+		ERROR("cannot convert P in G2 to string");
+	}
+	else 
+	{
+		ERROR("can convert P in G2 to string at this point");
+	}
+}
+#endif
 
 	rtn = 1;
 
@@ -158,7 +189,7 @@ int ibe_point_from_octets(point_t **point, char *buf)
 
 end:
 	if(bn_ctx)	BN_CTX_end(bn_ctx);
-	BN_CTX_free(bn_ctx);
+	// BN_CTX_free(bn_ctx);
 
 	return rtn;
 
@@ -172,6 +203,7 @@ point_t *ibe_point_new()
 	point_init_smx(res, ctx);
 	BN_CTX_end(ctx);
 	BN_CTX_free(ctx);
+	return res;
 }
 
 void ibe_point_free(point_t *point)
@@ -193,6 +225,8 @@ int ibe_point_add(point_t *res, point_t *a, point_t *b)
 	if(!point_add_smx(res, a, b, p, ctx))
 	{
 		ERROR(" can not add the two point");
+		fprintf(stderr, "a is on the curve: %d\n", ibe_point_is_on_curve(a));
+		fprintf(stderr, "b is on the curve: %d\n", ibe_point_is_on_curve(b));
 		goto end;
 	}
 

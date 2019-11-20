@@ -195,7 +195,6 @@ void Initializer::cal_shareP2(char *out, int *outlen)
 {
     // calculate share * P
 
-	point_t *point = ibe_point_new();
 	int length = *outlen;
 	char buf[150];
 
@@ -209,20 +208,29 @@ void Initializer::cal_shareP2(char *out, int *outlen)
 		Error("the out buffer is not big enough");
 	}
 	length = 129;
+	point_t *point = ibe_point_new();
 
     // calculate C = xP
 	if (!ibe_cal_xP2(point, get_share(), get_user()->get_mpk_filename())) {
 		Error("parse xP2 failed");
 	}
 
+#ifdef DEBUG 
+	fprintf(stderr, "location of the point: 0x%lx\n", point);
+	fprintf(stderr, "point on curve: %d\n", ibe_point_is_on_curve(point));
+#endif
 
 	if(!(ibe_point_to_octets(point, buf)))
 	{
+        ibe_point_free(point);
 		Error("cannot convert the point to a string");
 	}
 
 	memcpy(out, buf, length);
 	*outlen = length;
+# ifdef DEBUG
+    Debug("mark");
+#endif
 
 }
 
@@ -273,18 +281,27 @@ void Initializer::cal_sP()
     // add the points in the sp_point with the product of the share and the P point 
 
     // calculate Ppub1 
+#ifdef DEBUG 
+    Debug("begin to calculate sP1");
+#endif
 
     {    
         EC_POINT *point = nullptr;
         EC_GROUP *group = nullptr;
         BN_CTX *ctx = BN_CTX_new();
-        EC_POINT *res = EC_POINT_new(group);
+        EC_POINT *res = nullptr;
         EC_POINT *tmp = nullptr;
+
 
         // point = share * P1
         if(!ibe_cal_xP1(&group, &point, get_share(), get_user()->get_mpk_filename()))
         {
             Error("calculate the xP failed");
+        }
+
+        if(!(res = EC_POINT_new(group)))
+        {
+            Error("cannot alloacate the point");            
         }
 
         for (auto elem : *get_sp_pub_points())
@@ -295,6 +312,8 @@ void Initializer::cal_sP()
             {
                 EC_GROUP_free(group);
                 BN_CTX_free(ctx);
+                EC_POINT_free(point);
+                EC_POINT_free(res);
                 Error("calculate the sP failed in the loop");
             }
         }
@@ -304,6 +323,9 @@ void Initializer::cal_sP()
         BN_CTX_free(ctx);
 
     }    
+#ifdef DEBUG 
+    Debug("begin to calculate sP2");
+#endif
     
     // Ppub2
     {
@@ -320,6 +342,9 @@ void Initializer::cal_sP()
 
             for (auto elem : *get_sp2_pub_points())
             {
+#ifdef DEBUG 
+                Debug("round mark");
+#endif
                 point_t *tmp = elem.second;
                 if(!ibe_point_add(res, point, tmp)
                     ||!ibe_point_copy(point, res))

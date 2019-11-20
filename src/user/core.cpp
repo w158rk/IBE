@@ -158,6 +158,19 @@ void User::send_init_message_2(char *buff, int len1, int len2, ID *dest_id)
 	std::memcpy(buffer+12, get_id()->id, id_length);	
 	std::memcpy(buffer+12+id_length, buff, len1+len2);	
 
+#ifdef DEBUG 
+{
+	point_t *point = nullptr;
+	if(!(ibe_point_from_octets(&point, buff+len1)))
+	{
+		Debug("ibe point from octets");
+	}
+	else {
+		Debug("ibe point from octets success");
+	}
+}
+#endif
+
 	p_app_packet->set_type(INIT_MESSAGE_2);	
 	p_app_packet->set_length(payload_len);			
 	p_app_packet->set_payload(buffer);		
