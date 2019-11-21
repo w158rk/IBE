@@ -29,10 +29,15 @@ int ibe_setup(
     char *mpk_len_file,
     char *msk_len_file
 );
-int ibe_encrypt(const  char* data, size_t data_len,  char* c_buf, size_t *c_len, 
+
+int ibe_encrypt(const char* data, size_t data_len,  char* c_buf, size_t *c_len, 
     IBEPublicParameters *mpk, long mpk_len, const char *id, size_t id_len);
-int ibe_decrypt(const  char* c_buf, size_t c_len,  char* m_buff, size_t *m_len, 
+int ibe_decrypt(const char* c_buf, size_t c_len,  char* m_buff, size_t *m_len, 
     IBEPrivateKey *sk, long sk_len);
+int ibe_sign(const char* data, size_t data_len,  char* sign_buf, size_t *sign_len, 
+    IBEPrivateKey *sk, long sk_len);
+int ibe_verify(const  char* data, size_t data_len,  char* sign_buf, size_t sign_len, 
+    IBEPublicParameters *mpk, long mpk_len, const char *id, size_t id_len);
 
 /**
  * @brief extract ibe private key 

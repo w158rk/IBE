@@ -32,8 +32,6 @@ int ibe_encrypt(const  char* data, size_t data_len,  char* c_buf, size_t *c_len,
     memcpy(mpk_str, *mpk, mpk_len);
     SMXPublicParameters *smx_mpk = NULL;
 
-    // NOTE: if the mpk_str is char **, if it is necessary to malloc 
-    // space for it?
     if (!d2i_SMXPublicParameters(&smx_mpk, &mpk_str ,mpk_len)) {
         ERROR(MPK_FROM_STR_ERROR);
         goto end;

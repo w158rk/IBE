@@ -565,3 +565,9 @@ char *ibe_malloc_char(size_t size)
     return ret;
 
 }
+
+void ibe_free(char *buf)
+{
+	if(!buf) return;
+	free(buf);
+}

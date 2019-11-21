@@ -118,25 +118,39 @@ end:
 int test_smx_sign()
 {
     fprintf(stderr, "[test] sign\n");
+
     size_t data_len = strlen(data2);
-    printf("data2 is %s\n", data2);
-    printf("sk is %s\n", sk);
-    SMXPrivateKey *smx_sk = NULL;
-    d2i_SMXPrivateKey(&smx_sk, &sk, 380);
-    fprintf(stderr, "smx_sk: %ld\n", smx_sk);
-    fprintf(stderr, "data_len: %d\n", data_len);
-    int ret = SMX_sign(NID_sm3, data2, data_len, sign_data, &sign_len, smx_sk);
-    fprintf(stderr, "ret: %d\n", ret);
-    fprintf(stderr, "sign_len: %d\n", sign_len);
+    int ret = 0;
+
+    sign_len = BUFFER_SIZE;
+
+    if(!(ibe_sign(data2, data_len, sign_data, &sign_len, &sk, 380)))
+    {
+        fprintf(stderr, "sign error\n");
+        goto end;
+    }
+
+    ret = 1;
+
+end:
     return ret;
 }
 
 int test_smx_verify()
 {
-    printf("[test] sign verify\n");
+    printf("[test] verify\n");
     size_t data_len = strlen(data2);
-    size_t sign_len = strlen(sign_data);
-    int ret = SMX_verify(NID_sm3, data2, data_len, sign_data, sign_len, &mpk, SERVER_ID, SERVER_ID_LEN);
+    int ret = 0;
+
+    if(!ibe_verify(data2, data_len, sign_data, sign_len, &mpk, 239, SERVER_ID, SERVER_ID_LEN))
+    {
+        fprintf(stderr, "verify error\n");
+        goto end;
+    }
+
+    ret = 1;
+
+end:
     return ret;
 }
 
@@ -147,18 +161,18 @@ int test_smx_verify()
 
 int main(int argc, char *argv[]) {
 
-    // if(-1 == test_set_up()) goto end; 
+    if(-1 == test_set_up()) goto end; 
     if(-1 == test_get_public_parameters()) goto end;    //获取sP，并输出文件
-    // if(-1 == test_get_master_secret()) goto end;    //获取s，并输出文件
-    // if(-1 == test_extract_private_key()) goto end;  //获取sk
+    if(-1 == test_get_master_secret()) goto end;    //获取s，并输出文件
+    if(-1 == test_extract_private_key()) goto end;  //获取sk
+
+    if(-1 == test_smx_encrypt()) goto end;  //加密
+    if(-1 == test_smx_decrypt()) goto end;  //解密 
 
     // if(-1 == test_smx_encrypt()) goto end;  //加密
     // if(-1 == test_smx_decrypt()) goto end;  //解密 
-
-    if(-1 == test_smx_encrypt()) goto end;  //加密
-    // if(-1 == test_smx_decrypt()) goto end;  //解密 
     // if(-1 == test_put_private_key()) goto end;  //加密
-    if(-1 == test_get_private_key()) goto end;  //解密 
+    // if(-1 == test_get_private_key()) goto end;  //解密 
 
     // if(-1 == test_smx_encrypt()) goto end;  //加密
     // if(-1 == test_smx_decrypt()) goto end;  //解密 
@@ -166,8 +180,9 @@ int main(int argc, char *argv[]) {
     // if(-1 == test_smx_encrypt()) goto end;  //加密
     // if(-1 == test_put_private_key()) goto end;  //加密
     // if(-1 == test_get_private_key()) goto end;  //解密 
-    // if(-1 == test_smx_sign()) goto end;  //解密 
-    // if(-1 == test_smx_verify()) goto end;  //解密 
+    // if(-1 == test_get_public_parameters()) goto end;    //获取sP，并输出文件
+    if(0 == test_smx_sign()) goto end;  //解密 
+    if(0 == test_smx_verify()) goto end;  //解密 
 
     //print(data2);
     //int i = test_smx_sign();

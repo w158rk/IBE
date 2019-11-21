@@ -11,6 +11,8 @@
 #define DEC_ERROR           500
 #define CAL_ERROR           600
 #define MEM_ERROR           700
+#define SIGN_ERROR          800
+#define VERIFY_ERROR        900
 
 #define LEN_ERROR               1
 #define FROM_STR_ERROR          2
@@ -24,7 +26,7 @@
 
 // #define ERROR_NAME(parent, sub) parent ## _ ## sub ## _ERROR
 // #define ERROR_VALUE(parent, sub) parent ## _ ## ERROR ## sub  ## _ERROR
-#define DEFINE_ERROR(parent, sub) const int \
+#define DEFINE_ERROR(parent, sub) static const int \
         parent ## _ ## sub ## _ERROR = parent ## _ ## ERROR + sub  ## _ERROR;
 
 DEFINE_ERROR(MPK, LEN)
@@ -41,6 +43,8 @@ DEFINE_ERROR(SK, TO_STR)
 
 DEFINE_ERROR(ENC, OPENSSL)
 DEFINE_ERROR(DEC, OPENSSL)
+DEFINE_ERROR(SIGN, OPENSSL)
+DEFINE_ERROR(VERIFY, OPENSSL)
 
 DEFINE_ERROR(CAL, POINTER_NOT_NULL)
 
@@ -65,6 +69,8 @@ DEFINE_ERROR(MEM, ALLOC)
 
 #define ENC_OPENSSL_ERROR_STR       "error in smx encrypt (openssl)"
 #define DEC_OPENSSL_ERROR_STR       "error in smx decrypt (openssl)"
+#define SIGN_OPENSSL_ERROR_STR      "error in smx sign (openssl)"
+#define VERIFY_OPENSSL_ERROR_STR    "error in smx verify (openssl)"
 
 #define CAL_POINTER_NOT_NULL_ERROR_STR    "the pointer is not NULL"
 #define CAL_POINTER_NULL_ERROR_STR        "the pointer is NULL"
@@ -72,12 +78,12 @@ DEFINE_ERROR(MEM, ALLOC)
 #define MEM_ALLOC_ERROR_STR         "the location failed"
 
 
-#define ERROR(err_type) fprintf(stderr, "[%s:%d]%s\n", err_type ## _STR)
+#define ERROR(err_type) fprintf(stderr, "[%s:%d]%s\n", __FILE__, __LINE__, err_type ## _STR)
 #define ERROR_WITH_STR(err_type, aux) \
-    fprintf(stderr, "[%s:%d]\n%s(%s)\n", err_type ## _STR, aux)
+    fprintf(stderr, "[%s:%d]\n%s(%s)\n", __FILE__, __LINE__, err_type ## _STR, aux)
 #define ERROR_WITH_INT(err_type, aux) \
-    fprintf(stderr, "[%s:%d]\n%s(%s:%d)\n", err_type ## _STR, err_type ## _INT, aux)
+    fprintf(stderr, "[%s:%d]\n%s(%s:%d)\n", __FILE__, __LINE__, err_type ## _STR, err_type ## _INT, aux)
 #define ERROR_WITH_LONG(err_type, aux) \
-    fprintf(stderr, "[%s:%d]\n%s(%s:%ld)\n", err_type ## _STR, err_type ## _INT, aux)
+    fprintf(stderr, "[%s:%d]\n%s(%s:%ld)\n", __FILE__, __LINE__, err_type ## _STR, err_type ## _INT, aux)
 
 #endif
