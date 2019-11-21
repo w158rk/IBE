@@ -4,8 +4,6 @@
 #include "utils.h"
 #include "ds.h"
 
-// this should be removed some time
-#include <openssl/smx.h>
 
 /**
  * @brief map an ID to point 

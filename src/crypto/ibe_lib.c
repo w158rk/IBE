@@ -17,6 +17,23 @@ int ibe_get_group_id()
     return NID_sm9bn256v1; 
 }
 
+char *EC_ec2str(EC_POINT *point, BN_CTX* ctx)
+{
+    return EC_POINT_point2hex(EC_GROUP_new_by_curve_name(NID_sm9bn256v1), point, POINT_CONVERSION_COMPRESSED, ctx);
+
+}
+
+EC_POINT *EC_str2ec(char *str, EC_POINT *point, BN_CTX *ctx)
+{
+	return EC_POINT_hex2point(EC_GROUP_new_by_curve_name(NID_sm9bn256v1), str, point, ctx);
+}
+
+EC_POINT *EC_POINT_new_sm9()
+{
+	return EC_POINT_new(EC_GROUP_new_by_curve_name(NID_sm9bn256v1));
+
+}
+
 int ibe_cal_xP1(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, char *mpk_file)
 {
 

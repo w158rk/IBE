@@ -12,13 +12,15 @@ extern "C" {
 
 /* wrap some library functions */
 
-#define EC_POINT_new_sm9() EC_POINT_new(EC_GROUP_new_by_curve_name(NID_sm9bn256v1))
 #define BN_bn2str(x) BN_bn2hex(x)
 #define BN_str2bn(a,b) BN_hex2bn(a,b)
-#define EC_ec2str(point, ctx) \
-    EC_POINT_point2hex(EC_GROUP_new_by_curve_name(NID_sm9bn256v1), point, POINT_CONVERSION_COMPRESSED, ctx)
-#define EC_str2ec(str, point, ctx) \
-    EC_POINT_hex2point(EC_GROUP_new_by_curve_name(NID_sm9bn256v1), str, point, ctx)
+char *EC_ec2str(EC_POINT *point, BN_CTX* ctx);
+EC_POINT *EC_str2ec(char *str, EC_POINT *point, BN_CTX *ctx);
+
+EC_POINT *EC_POINT_new_sm9(); 
+// EC_POINT_new(EC_GROUP_new_by_curve_name(NID_sm9bn256v1))
+
+    // EC_POINT_hex2point(EC_GROUP_new_by_curve_name(NID_sm9bn256v1), str, point, ctx)
 // #define SS_ec2bn(a,b) BN_hex2bn(a,b)
 
 
