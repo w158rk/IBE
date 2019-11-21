@@ -11,9 +11,6 @@
                 __LINE__, __func__, info) 
 // #define ERROR(info)
 
-#ifdef __cplusplus 
-extern "C" {
-#endif
 
 #define GET_AND_SET(type, name) \
     void set_##name(type name); \
@@ -126,6 +123,10 @@ extern "C" {
     filename[filename_len-1] = '\0';
 
 #define FREE_SM4_FILENAME free(filename)
+
+#ifdef __cplusplus 
+extern "C" {
+#endif
 
 /**
  * @brief set the first 4 bytes of the ptr as the val 

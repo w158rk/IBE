@@ -1,4 +1,5 @@
 # include "smx_lcl.h"
+# include "ibe_err.h"
 
 #include <crypto.h>
 #include <utils.h>
@@ -22,7 +23,7 @@ int ibe_cal_xP1(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, char *mpk_fil
     int ret = 0;
 	if(*point != NULL || *group_ptr != NULL)
 	{
-		ERROR("[ibe_cal_xp] the input point or group is not NULL");
+		ERROR(CAL_POINTER_NOT_NULL_ERROR);
 		goto end;
 	}
 
@@ -31,9 +32,9 @@ int ibe_cal_xP1(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, char *mpk_fil
 	EC_GROUP *group = NULL;
 	EC_POINT *C = NULL;
 	BN_CTX *bn_ctx = NULL;
-	const BIGNUM *n = SMX_get0_order();
 
 	/** allocate the spaces */
+
 	if (!(group = EC_GROUP_new_by_curve_name(NID_sm9bn256v1))
 		|| !(C = EC_POINT_new(group))
 		|| !(bn_ctx = BN_CTX_new())) {
@@ -555,3 +556,12 @@ const BIGNUM *IBE_get0_order(void)
 	return SMX_get0_order();
 }
 
+
+char *ibe_malloc_char(size_t size)
+{
+
+    char *ret = (char *)malloc(size+1);
+    memset(ret, 0, size+1);
+    return ret;
+
+}

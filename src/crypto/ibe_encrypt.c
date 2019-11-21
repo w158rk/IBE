@@ -13,25 +13,29 @@
 #include<string.h>
 
 #include "smx_lcl.h"
+#include "ibe_lcl.h"
+#include "ibe_err.h"
 #include <openssl/bio.h>
 
 int ibe_encrypt(const  char* data, size_t data_len,  char* c_buf, size_t *c_len, 
     IBEPublicParameters *mpk, long mpk_len, const char *id, size_t id_len) 
 {
-    if (mpk_len > 239)
+    if (mpk_len > MPK_LEN)
     {
-        ERROR("the mpk len is longer than 239");
-        fprintf(stderr, "instead: %d\n", mpk_len);
+        ERROR_WITH_LONG(MPK_LEN_ERROR, mpk_len);
         return 0;
     }
-    char *mpk_str = (char *)malloc(240);
+
+    char *mpk_str = ibe_malloc_char(MPK_LEN);
     char *to_be_freed = mpk_str;
-    mpk_str[239] = 0;
+
     memcpy(mpk_str, *mpk, mpk_len);
     SMXPublicParameters *smx_mpk = NULL;
 
+    // NOTE: if the mpk_str is char **, if it is necessary to malloc 
+    // space for it?
     if (!d2i_SMXPublicParameters(&smx_mpk, &mpk_str ,mpk_len)) {
-        ERROR("cannot extract the public parameters");
+        ERROR(MPK_FROM_STR_ERROR);
         goto end;
     }
 
@@ -40,7 +44,7 @@ int ibe_encrypt(const  char* data, size_t data_len,  char* c_buf, size_t *c_len,
 
     if(!ret) {
 
-        ERROR("error in sm9 encrypt (openssl) ");
+        ERROR(ENC_OPENSSL_ERROR);
         goto end;
     
     }
@@ -67,15 +71,14 @@ int ibe_decrypt(const char* c_buf, size_t c_len, char* m_buff, size_t *m_len,
     
     if(!d2i_SMXPrivateKey(&smx_sk, &sk_str, sk_len))
     {
-        ERROR("cannot parse sm9 sk");
-        fprintf(stderr, "   len: %d\n", sk_len);
+        ERROR_WITH_LONG(SK_FROM_STR_ERROR, sk_len);
         goto end;
     }
 
     ret = SMX_decrypt(NID_sm9encrypt_with_sm3_xor, c_buf, c_len, m_buff, m_len, smx_sk);
 
     if(0 == ret) {
-        ERROR("wrong in sm9 decryption (openssl)");
+        ERROR(DEC_OPENSSL_ERROR);
         goto end;
     }
 

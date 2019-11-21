@@ -1,4 +1,8 @@
 /* ====================================================================
+ * 
+ *  This file is part of the modified GmSSL
+ *  It is written based on the file sm9_lcl.h 
+ * 
  * Copyright (c) 2016 The GmSSL Project.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
