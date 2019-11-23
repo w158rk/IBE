@@ -1,7 +1,7 @@
 #ifndef IBE_H 
 #define IBE_H 
 
-#include "utils.h"
+// #include "utils.h"
 #include "ds.h"
 
 
@@ -13,7 +13,7 @@
  * @param[in] id_len length of ID
  * @param[in] mpk_file the filename of the file where the mpk is stored, should end with '\0
  */
-int ibe_id2point(
+int ibe_ec_id2point(
     EC_POINT **point,    
     char *id, 
     long id_len,
@@ -58,27 +58,27 @@ void ibe_sk_copy(IBEPrivateKey *dest, IBEPrivateKey *src, long);
 /**
  * @brief calculate res = xP where x in a number and P is the generator of the group 
  */
-int ibe_cal_xP1(EC_GROUP **group, EC_POINT **res, BIGNUM *x, char *mpk_file);
+int ibe_ec_cal_xP1(EC_GROUP **group, EC_POINT **res, BIGNUM *x, char *mpk_file);
 
 
 /**
  * @brief calculate res = xP2 where x in a number and P2 is the generator of the group G2
  */
-int ibe_cal_xP2(point_t *res, BIGNUM *x, char *mpk_file);
+int ibe_point_cal_xP2(point_t *res, BIGNUM *x, char *mpk_file);
 
 /**
  * @brief calculate res = xQ where x in a number and Q is an arbitrary point in the group 
  */
-int ibe_cal_xQ(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, EC_POINT *Q, char *mpk_file);
+int ibe_ec_cal_xQ(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, EC_POINT *Q, char *mpk_file);
 
 
 // int ibe_sign(const unsigned char *data, size_t data_length, const unsigned char* sign, size_t *sign_length, SM9PrivateKey *sk);
 // int ibe_verify(const unsigned char* data, size_t data_length, const unsigned char *sign, size_t sign_length, SM9PublicParameters *mpk, const char *id, size_t id_length);
 
 /* replace the sP in the mpk file with point */
-int ibe_store_sP(EC_POINT *point, char *mpk_file);
-int ibe_store_Ppub2(point_t *point, char *mpk_file);
-int ibe_store_sQ(EC_POINT *sQ, ID *id, char *mpk_file);
+int ibe_ec_store_Ppub1(EC_POINT *point, char *mpk_file);
+int ibe_point_store_Ppub2(point_t *point, char *mpk_file);
+int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file);
 
 // wrap for point_t
 int ibe_point_from_octets(point_t **point, char *buf);
@@ -88,6 +88,12 @@ point_t *ibe_point_new(void);
 void ibe_point_free(point_t *);
 int ibe_point_add(point_t *res, point_t *a, point_t *b);
 int ibe_point_is_on_curve(point_t *point);
+
+
+// utils 
+int ibe_gen_sk_filename(char **to, ID *id);
+int ibe_gen_sk_len_filename(char **to, ID *id);
+void ibe_free_filename(char *filename);
 
 
 const BIGNUM *IBE_get0_generator2_x0(void);

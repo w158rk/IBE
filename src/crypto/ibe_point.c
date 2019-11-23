@@ -1,105 +1,17 @@
 /**
- * file: ibe_id2point.c
+ * 
+ * @file ibe_id2point.c
+ * @brief all functions related to the operations in G2
+ *
  */
 
-#include <utils.h>
 #include <crypto.h>
+#include <config.h>
 
 #include "smx_lcl.h"
+#include "ibe_err.h"
 
 
-/*  the caller should ensure that mpk_file end with '\0' */
-/* parse Q_B = H1(ID_B||hid) * P1 + Ppub1 */
-int ibe_id2point(
-    EC_POINT **point,    
-    char *id, 
-    long id_len,
-    char *mpk_file
-) 
-{
-	int ret = 0;
-	if(*point != NULL)
-	{
-		ERROR("the input point is not NULL");
-		goto end;
-	}
-
-    // read the mpk from file 
-
-    SMXPublicParameters *smx_mpk = NULL;
-
-    FILE *mpk_fp = fopen(mpk_file, "rb");
-    if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
-		ERROR(" get mpk failed");
-        goto end;
-    }
-    
-    fclose(mpk_fp);
-
-	EC_GROUP *group = NULL;
-	EC_POINT *C = NULL;
-	BN_CTX *bn_ctx = NULL;
-	BIGNUM *h = NULL;
-	const EVP_MD *hash1_md;
-	const BIGNUM *n = SMX_get0_order();
-
-    /** use sha-256 as default hash function */
-	/** allocate the spaces */
-	if (!(group = EC_GROUP_new_by_curve_name(NID_sm9bn256v1))
-		|| !(C = EC_POINT_new(group))
-		|| !(bn_ctx = BN_CTX_new())) {
-		
-		ERROR(" the allocation failed");
-		goto end;
-	}
-
-
-
-	BN_CTX_start(bn_ctx);
-
-	switch (OBJ_obj2nid(smx_mpk->hash1)) {
-	case NID_sm9hash1_with_sm3:
-		hash1_md = EVP_sm3();
-		break;
-	case NID_sm9hash1_with_sha256:
-		hash1_md = EVP_sha256();
-		break;
-	default:
-		ERROR("Cannot get appropriate hash function iod");
-		goto end;
-	}
-
-	EC_POINT* Ppube = EC_POINT_new(group);
-
-	/* parse Ppube1 */
-	if (!EC_POINT_oct2point(group, Ppube, ASN1_STRING_get0_data(smx_mpk->pointPpub1),
-		ASN1_STRING_length(smx_mpk->pointPpub1), bn_ctx)) {
-		goto end;
-	}
-
-	/* parse Q_B = H1(ID_B||hid) * P1 */
-	// we should check mpk->hash1
-	if (!SMX_hash1(hash1_md, &h, id, id_len, SMX_HID_ENC, n, bn_ctx)
-		|| !EC_POINT_mul(group, C, h, NULL, NULL, bn_ctx)
-		|| !EC_POINT_add(group, C, C, Ppube, bn_ctx)) 
-	{
-		ERROR("parse QB failed");
-		goto end;
-	}
-
-	*point = C;
-	ret = 1;
-
-end:
-	EC_GROUP_free(group);
-	if (bn_ctx) {
-		BN_CTX_end(bn_ctx);
-	}
-	BN_free(h);
-	BN_CTX_free(bn_ctx);
-	return ret;
-    
-}
 
 int ibe_point_to_octets(point_t *point, char *buf)
 {
@@ -107,7 +19,7 @@ int ibe_point_to_octets(point_t *point, char *buf)
 
 	if(!point || !buf)
 	{
-		ERROR("point or out buffer is NULL at the beginning");
+		ERROR(MEM_POINTER_NULL_ERROR);
 		return 0;
 	}
 
@@ -119,11 +31,7 @@ int ibe_point_to_octets(point_t *point, char *buf)
 	const BIGNUM *p = SMX_get0_prime();
 	if(!point_is_on_curve_smx(point, p, bn_ctx))
 	{
-		ERROR("P is not in the group G2");
-	}
-	else
-	{
-		ERROR("P is on the curve");
+		ERROR(POINT_NOT_IN_GROUP_ERROR);
 	}
 	
 }
@@ -131,7 +39,7 @@ int ibe_point_to_octets(point_t *point, char *buf)
 
 	if(!point_to_octets_smx(point, buf, bn_ctx))
 	{
-		ERROR("cannot convert P in G2 to string");
+		ERROR(POINT_TO_STR_ERROR);
 		goto end;
 	}
 
@@ -143,11 +51,7 @@ int ibe_point_to_octets(point_t *point, char *buf)
 	if(!point_init_smx(&dbg_point, bn_ctx)
 		|| !point_from_octets_smx(&dbg_point, buf, p, bn_ctx))
 	{
-		ERROR("cannot convert P in G2 to string");
-	}
-	else 
-	{
-		ERROR("can convert P in G2 to string at this point");
+		ERROR(POINT_TO_STR_ERROR);
 	}
 }
 #endif
@@ -168,7 +72,7 @@ int ibe_point_from_octets(point_t **point, char *buf)
 
 	if(*point)
 	{
-		ERROR("point is not NULL at the beginning");
+		ERROR(MEM_POINTER_NOT_NULL_ERROR);
 		return 0;
 	}
 
@@ -180,7 +84,7 @@ int ibe_point_from_octets(point_t **point, char *buf)
 	if(!point_init_smx(res, bn_ctx)
 		||!point_from_octets_smx(res, buf, p, bn_ctx))
 	{
-		ERROR("cannot get pub2 from string");
+		ERROR(POINT_FROM_STR_ERROR);
 		goto end;
 	}
 
@@ -224,9 +128,7 @@ int ibe_point_add(point_t *res, point_t *a, point_t *b)
 	BN_CTX_start(ctx);
 	if(!point_add_smx(res, a, b, p, ctx))
 	{
-		ERROR(" can not add the two point");
-		fprintf(stderr, "a is on the curve: %d\n", ibe_point_is_on_curve(a));
-		fprintf(stderr, "b is on the curve: %d\n", ibe_point_is_on_curve(b));
+		ERROR(POINT_CAL_ERROR);
 		goto end;
 	}
 
@@ -241,4 +143,174 @@ end:
 int ibe_point_copy(point_t *to, point_t *from)
 {
 	return point_copy_smx(to, from);
+}
+
+int ibe_point_is_on_curve(point_t *point)
+{
+	if(!point)
+	{
+		return 0;
+	}
+
+	int ret = 0;
+	const BIGNUM *p = SMX_get0_prime();
+	BN_CTX *bn_ctx = NULL;
+	if(!(bn_ctx = BN_CTX_new()))
+	{
+		ERROR(MEM_ALLOC_ERROR);
+		goto end;
+	}
+
+	BN_CTX_start(bn_ctx);
+
+	ret = point_is_on_curve_smx(point, p, bn_ctx);
+
+end:
+	if (bn_ctx) {
+		BN_CTX_end(bn_ctx);
+	}
+	BN_CTX_free(bn_ctx);
+	return ret;
+}
+
+int ibe_point_cal_xP2(point_t *res, BIGNUM *x, char *mpk_file)
+{
+
+    int ret = 0;
+	point_t point;
+
+	BN_CTX *bn_ctx = NULL;
+	const BIGNUM *p = SMX_get0_prime();
+
+	/** allocate the spaces */
+	if(!(bn_ctx = BN_CTX_new()))
+	{
+		ERROR(MEM_ALLOC_ERROR);
+		goto end;
+	}
+
+	BN_CTX_start(bn_ctx);
+
+    // calculate C = xP
+	if (!point_init_smx(&point, bn_ctx)
+		||!point_mul_smx_generator(&point, x, p, bn_ctx)
+		||!point_is_on_curve_smx(&point, p, bn_ctx)) {
+		ERROR(POINT_CAL_ERROR);
+		goto end;
+	}
+
+	point_copy_smx(res, &point);
+
+#ifdef DEBUG 
+	if(!point_is_on_curve_smx(res, p, bn_ctx))
+	{
+		ERROR(POINT_NOT_IN_GROUP_ERROR);
+	}
+	if(!point_is_on_curve_smx(res, p, bn_ctx))
+	{
+		ERROR(POINT_NOT_IN_GROUP_ERROR);
+	}
+#endif
+
+	ret = 1;
+
+end:
+	if (bn_ctx) {
+		BN_CTX_end(bn_ctx);
+	}
+	// this free will make the res not work 
+	// but how to free the ctx safely is unknown so far 
+	// BN_CTX_free(bn_ctx);
+	return ret;
+
+}
+
+
+
+
+
+
+int ibe_point_store_Ppub2(point_t *point, char *mpk_file)
+{
+	int ret = 0;
+	if(!point)
+	{
+		ERROR(MEM_POINTER_NULL_ERROR);
+		goto end;
+	}
+
+    SMXPublicParameters *smx_mpk = NULL;
+
+    FILE *mpk_fp = NULL;
+	char buff[BUFFER_SIZE];
+	int flag = 0;
+	BN_CTX* ctx = BN_CTX_new();
+
+	mpk_fp = fopen(mpk_file, "rb");
+	if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
+		ERROR(MPK_FROM_FILE_ERROR);
+        goto end;
+    }
+    fclose(mpk_fp);
+#ifdef DEBUG
+{
+	char data[10] = "1234567890";
+	char cipher[BUFFER_SIZE] = {0};
+	int datalen = 10;
+	int cipherlen = BUFFER_SIZE;
+	fprintf(stderr, "encrypt: %d\n", SMX_encrypt(NID_sm9encrypt_with_sm3_xor, data, datalen, cipher, &cipherlen, smx_mpk, "Server", 6));
+
+}
+#endif
+
+	flag = point_to_octets_smx(point, buff, ctx);
+#ifdef DEBUG 
+	fprintf(stderr, "[IMPORTANT]the flag of the string: %d\n", flag);
+#endif
+	if(!flag)
+	{
+		ERROR(POINT_TO_STR_ERROR);
+        goto end;
+	}
+	int length = 129;
+
+	// set the param
+	smx_mpk->pointPpub2 = ASN1_OCTET_STRING_new();
+	if(!smx_mpk->pointPpub2)
+	{
+		ERROR(MEM_ALLOC_ERROR);
+        goto end;
+	}
+
+	if(!ASN1_OCTET_STRING_set(smx_mpk->pointPpub2, buff, length))
+	{
+		ERROR(MPK_SET_MEMBER_ERROR);
+        goto end;
+	}
+
+#ifdef DEBUG
+{
+	char data[10] = "1234567890";
+	char cipher[BUFFER_SIZE] = {0};
+	int datalen = 10;
+	int cipherlen = BUFFER_SIZE;
+	fprintf(stderr, "encrypt: %d\n", SMX_encrypt(NID_sm9encrypt_with_sm3_xor, data, datalen, cipher, &cipherlen, smx_mpk, "Server", 6));
+
+}
+#endif
+
+	// output
+    mpk_fp = fopen(mpk_file, "wb");
+	if (!i2d_SMXPublicParameters_fp(mpk_fp, smx_mpk)){
+		ERROR(MPK_TO_FILE_ERROR);
+        goto end;
+    }
+    fclose(mpk_fp);
+
+	ret = 1;
+
+end:
+	BN_CTX_free(ctx);
+	return ret;
+
 }

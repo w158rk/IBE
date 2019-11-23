@@ -6,6 +6,6 @@
 
 typedef unsigned long size_t;
 char *ibe_malloc_char(size_t size);
-void ibe_free(char *);
+void ibe_free_char(char *);
 
 #endif

@@ -31,14 +31,14 @@ int ibe_sign(const char* data, size_t data_len,  char* sign_buf, size_t *sign_le
 
     if(!SMX_sign(NID_sm3, data, data_len, sign_buf, sign_len, smx_sk))
     {
-        ERROR(SIGN_OPENSSL_ERROR);
+        ERROR(OPENSSL_SIGN_ERROR);
         goto end;
     }
 
     ret = 1;
 
 end:
-    ibe_free(to_be_free);
+    ibe_free_char(to_be_free);
     return ret;
 }
 
@@ -66,14 +66,14 @@ int ibe_verify(const  char* data, size_t data_len,  char* sign_buf, size_t sign_
 
     if(!SMX_verify(NID_sm3, data, data_len, sign_buf, sign_len, smx_mpk, id, id_len))
     {
-        ERROR(VERIFY_OPENSSL_ERROR);
+        ERROR(OPENSSL_VERIFY_ERROR);
         goto end;
     }
 
     ret = 1;
 
 end:
-    ibe_free(to_be_free);
+    ibe_free_char(to_be_free);
     return ret;
 }
 

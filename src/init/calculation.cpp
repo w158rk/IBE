@@ -165,12 +165,12 @@ void Initializer::cal_shareP1(char *result, int *len)
     EC_POINT *point = nullptr;
     EC_GROUP *group = nullptr;
     BN_CTX *ctx = BN_CTX_new();
-    if(!ibe_cal_xP1(&group, &point, get_share(), get_user()->get_mpk_filename()))
+    if(!ibe_ec_cal_xP1(&group, &point, get_share(), get_user()->get_mpk_filename()))
     {
         Error("calculate the xP failed");
     }
 
-    char *temp = EC_ec2str(point, ctx);
+    char *temp = ibe_ec2str(point, ctx);
     int length = strlen(temp);
     if (*len < length)
     {
@@ -211,7 +211,7 @@ void Initializer::cal_shareP2(char *out, int *outlen)
 	point_t *point = ibe_point_new();
 
     // calculate C = xP
-	if (!ibe_cal_xP2(point, get_share(), get_user()->get_mpk_filename())) {
+	if (!ibe_point_cal_xP2(point, get_share(), get_user()->get_mpk_filename())) {
 		Error("parse xP2 failed");
 	}
 
@@ -243,17 +243,17 @@ void Initializer::cal_shareQ(char *result, int *len, ID *id)
     EC_GROUP *group = nullptr;
     EC_POINT *Q = nullptr;
     BN_CTX *ctx = BN_CTX_new();
-    if(!ibe_id2point(&Q, id->id, id->length, get_user()->get_mpk_filename()))
+    if(!ibe_ec_id2point(&Q, id->id, id->length, get_user()->get_mpk_filename()))
     {
         Error("calculate the Q failed");
     }
 
-    if(!ibe_cal_xQ(&group, &point, get_share(), Q, get_user()->get_mpk_filename()))
+    if(!ibe_ec_cal_xQ(&group, &point, get_share(), Q, get_user()->get_mpk_filename()))
     {
         Error("calculate the xP failed");
     }
 
-    char *temp = EC_ec2str(point, ctx);
+    char *temp = ibe_ec2str(point, ctx);
     int length = strlen(temp);
 
     if (*len < length)
@@ -294,7 +294,7 @@ void Initializer::cal_sP()
 
 
         // point = share * P1
-        if(!ibe_cal_xP1(&group, &point, get_share(), get_user()->get_mpk_filename()))
+        if(!ibe_ec_cal_xP1(&group, &point, get_share(), get_user()->get_mpk_filename()))
         {
             Error("calculate the xP failed");
         }
@@ -335,7 +335,7 @@ void Initializer::cal_sP()
         // point = share * P2
         try 
         {
-            if(!ibe_cal_xP2(point, get_share(), get_user()->get_mpk_filename()))
+            if(!ibe_point_cal_xP2(point, get_share(), get_user()->get_mpk_filename()))
             {
                 Error("calculate the xP failed");
             }
@@ -377,8 +377,8 @@ void Initializer::cal_sQ()
     EC_GROUP *group = nullptr;
     BN_CTX *ctx = BN_CTX_new();
     
-    if(!ibe_id2point(&Q, get_user()->get_id()->id, get_user()->get_id()->length, get_user()->get_mpk_filename())
-        ||!ibe_cal_xQ(&group, &point, get_share(), Q, get_user()->get_mpk_filename()))
+    if(!ibe_ec_id2point(&Q, get_user()->get_id()->id, get_user()->get_id()->length, get_user()->get_mpk_filename())
+        ||!ibe_ec_cal_xQ(&group, &point, get_share(), Q, get_user()->get_mpk_filename()))
     {
         Error("calculate the xQ failed");
     }

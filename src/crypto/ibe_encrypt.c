@@ -42,7 +42,7 @@ int ibe_encrypt(const  char* data, size_t data_len,  char* c_buf, size_t *c_len,
 
     if(!ret) {
 
-        ERROR(ENC_OPENSSL_ERROR);
+        ERROR(OPENSSL_ENC_ERROR);
         goto end;
     
     }
@@ -76,7 +76,7 @@ int ibe_decrypt(const char* c_buf, size_t c_len, char* m_buff, size_t *m_len,
     ret = SMX_decrypt(NID_sm9encrypt_with_sm3_xor, c_buf, c_len, m_buff, m_len, smx_sk);
 
     if(0 == ret) {
-        ERROR(DEC_OPENSSL_ERROR);
+        ERROR(OPENSSL_DEC_ERROR);
         goto end;
     }
 

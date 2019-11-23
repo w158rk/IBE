@@ -1,8 +1,8 @@
 
 #include <crypto.h>
 #include "smx_lcl.h"
+#include "ibe_err.h"
 #include <openssl/bio.h>
-#include <utils.h>
 
 int ibe_setup(
     char *mpk_file,
@@ -11,16 +11,13 @@ int ibe_setup(
     char *msk_len_file
 )
 {
-#ifdef DEBUG
-    ERROR("enter ibe setup");
-#endif
 
     int ret = 0;
    	SMXPublicParameters *mpk = NULL;
 	SMXMasterSecret *msk = NULL;
 
    	if (!SMX_setup(NID_sm9bn256v1, NID_sm9encrypt, NID_sm9hash1_with_sm3, &mpk, &msk)) {
-        ERROR(" sm9 set up failed");
+        ERROR(OPENSSL_SETUP_ERROR);
         goto end;
 	}
 
@@ -28,7 +25,7 @@ int ibe_setup(
     FILE *mpk_fp = fopen(mpk_file, "wb+");
     
     if (!i2d_SMXPublicParameters_fp(mpk_fp, mpk)){
-        ERROR("output mpk to file failed");
+        ERROR(MPK_TO_FILE_ERROR);
         fclose(mpk_fp);
         goto end;
     }
@@ -46,7 +43,7 @@ int ibe_setup(
     /* output msk  */
     FILE *msk_fp = fopen(msk_file, "wb");
     if (!i2d_SMXMasterSecret_fp(msk_fp, msk)) {
-        ERROR("output msk to file failed");
+        ERROR(MSK_TO_FILE_ERROR);
         fclose(mpk_fp);
         goto end;
     }
@@ -61,9 +58,6 @@ int ibe_setup(
     fclose(msk_len_fp);
 
     ret = 1;
-#ifdef DEBUG
-    ERROR("exit ibe setup");
-#endif
 end:
 	SMXPublicParameters_free(mpk);
 	SMXMasterSecret_free(msk);

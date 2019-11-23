@@ -396,9 +396,9 @@ int handle_init_message_2(Packet *target)
             pPub2 = pPub1 + len_pPub1;
             
             BN_CTX *ctx = BN_CTX_new();
-            EC_POINT *pnt = EC_POINT_new_sm9();
+            EC_POINT *pnt = ibe_EC_POINT_new();
 
-            if(!EC_str2ec(pPub1, pnt, ctx))
+            if(!ibe_str2ec(pPub1, pnt, ctx))
             {
                 Error("cannot convert string to EC point");
             }
@@ -501,9 +501,9 @@ int handle_init_message_3(Packet *target)
             message += id_len;
             
             BN_CTX *ctx = BN_CTX_new();
-            EC_POINT *pnt = EC_POINT_new_sm9();
+            EC_POINT *pnt = ibe_EC_POINT_new();
 
-            if(!EC_str2ec(message, pnt, ctx))
+            if(!ibe_str2ec(message, pnt, ctx))
             {
                 Error("cannot convert string to bn");
             }

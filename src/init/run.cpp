@@ -175,7 +175,7 @@ void Initializer::run()
     BN_CTX *ctx = BN_CTX_new();
     std::ostringstream s;
     s << " the sP1 is: ";
-    s << EC_ec2str(get_sP(), ctx) << std::endl;
+    s << ibe_ec2str(get_sP(), ctx) << std::endl;
     Debug(s.str());
     BN_CTX_free(ctx);
 }
@@ -238,7 +238,7 @@ void Initializer::run()
     BN_CTX *ctx = BN_CTX_new();
     std::ostringstream s;
     s << " the sQ is: ";
-    s << EC_ec2str(get_sP(), ctx) << std::endl;
+    s << ibe_ec2str(get_sP(), ctx) << std::endl;
     Debug(s.str());
     BN_CTX_free(ctx);
 }

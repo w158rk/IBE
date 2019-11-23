@@ -14,10 +14,10 @@ extern "C" {
 
 #define BN_bn2str(x) BN_bn2hex(x)
 #define BN_str2bn(a,b) BN_hex2bn(a,b)
-char *EC_ec2str(EC_POINT *point, BN_CTX* ctx);
-EC_POINT *EC_str2ec(char *str, EC_POINT *point, BN_CTX *ctx);
+char *ibe_ec2str(EC_POINT *point, BN_CTX* ctx);
+EC_POINT *ibe_str2ec(char *str, EC_POINT *point, BN_CTX *ctx);
 
-EC_POINT *EC_POINT_new_sm9(); 
+EC_POINT *ibe_EC_POINT_new(); 
 // EC_POINT_new(EC_GROUP_new_by_curve_name(NID_sm9bn256v1))
 
     // EC_POINT_hex2point(EC_GROUP_new_by_curve_name(NID_sm9bn256v1), str, point, ctx)

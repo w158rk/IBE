@@ -41,7 +41,7 @@ int BN_mod_add_smx(BIGNUM *res, BIGNUM* a, BIGNUM* b)
 int SS_id2num_init(BIGNUM *res, ID *id, char *filename)
 {
     EC_POINT *point = NULL;
-    ibe_id2point(&point, id->id, id->length, filename);
+    ibe_ec_id2point(&point, id->id, id->length, filename);
 
     // get the x and z of the point 
     BIGNUM *X = point->X;

@@ -13,6 +13,7 @@
 #include <crypto.h>
 
 #include "smx_lcl.h"
+#include "ibe_err.h"
 #include <openssl/bio.h>
 
 int ibe_extract(IBEPrivateKey *sk,
@@ -31,7 +32,7 @@ int ibe_extract(IBEPrivateKey *sk,
 
     int len = i2d_SMXPrivateKey(sm9_sk, sk);
     if (0 == len) {
-        ERROR("extract the private key fail, please try it again");
+        ERROR(SK_FROM_STR_ERROR);
         goto end;
     }
     *sk_len = (long)len;
