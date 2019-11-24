@@ -4,6 +4,8 @@
     },
     "crypto" : {
         "mpk_file" : "mpk-Server.conf",
+        "msk_file" : "msk.conf",
+        "msk_len_file" : "msk-len.conf",
         "mpk_len_file" : "mpk-len.conf"
     },
     "id" : {

@@ -26,6 +26,14 @@ enum state {
     RECV_SEC_PACKET,
 };
 
+struct SignMesg
+{
+    char *ID;
+    char *PP;
+    char *sign_data;
+    SignMesg *front;
+};
+
 class AppPacket 
 {
 

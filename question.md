@@ -1,3 +1,9 @@
+## 11.24
+1. 在ds.hpp中添加了SignMesg的结构体
+2. 加入了sign的获取函数`get_signdata`，但是其中mpk的值的获取部分还没改
+3. 加入了`SIGN_REQUEST_TYPE`，注释掉了`SESSION_KEY_FINAL_TYPE`
+4. `clientjson`中加入了`msk_file`和`msk_len_file`
+
 ## 11.5
 1. 解决IBE加解密的问题
 2. 段错误的问题在于type的值在packet_send的过程中出现了改变
