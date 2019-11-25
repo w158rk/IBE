@@ -38,10 +38,9 @@ void User::run_get_signdata(char *server_ip,
 
 	char *id = get_id()->id;
 	size_t id_len = get_id()->length;
-    std::cout<<id<<std::endl;
     size_t mpk_len = get_mpk_len();
-    std::cout<<mpk_len<<std::endl;
 	size_t m_len = (size_t)(id_len + mpk_len);      //calculate length
+	std::cout<<m_len<<std::endl;
 	char *payload = (char *)std::malloc(m_len);
 
     AppPacket *p_app_packet = new AppPacket; 
@@ -53,8 +52,6 @@ void User::run_get_signdata(char *server_ip,
     IBEPublicParameters mpk = NULL;
     get_mpk_fp("mpk-Server.conf", &mpk);
 
-    std::cout<<mpk<<std::endl;
-
     memcpy(payload, mpk, mpk_len);
     memcpy(payload, id, id_len);
     p_app_packet->set_payload (payload);
@@ -65,5 +62,12 @@ void User::run_get_signdata(char *server_ip,
 
 	ctx->set_phase (SEND_APP_PACKET);
 	ctx->set_payload_app (p_app_packet);
+
+	fprintf(stderr, "sec_packet: %ld", p_app_packet);
+
 	ctx->set_dest_id (server_id);
+
+	if(0 == get_packet_ptr()->packet_send(ctx)) {
+		throw UserException("wrong when make the packet to send");
+	}
 }
