@@ -28,8 +28,8 @@ enum state {
 
 struct SignMesg
 {
-    char *ID;
     char *PP;
+    char *ID;
     char *sign_data;
     SignMesg *front;
 };
@@ -43,6 +43,7 @@ public:
 
     GET_AND_SET(char *, payload);
     GET_AND_SET(char *, head);
+    GET_AND_SET(SignMesg *, sign);
 
     static AppPacket *from_bytes(char *);
     char *to_bytes();
@@ -56,6 +57,7 @@ private:
     char m_head[APP_HEAD_LEN];
     bool m_fhead;
     DECLARE_MEMBER(char *, payload);
+    DECLARE_MEMBER(SignMesg *, sign);
 
 };
 

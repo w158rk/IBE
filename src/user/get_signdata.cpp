@@ -40,7 +40,6 @@ void User::run_get_signdata(char *server_ip,
 	size_t id_len = get_id()->length;
     size_t mpk_len = get_mpk_len();
 	size_t m_len = (size_t)(id_len + mpk_len);      //calculate length
-	std::cout<<m_len<<std::endl;
 	char *payload = (char *)std::malloc(m_len);
 
     AppPacket *p_app_packet = new AppPacket; 
@@ -50,10 +49,10 @@ void User::run_get_signdata(char *server_ip,
 	p_app_packet->set_length(m_len);
 
     IBEPublicParameters mpk = NULL;
-    get_mpk_fp("mpk-Server.conf", &mpk);
+    get_mpk_fp(get_mpk_filename(), &mpk);
 
     memcpy(payload, mpk, mpk_len);
-    memcpy(payload, id, id_len);
+    memcpy(payload + mpk_len, id, id_len);
     p_app_packet->set_payload (payload);
 
     PacketCTX *ctx = new PacketCTX;
@@ -62,8 +61,6 @@ void User::run_get_signdata(char *server_ip,
 
 	ctx->set_phase (SEND_APP_PACKET);
 	ctx->set_payload_app (p_app_packet);
-
-	fprintf(stderr, "sec_packet: %ld", p_app_packet);
 
 	ctx->set_dest_id (server_id);
 

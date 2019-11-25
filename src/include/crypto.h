@@ -26,7 +26,7 @@ extern "C" {
 #define AES_IV_LEN              (AES_IV_BITS/8)
 #define SM4_KEY_BITS            128
 #define SM4_KEY_LEN             (SM4_KEY_BITS/8)
-
+#define IBE_MPK_LEN             237
 
 
 
