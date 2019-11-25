@@ -1,8 +1,13 @@
 #ifndef COMM_LCL_H
 #define COMM_LCL_H 
 
+#ifdef __cplusplus 
+extern "C"{
+#endif
+
 #include <sys/socket.h>
-#include<stdio.h>
+#include <stdio.h>
+
 /* 
  * socket 监听与连接函数
  */
@@ -25,6 +30,9 @@ int     Accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
  */
 void sig_chld(int signo);
 FILE* open_log_file();
+#ifdef __cplusplus 
+}
+#endif
 
 
 #endif

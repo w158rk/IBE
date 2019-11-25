@@ -9,10 +9,10 @@ namespace ui {
         ~UInterface() = default;
         void run();
 
-        GET_AND_SET(interface::IUser * , user_ptr)
+        GET_AND_SET(user::User * , user_ptr)
 
     private:
-        DECLARE_MEMBER(interface::IUser * , user_ptr)
+        DECLARE_MEMBER(user::User * , user_ptr)
 
         int socket_interface_run();
 

@@ -11,7 +11,7 @@
 
 namespace user {
 
-    class User : public interface::IUser
+    class User
     {
 
     public :
@@ -116,7 +116,7 @@ namespace user {
 
 };
 
-void bind_objects(interface::IUser* user, 
+void bind_objects(user::User* user, 
                     interface::IComm* comm, 
                     interface::IPacket* packet, 
                     interface::IUI* uinterface,

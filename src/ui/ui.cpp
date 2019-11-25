@@ -33,7 +33,7 @@ void UInterface::run() {
 int UInterface::socket_interface_run() 
 {
 
-	interface::IUser *usr = get_user_ptr();
+	user::User *usr = get_user_ptr();
     ID *user_id = usr->get_id();
 	
 	while(true)
@@ -150,4 +150,4 @@ void IUI::debug(std::string message)
 }
 
 
-GET_AND_SET_IMPL(UInterface, interface::IUser * , user_ptr)
+GET_AND_SET_IMPL(UInterface, user::User * , user_ptr)

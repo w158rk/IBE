@@ -23,7 +23,7 @@ namespace init
     class Initializer 
     {
         public:
-            GET_AND_SET(interface::IUser *, user)
+            GET_AND_SET(user::User *, user)
             GET_AND_SET2(std::unordered_map<ID*, BIGNUM*>*, numbers)
             GET_AND_SET2(std::unordered_map<ID*, EC_POINT*>*, sp_pub_points)
             GET_AND_SET2(std::unordered_map<ID*, point_t*>*, sp2_pub_points)
@@ -36,11 +36,11 @@ namespace init
             void run();
             struct config_t *get_config();
 
-            Initializer(interface::IUser *user);
+            Initializer(user::User *user);
 
         private:
 
-            DECLARE_MEMBER(interface::IUser *, user)
+            DECLARE_MEMBER(user::User *, user)
             DECLARE_MEMBER(BIGNUM*, share)
             DECLARE_MEMBER(EC_POINT*, sP)
             DECLARE_MEMBER(point_t*, Ppub2)

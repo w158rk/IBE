@@ -34,7 +34,7 @@ void runuser(int argc, char *argv[])
 
     // bind the user    
     #define REINTER(type, obj) reinterpret_cast<type *>(&obj)
-    bind_objects(REINTER(interface::IUser, user), 
+    bind_objects(REINTER(user::User, user), 
                     REINTER(interface::IComm, comm), 
                     REINTER(interface::IPacket, packet), 
                     REINTER(interface::IUI, uinterface), 

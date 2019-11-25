@@ -1,6 +1,8 @@
 #include <config.h>
-#include <utils.hpp>
-#include <init.hpp>
+#include <cstring>
+// #include <utils.hpp>
+#include "init_lcl.hpp"
+#include <ui.hpp>
 
 #ifdef DEBUG 
 #include <sstream>
@@ -11,7 +13,7 @@ using namespace init;
 #define Error(err) throw InitException(err)
 
 # ifdef DEBUG
-# define Debug(err) get_user()->get_ui_ptr()->debug(err)
+# define Debug(err) ui::UInterface::debug(err)
 # endif
 
 void Initializer::gen_poly()
@@ -23,13 +25,6 @@ void Initializer::gen_poly()
     {
         Error("can not generate a polynomial");
     }
-
-#ifdef DEBUG 
-{
-    BIGNUM **dbg_coeff = poly->coeff;
-    BN_one(dbg_coeff[1]);
-}
-#endif
 
     set_poly(poly);
 
@@ -45,7 +40,7 @@ void Initializer::cal_fx(char* result, int *len, ID* id)
 
 
     BIGNUM *x = BN_new();
-    SS_id2num_init(x, id, get_user()->get_mpk_filename());
+    SS_id2num_init(x, id, user_get_mpk_filename(get_user()));
     BIGNUM *res = BN_new();
     if(0 == SS_poly_apply_smx(res, get_poly(), x))
     {
@@ -66,7 +61,7 @@ void Initializer::cal_fx(char* result, int *len, ID* id)
 #ifdef DEBUG
     std::ostringstream s;
     s << "the length of the fx: " << length << std::endl;
-    get_user()->get_ui_ptr()->debug(s.str());
+    Debug(s.str());
 #endif
 
     // set the results
@@ -96,7 +91,7 @@ void Initializer::cal_share()
     int length;
 
     // calc fi(xi) 
-    cal_fx(tmp_str, &length, get_user()->get_id());
+    cal_fx(tmp_str, &length, user_get_id(get_user()));
 
 # ifdef DEBUG
     std::ostringstream s;
@@ -128,12 +123,12 @@ void Initializer::cal_share_with_lp()
     int j=0, i=-1;
     for (ID *id : config.user_ids)
     {
-        if(ID_equal(id, get_user()->get_id()))
+        if(ID_equal(id, user_get_id(get_user())))
         {
             i = j;
         }
         num_list[j] = BN_new();
-        SS_id2num_init(num_list[j], id, get_user()->get_mpk_filename());
+        SS_id2num_init(num_list[j], id, user_get_mpk_filename(get_user()));
         j ++;
     }
 
@@ -165,7 +160,7 @@ void Initializer::cal_shareP1(char *result, int *len)
     EC_POINT *point = nullptr;
     EC_GROUP *group = nullptr;
     BN_CTX *ctx = BN_CTX_new();
-    if(!ibe_ec_cal_xP1(&group, &point, get_share(), get_user()->get_mpk_filename()))
+    if(!ibe_ec_cal_xP1(&group, &point, get_share(), user_get_mpk_filename(get_user())))
     {
         Error("calculate the xP failed");
     }
@@ -211,7 +206,7 @@ void Initializer::cal_shareP2(char *out, int *outlen)
 	point_t *point = ibe_point_new();
 
     // calculate C = xP
-	if (!ibe_point_cal_xP2(point, get_share(), get_user()->get_mpk_filename())) {
+	if (!ibe_point_cal_xP2(point, get_share(), user_get_mpk_filename(get_user()))) {
 		Error("parse xP2 failed");
 	}
 
@@ -243,12 +238,12 @@ void Initializer::cal_shareQ(char *result, int *len, ID *id)
     EC_GROUP *group = nullptr;
     EC_POINT *Q = nullptr;
     BN_CTX *ctx = BN_CTX_new();
-    if(!ibe_ec_id2point(&Q, id->id, id->length, get_user()->get_mpk_filename()))
+    if(!ibe_ec_id2point(&Q, id->id, id->length, user_get_mpk_filename(get_user())))
     {
         Error("calculate the Q failed");
     }
 
-    if(!ibe_ec_cal_xQ(&group, &point, get_share(), Q, get_user()->get_mpk_filename()))
+    if(!ibe_ec_cal_xQ(&group, &point, get_share(), Q, user_get_mpk_filename(get_user())))
     {
         Error("calculate the xP failed");
     }
@@ -294,7 +289,7 @@ void Initializer::cal_sP()
 
 
         // point = share * P1
-        if(!ibe_ec_cal_xP1(&group, &point, get_share(), get_user()->get_mpk_filename()))
+        if(!ibe_ec_cal_xP1(&group, &point, get_share(), user_get_mpk_filename(get_user())))
         {
             Error("calculate the xP failed");
         }
@@ -335,7 +330,7 @@ void Initializer::cal_sP()
         // point = share * P2
         try 
         {
-            if(!ibe_point_cal_xP2(point, get_share(), get_user()->get_mpk_filename()))
+            if(!ibe_point_cal_xP2(point, get_share(), user_get_mpk_filename(get_user())))
             {
                 Error("calculate the xP failed");
             }
@@ -377,8 +372,8 @@ void Initializer::cal_sQ()
     EC_GROUP *group = nullptr;
     BN_CTX *ctx = BN_CTX_new();
     
-    if(!ibe_ec_id2point(&Q, get_user()->get_id()->id, get_user()->get_id()->length, get_user()->get_mpk_filename())
-        ||!ibe_ec_cal_xQ(&group, &point, get_share(), Q, get_user()->get_mpk_filename()))
+    if(!ibe_ec_id2point(&Q, user_get_id(get_user())->id, user_get_id(get_user())->length, user_get_mpk_filename(get_user()))
+        ||!ibe_ec_cal_xQ(&group, &point, get_share(), Q, user_get_mpk_filename(get_user())))
     {
         Error("calculate the xQ failed");
     }

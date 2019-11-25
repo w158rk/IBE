@@ -17,13 +17,13 @@ namespace packet {
         void packet_send();    
 
         GET_AND_SET(interface::IUI *, ui_ptr)
-        GET_AND_SET(interface::IUser *, user_ptr)
+        GET_AND_SET(user::User *, user_ptr)
         GET_AND_SET(interface::IComm *, comm_ptr)
         GET_AND_SET(PacketCTX *, ctx)
 
     private:
         DECLARE_MEMBER(PacketCTX *, ctx)
-        DECLARE_MEMBER(interface::IUser *, user_ptr)
+        DECLARE_MEMBER(user::User *, user_ptr)
         DECLARE_MEMBER(interface::IComm *, comm_ptr)
         DECLARE_MEMBER(interface::IUI *, ui_ptr)
 

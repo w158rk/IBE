@@ -11,12 +11,13 @@ extern "C" {
 }
 
 #include<config.h>
-#include<packet.hpp>
+#include"packet_lcl.hpp"
 #include<crypto.h>
 using namespace packet;
 
 void Packet::send_ap()
-{
+{   
+    user::User *user_ptr = get_user_ptr();
     PacketCTX *ctx = get_ctx();
 
     if(ctx->get_phase() != SEND_APP_PACKET) {
@@ -41,7 +42,7 @@ void Packet::send_ap()
         {
             char *p_sm4key = (char *)std::malloc(SM4_KEY_LEN);
             memcpy(p_sm4key, p_packet->get_payload(), SM4_KEY_LEN);
-            get_user_ptr()->set_sm4_key(p_sm4key);
+            user_set_sm4_key(user_ptr, p_sm4key);
         }
         case SESSION_KEY_ACK_TYPE:
         case IBE_MES_TYPE:

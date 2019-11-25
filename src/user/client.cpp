@@ -1,4 +1,4 @@
-#include<user.hpp>
+#include "user_lcl.hpp"
 #include<iostream>
 
 #include<config.h>
@@ -24,7 +24,7 @@ void User::run_get_private_key(char *server_ip,
 	 try
 	 {
 		// get the files from the comm object
-		interface::IComm::file_main(this, comm->get_read_file(), 
+		comm_file_main(this, comm->get_read_file(), 
 									comm->get_write_file());
 	 }
 	 catch(const std::exception& e)

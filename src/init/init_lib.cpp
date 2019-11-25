@@ -1,6 +1,7 @@
 #include <config.h>
-#include <init.hpp>
 #include <comm.hpp>
+
+#include "init_lcl.hpp"
 
 using namespace init;
 
@@ -15,14 +16,20 @@ using namespace init;
 
 void Initializer::store_sP()
 {
+    char *mpk_filename = user_get_mpk_filename(get_user());
+#ifdef DEBUG 
+{
+    fprintf(stderr, "filename : %s\n", mpk_filename);
+}
+#endif
     EC_POINT *sP = get_sP();
-    ibe_ec_store_Ppub1(sP, get_user()->get_mpk_filename());
+    ibe_ec_store_Ppub1(sP, mpk_filename);
     point_t *pPub2 = get_Ppub2();
-    ibe_point_store_Ppub2(pPub2, get_user()->get_mpk_filename());
+    ibe_point_store_Ppub2(pPub2, mpk_filename);
 }
 
 void Initializer::store_sQ()
 {
     EC_POINT *sQ = get_sP();
-    ibe_ec_store_sk(sQ, get_user()->get_id(), get_user()->get_mpk_filename());
+    ibe_ec_store_sk(sQ, user_get_id(get_user()), user_get_mpk_filename(get_user()));
 }

@@ -13,7 +13,7 @@ extern "C" {
 	#include <config.h>
 	#include <string.h>
 }
-#include <comm.hpp>
+#include "comm_lcl.hpp"
 
 #include <sstream>
 #include <iostream>
@@ -26,7 +26,7 @@ using namespace comm;
 int Comm::run_listen_core()
 {
 	// init the static variable
-	ID *entity_id = m_user_ptr->get_id(); 
+	ID *entity_id = user_get_id(get_user_ptr()); 
 	char *entity_id_cstr = entity_id->id;
 	int entity_id_len = entity_id->length; 
 

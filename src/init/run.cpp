@@ -1,29 +1,29 @@
 #include <unistd.h>
 #include <set>
 #include <iostream>
+#include <ui.hpp>
 
 #include <config.h>
-#include <init.hpp>
-#include <comm.hpp>
+#include "init_lcl.hpp"
 
 using namespace init;
 
-#define Error(err) get_user()->get_ui_ptr()->error(err)
-#define Print(err) get_user()->get_ui_ptr()->print(err)
+#define Error(err) throw InitException(err)
+#define Print(err) ui::UInterface::print(err)
 
 # ifdef DEBUG
 # include <sstream>
-# define Debug(err) get_user()->get_ui_ptr()->debug(err)
+# define Debug(err) ui::UInterface::debug(err)
 # endif
 
 # define FOR_BLOCK_CHECK \
-if(ID_equal(id, get_user()->get_id())           \
+if(ID_equal(id, user_get_id(get_user()))           \
     ||sent_list.find(id)  != sent_list.end())   \
 { continue; }           \
 if(sent_list.size() == cnt){ break; }   
 
 #define TRY_BEGIN try {
-#define TRY_END } catch(comm::CommException& e) { \
+#define TRY_END } catch(InitException& e) { \
     std::cerr << e.what() << std::endl;     \
     continue; \
 }
@@ -98,7 +98,7 @@ void Initializer::run()
 #endif
 
             TRY_BEGIN
-                get_user()->send_init_message_1(buff, len, id);
+                user_send_init_message_1(get_user(), buff, len, id);
             TRY_END
             sent_list.insert(id);
 
@@ -155,7 +155,7 @@ void Initializer::run()
             FOR_BLOCK_CHECK
 
             TRY_BEGIN
-                get_user()->send_init_message_2(buff, len, len2, id);
+                user_send_init_message_2(get_user(), buff, len, len2, id);
             TRY_END
             sent_list.insert(id);
 
@@ -215,7 +215,7 @@ void Initializer::run()
 #endif
 
             TRY_BEGIN
-            get_user()->send_init_message_3(buff, len, id);
+            user_send_init_message_3(get_user(), buff, len, id);
             TRY_END
 
             sent_list.insert(id);

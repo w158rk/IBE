@@ -8,7 +8,7 @@
 using namespace packet;
 
 GET_AND_SET_IMPL(Packet, interface::IUI *, ui_ptr)
-GET_AND_SET_IMPL(Packet, interface::IUser *, user_ptr)
+GET_AND_SET_IMPL(Packet, user::User *, user_ptr)
 GET_AND_SET_IMPL(Packet, interface::IComm *, comm_ptr)
 GET_AND_SET_IMPL(Packet, PacketCTX *, ctx)
 

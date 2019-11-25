@@ -1,5 +1,5 @@
 #include <utils.hpp>
-#include <init.hpp>
+#include "init_lcl.hpp"
 
 using namespace init;
 
@@ -7,15 +7,20 @@ GET_AND_SET_IMPL(InitException, std::string, message)
 
 // the definition of the initexception methods must be 
 // in front of this definition
-#define Error(x) get_user()->get_ui_ptr()->error(x)
+#define Error(x) throw InitException(x)
 
-Initializer::Initializer(interface::IUser *user)
+#ifdef DEBUG 
+#include<ui.hpp>
+#define Debug(x) ui::UInterface::debug(x)
+#endif
+
+Initializer::Initializer(user::User *user)
 {
     config.is_set = false;
     config.user_cnt = 0;
 
     set_user(user);
-    user->set_initializer(this);
+    user_set_init(this, user);
     read_config();
 
     // some members exists from the very beginning to the end of the 
@@ -32,7 +37,7 @@ Initializer::Initializer(interface::IUser *user)
 }
 
 
-GET_AND_SET_IMPL(Initializer, interface::IUser *, user)
+GET_AND_SET_IMPL(Initializer, user::User *, user)
 GET_AND_SET_IMPL2(Initializer, std::unordered_map<ID*, BIGNUM*>*, numbers)
 GET_AND_SET_IMPL2(Initializer, std::unordered_map<ID*, EC_POINT*>*, sp_pub_points)
 GET_AND_SET_IMPL2(Initializer, std::unordered_map<ID*, point_t*>*, sp2_pub_points)
@@ -86,7 +91,7 @@ struct config_t *Initializer::get_config()
 
 void Initializer::read_config()
 {
-    char *filename = get_user()->get_cfg_filename();
+    char *filename = user_get_cfg_filename(get_user());
     if(!filename)
     {
         throw new InitException("No filename in the user context");
@@ -95,13 +100,13 @@ void Initializer::read_config()
 
     if(!doc->HasMember("init"))
     {
-        get_user()->get_ui_ptr()->error("No initial config exists");
+        Error("No initial config exists");
     }
     rapidjson::Value& val = (*doc)["init"];
 
     if(!val.HasMember("user_ids"))
     {
-        get_user()->get_ui_ptr()->error("No user ids identified in the config");
+        Error("No user ids identified in the config");
     }
 
     /* read the ids */
@@ -117,7 +122,7 @@ void Initializer::read_config()
     config.is_set = true;
 
 #ifdef DEBUG 
-    get_user()->get_ui_ptr()->debug("read user ids finished");
+    Debug("read user ids finished");
 #endif
 
 }

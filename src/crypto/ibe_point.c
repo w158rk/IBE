@@ -252,22 +252,9 @@ int ibe_point_store_Ppub2(point_t *point, char *mpk_file)
         goto end;
     }
     fclose(mpk_fp);
-#ifdef DEBUG
-{
-	char data[10] = "1234567890";
-	char cipher[BUFFER_SIZE] = {0};
-	int datalen = 10;
-	int cipherlen = BUFFER_SIZE;
-	fprintf(stderr, "encrypt: %d\n", SMX_encrypt(NID_sm9encrypt_with_sm3_xor, data, datalen, cipher, &cipherlen, smx_mpk, "Server", 6));
 
-}
-#endif
 
-	flag = point_to_octets_smx(point, buff, ctx);
-#ifdef DEBUG 
-	fprintf(stderr, "[IMPORTANT]the flag of the string: %d\n", flag);
-#endif
-	if(!flag)
+	if(!point_to_octets_smx(point, buff, ctx))
 	{
 		ERROR(POINT_TO_STR_ERROR);
         goto end;

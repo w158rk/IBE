@@ -44,7 +44,7 @@ void runtest(int argc, char *argv[])
 
     // bind the server    
     #define REINTER(type, obj) reinterpret_cast<type *>(&obj)
-    bind_objects(REINTER(interface::IUser, server), 
+    bind_objects(REINTER(user::User, server), 
                     REINTER(interface::IComm, comm), 
                     REINTER(interface::IPacket, packet), 
                     REINTER(interface::IUI, uinterface), 

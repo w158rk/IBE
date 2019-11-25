@@ -363,6 +363,8 @@ int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file)
 	int datalen = 10;
 	int cipherlen = BUFFER_SIZE;
 	int ddata_len = BUFFER_SIZE;
+	fprintf(stderr, "encrypt: %d\n", SMX_encrypt(NID_sm9encrypt_with_sm3_xor, data, datalen, cipher, &cipherlen, smx_mpk, "Client", 6));
+	fprintf(stderr, "decrypt: %d\n", SMX_decrypt(NID_sm9encrypt_with_sm3_xor, cipher, cipherlen, ddata, &ddata_len, sk));
 	fprintf(stderr, "encrypt: %d\n", SMX_encrypt(NID_sm9encrypt_with_sm3_xor, data, datalen, cipher, &cipherlen, smx_mpk, "Server", 6));
 	fprintf(stderr, "decrypt: %d\n", SMX_decrypt(NID_sm9encrypt_with_sm3_xor, cipher, cipherlen, ddata, &ddata_len, sk));
 

@@ -14,13 +14,15 @@
 
 #include <iostream>
 #include <sstream>
-#include <packet.hpp>
-#include <init.hpp>
+#include "packet_lcl.hpp"
+#include <ui.hpp>
 
 using namespace packet;
 
 # define Error(err) throw PacketException(err)
-# define Debug(info) interface::IUI::debug(info)
+# define Debug(info) ui::UInterface::debug(info)
+# define Print(info) ui::UInterface::print(info)
+# define Print2(a,b) ui::UInterface::print(a,b)
 
 int handle_m(Packet *target)
 {
@@ -31,7 +33,7 @@ int handle_m(Packet *target)
     int length = p->get_length();
     
     /*@todo forbid the overflow, but it may cause some other problem */
-    interface::IUI::print(p->get_payload(), length);
+    Print2(p->get_payload(), length);
     rtn = 1;
 
     return rtn;
@@ -55,9 +57,9 @@ int handle_sk_request(Packet *target)
     IBEMasterSecret msk = NULL;
     IBEPrivateKey sk = NULL;
 
-    interface::IUser *user= target->get_user_ptr();
-    char *msk_filename = user->get_msk_filename();
-    char *mpk_filename = user->get_mpk_filename();
+    user::User *user= target->get_user_ptr();
+    char *msk_filename = user_get_msk_filename(user);
+    char *mpk_filename = user_get_mpk_filename(user);
 
     if (get_msk_fp(msk_filename, &msk) == 0) {
         interface::IUI::error(" you don't have the access to msk file");
@@ -73,7 +75,7 @@ int handle_sk_request(Packet *target)
     if ( 0 == ibe_extract(&sk,
                             &sk_len, 
                             &msk, 
-                            target->get_user_ptr()->get_msk_len(),
+                            user_get_msk_len(target->get_user_ptr()),
                             client_id, 
                             (size_t)client_id_len)) {
         interface::IUI::error(" cannot extract the private key");
@@ -132,7 +134,7 @@ int handle_sk_request(Packet *target)
 
     char *sm4_key= (char *)std::malloc(SM4_KEY_LEN);
 	memcpy(sm4_key, payload, 16);       //payload的前16位为sm4key
-    target->get_user_ptr()->set_sm4_key(sm4_key);
+    user_set_sm4_key(target->get_user_ptr(), sm4_key);
 
     // send the packet
 #ifdef DEBUG 
@@ -237,21 +239,20 @@ int handle_init_message_1(Packet *target)
     memcpy(id, message, id_len);
 
     // check if it is necessary to insert the number
-    init::Initializer *initializer = 
-            target->get_user_ptr()->get_initializer();
+    init::Initializer *initializer = user_get_init(target->get_user_ptr());
     
     bool init_is_run = true;     // used to trigger the initializer
     if(!initializer)
     {
         init_is_run = false;
-        initializer = new init::Initializer(target->get_user_ptr());
+        initializer = init_new(target);
     }
 
-    auto numbers = initializer->get_numbers();
+    auto numbers = init_get_numbers(initializer);
 
     bool need_to_insert = true;
     ID *tmp_id = nullptr;
-    for(auto elem : *(initializer->get_numbers()))
+    for(auto elem : *(numbers))
     {
         tmp_id = elem.first;
         if(id_len==tmp_id->length
@@ -265,7 +266,7 @@ int handle_init_message_1(Packet *target)
     if(need_to_insert)
     {
         ID *insert_id = NULL;
-        for(auto tmp_id : initializer->get_config()->user_ids)
+        for(auto tmp_id : *(init_get_user_ids(initializer)))
         {
             if(id_len==tmp_id->length
                 && 0==strncmp(id, tmp_id->id, id_len))
@@ -289,12 +290,6 @@ int handle_init_message_1(Packet *target)
             }
 
             (*numbers)[insert_id] = bn;
-#ifdef DEBUG 
-            std::ostringstream s;
-            s << "insert already, the size of numbers and the numbers of initializer: ";
-            s << numbers->size() << " , " << initializer->get_numbers()->size();
-            Debug(s.str());
-#endif
         }
         
     }
@@ -308,7 +303,7 @@ int handle_init_message_1(Packet *target)
     // trigger the initializer
     if(!init_is_run)
     {
-        initializer->run();
+        init_run(initializer);
     }
 
     rnt=1;
@@ -346,12 +341,11 @@ int handle_init_message_2(Packet *target)
     memcpy(id, message, id_len);
 
     // check if it is necessary to insert the point
-    init::Initializer *initializer = 
-            target->get_user_ptr()->get_initializer();
+    init::Initializer *initializer = user_get_init(target->get_user_ptr());
     
 
-    auto sp_points = initializer->get_sp_pub_points();
-    auto sp2_points = initializer->get_sp2_pub_points();
+    auto sp_points = init_get_sp_pub_points(initializer);
+    auto sp2_points = init_get_sp2_pub_points(initializer);
 
     bool need_to_insert = true;
     ID *tmp_id = nullptr;
@@ -369,7 +363,7 @@ int handle_init_message_2(Packet *target)
     if(need_to_insert)
     {
         ID *insert_id = NULL;
-        for(auto tmp_id : initializer->get_config()->user_ids)
+        for(auto tmp_id : *init_get_user_ids(initializer))
         {
             if(id_len==tmp_id->length
                 && 0==strncmp(id, tmp_id->id, id_len))
@@ -422,12 +416,6 @@ int handle_init_message_2(Packet *target)
 
             BN_CTX_free(ctx);        
 
-#ifdef DEBUG 
-            std::ostringstream s;
-            s << "insert already, the size of sp points and the points of initializer: ";
-            s << sp_points->size() << " , " << initializer->get_sp_pub_points()->size();
-            Debug(s.str());
-#endif
         }
         
     }
@@ -460,11 +448,10 @@ int handle_init_message_3(Packet *target)
     memcpy(id, message, id_len);
 
     // check if it is necessary to insert the point
-    init::Initializer *initializer = 
-            target->get_user_ptr()->get_initializer();
+    init::Initializer *initializer = user_get_init(target->get_user_ptr()); 
     
 
-    auto sq_points = initializer->get_sq_pub_points();
+    auto sq_points = init_get_sq_pub_points(initializer);
 
     bool need_to_insert = true;
     ID *tmp_id = nullptr;
@@ -482,7 +469,7 @@ int handle_init_message_3(Packet *target)
     if(need_to_insert)
     {
         ID *insert_id = NULL;
-        for(auto tmp_id : initializer->get_config()->user_ids)
+        for(auto tmp_id : *init_get_user_ids(initializer))
         {
             if(id_len==tmp_id->length
                 && 0==strncmp(id, tmp_id->id, id_len))
@@ -511,12 +498,6 @@ int handle_init_message_3(Packet *target)
             (*sq_points)[insert_id] = pnt;
             BN_CTX_free(ctx);
 
-#ifdef DEBUG 
-            std::ostringstream s;
-            s << "insert already, the size of sq points and the points of initializer: ";
-            s << sq_points->size() << " , " << initializer->get_sq_pub_points()->size();
-            Debug(s.str());
-#endif
         }
         
     }

@@ -11,7 +11,8 @@ extern "C" {
     #include <sys.h>
 }
 
-#include<packet.hpp>
+#include <ui.hpp>
+#include "packet_lcl.hpp"
 #include<config.h>
 #define DEBUG
 #ifdef DEBUG 
@@ -22,12 +23,13 @@ extern "C" {
 using namespace packet;
 
 #define Error(err) throw PacketException(err)
-#define Debug(info) get_user_ptr()->get_ui_ptr()->debug(info)
+#define Debug(info) ui::UInterface::debug(info)
 // at this phase, there is a sec packet in the 
 // ctx object, so the app packet is in the payload 
 // of that sec packet
 void Packet::send_enc()
 {
+    user::User *user_ptr = get_user_ptr();
     PacketCTX *ctx = get_ctx();
 
     if(ctx->get_phase() != SEND_ENC) {
@@ -58,11 +60,11 @@ void Packet::send_enc()
 #ifdef DEBUG 
 {
             std::ostringstream s;
-            s << "Get mpk file: " << get_user_ptr()->get_mpk_filename() << std::endl;
+            s << "Get mpk file: " << user_get_mpk_filename(user_ptr) << std::endl;
             Debug(s.str()); 
 }
 #endif
-            if(!get_mpk_fp(get_user_ptr()->get_mpk_filename(), &mpk))
+            if(!get_mpk_fp(user_get_mpk_filename(user_ptr), &mpk))
             {
                 Error("cannot get mpk from file");
             }
@@ -78,7 +80,7 @@ void Packet::send_enc()
                         cipher, 
                         &cipher_len, 
                         &mpk,
-                        get_user_ptr()->get_mpk_len(),
+                        user_get_mpk_len(user_ptr),
                         ctx->get_dest_id()->id, 
                         ctx->get_dest_id()->length))
             {
@@ -145,14 +147,14 @@ void Packet::send_enc()
             sm4_context *sm4ctx = new sm4_context;
 
             // get sm4 key from users directly
-            sm4_setkey_enc(sm4ctx,(unsigned char*)(get_user_ptr()->get_sm4_key()));
+            sm4_setkey_enc(sm4ctx,(unsigned char*)(user_get_sm4_key(user_ptr)));
             sm4_crypt_ecb(sm4ctx, ENC_PARAMETER, app_length + APP_HEAD_LEN, 
                             (unsigned char*)data, (unsigned char*)cipher, &c_len);
                  
 #ifdef DEBUG
 {
             /*对生成的cipher进行验证是否正确*/
-            sm4_setkey_dec(sm4ctx, (unsigned char*)(get_user_ptr()->get_sm4_key()));
+            sm4_setkey_dec(sm4ctx, (unsigned char*)user_get_sm4_key(user_ptr));
             unsigned char *tmp = (unsigned char *)std::malloc(c_len);
             memcpy(tmp, cipher, c_len);
             int out_len;

@@ -7,7 +7,7 @@ extern "C" {
 #include <config.h>
 }
 
-#include<packet.hpp>
+#include "packet_lcl.hpp"
 
 #ifdef DEBUG 
 #include<iostream>
@@ -26,9 +26,10 @@ extern "C" {
 using namespace packet;
 void Packet::handle_dec() {
 
-    PacketCTX *ctx = get_ctx();
 
     /* packets */
+    user::User *user_ptr = get_user_ptr();
+    PacketCTX *ctx = get_ctx();
     SecPacket *p_sec_packet = ctx->get_payload_sec();
 
     int crypto_type = p_sec_packet->get_type();
@@ -45,15 +46,13 @@ void Packet::handle_dec() {
         // get the private key from file
         IBEPrivateKey sk = NULL;
 
-        GENERATE_SK_FILENAME((ctx->get_dest_id()))
+        char *filename = NULL;
+        ibe_gen_sk_filename(&filename, user_get_id(user_ptr));
         get_sk_fp(filename, &sk);
-        FREE_SK_FILENAME
-        std::cout<<"cipher is"<<p_sec_packet->get_payload_byte()<<std::endl;
-        std::cout<<"cipher len is"<<c_len<<std::endl;
-        std::cout<<"sk is"<<sk<<std::endl;
+        ibe_free_filename(filename);
+
         ibe_decrypt(p_sec_packet->get_payload_byte(), c_len, m, &m_len, 
-                            &sk, get_user_ptr()->get_sk_len());
-        std::cout<<"m is"<<m<<std::endl;
+                            &sk, user_get_sk_len(user_ptr));
 //         size_t m_len;
 
 //         // get the private key from file
@@ -128,7 +127,7 @@ void Packet::handle_dec() {
         sm4_context sm4ctx;
 
         // get the key from the packet object
-        sm4_setkey_dec(&sm4ctx, (unsigned char*)get_user_ptr()->get_sm4_key());
+        sm4_setkey_dec(&sm4ctx, (unsigned char*)user_get_sm4_key(user_ptr));
 
         // allocate space for decryption
         int length = p_sec_packet->get_length();

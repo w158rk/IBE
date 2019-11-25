@@ -1,9 +1,11 @@
 {
     "system" : {
-        "log" : "server.log"
+        "log" : "client.log"
     },
     "crypto" : {
-        "mpk_file" : "mpk-Server.conf",
+        "mpk_file" : "mpk-Client.conf",
+        "msk_file" : "msk.conf",
+        "msk_len_file" : "msk-len.conf",
         "mpk_len_file" : "mpk-len.conf"
     },
     "id" : {

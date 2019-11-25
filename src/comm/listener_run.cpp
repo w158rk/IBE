@@ -5,18 +5,20 @@ extern "C" {
 
 #include <stdio.h>
 #include "depend.h"
-#include "comm_lcl.h"
 
 }
 
+#include "comm_lcl.hpp"
 #include<iostream>
 
-void comm::Comm::file_listener_run()
+using namespace comm;
+
+void Comm::file_listener_run()
 {
 	try 
 	{
 		file_listener_run_internal();
-	}catch(comm::CommException &e)
+	}catch(CommException &e)
 	{
 		std::cerr << e.what() << std::endl;
 	}catch(packet::PacketException &e)
@@ -25,9 +27,9 @@ void comm::Comm::file_listener_run()
 	}
 }
 
-void comm::Comm::file_listener_run_internal()
+void Comm::file_listener_run_internal()
 {
-	if(!m_fread_file | !m_fwrite_file){
+	if(!m_fread_file || !m_fwrite_file){
         interface::IUI::error("[error] flags are not set completely, check the error sig and files");
 		return ;
     }
@@ -52,7 +54,7 @@ void comm::Comm::file_listener_run_internal()
 
 	// handle finished
 	// delete this comm and the thread
-	get_user_ptr()->delete_client(this);
+	user_delete_client(this);
 	// get_user_ptr()->delete_thread(get_thread());
 #ifdef DEBUG 
 	fprintf(stderr, "remove the listening comm from the user\n");
@@ -61,14 +63,14 @@ void comm::Comm::file_listener_run_internal()
 
 }
 
-void comm::Comm::socket_listener_run()
+void Comm::socket_listener_run()
 {
 	if(m_fread_file | m_fwrite_file){
 #ifdef DEBUG 
 		std::cerr << "m_fread_file: " << m_fread_file << std::endl;
 		std::cerr << "m_fwrite_file: " << m_fwrite_file << std::endl;
 #endif
-		throw comm::CommException("[error in socket_listener_run] flags are not set properly, check the files");
+		throw CommException("[error in socket_listener_run] flags are not set properly, check the files");
     }
 
 	int listen_fd, connect_fd;
@@ -76,7 +78,7 @@ void comm::Comm::socket_listener_run()
 	socklen_t client_len;
 
 	// create the socket 
-	int listen_port = get_user_ptr()->get_port();
+	int listen_port = user_get_port(this);
 	if((listen_fd = create_listening_socket(listen_port)) == -1)
 	{
 		fprintf(stderr, "can't create listening socket\n");
@@ -106,7 +108,7 @@ void comm::Comm::socket_listener_run()
 		else
 		{
 			// if accept a new client, generate a new listening thread for that client 
-			interface::IComm::file_main(get_user_ptr(), read_file, read_file);
+			Comm::file_main(get_user_ptr(), read_file, read_file);
 
 		}
 #ifdef DEBUG 
