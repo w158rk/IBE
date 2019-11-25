@@ -33,9 +33,9 @@ void Packet::send_ap()
     {
         case PLAIN_MESSAGE_TYPE:
         case PRIVATE_KEY_RESPONSE_TYPE:
-        // case SESSION_KEY_FINAL_TYPE:
-        //     send_type = SM4_TYPE;
-        //     break;
+        case SESSION_KEY_FINAL_TYPE:
+            send_type = SM4_TYPE;
+            break;
         
         case PRIVATE_KEY_REQUEST_TYPE:
         {

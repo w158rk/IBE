@@ -22,9 +22,9 @@
 #define PRIVATE_KEY_RESPONSE_TYPE   2
 #define SESSION_KEY_REQUEST_TYPE    3
 #define SESSION_KEY_ACK_TYPE        4
-// #define SESSION_KEY_FINAL_TYPE      5
-#define IBE_MES_TYPE                5
-#define SIGN_REQUEST_TYPE           6
+#define SESSION_KEY_FINAL_TYPE      5
+#define IBE_MES_TYPE                6
+#define SIGN_REQUEST_TYPE           10
 
 // initialization phase 
 # define INIT_MESSAGE_1             7

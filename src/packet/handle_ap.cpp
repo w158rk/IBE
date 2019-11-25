@@ -566,7 +566,7 @@ void Packet::handle_ap()
             res = handle_session_ack(this);
             break;
 
-        case SIGN_REQUEST_TYPE:
+        case SESSION_KEY_FINAL_TYPE:
             res = handle_session_final(this);
             break;
 
