@@ -25,7 +25,7 @@ void Packet::send_sign()
     int app_length = p_app_packet->get_length();
 
     /*获取自己的sign*/
-    SignMesg *sign;
+    SignMesg *sign = NULL;
     
     p_app_packet->set_sign(sign);
     p_sec_packet->set_payload_app(p_app_packet);

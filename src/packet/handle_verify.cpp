@@ -39,7 +39,7 @@ void Packet::handle_verify() {
     sign = p->get_sign();
     if(sign->front==nullptr)
     {
-        if(!strcmp(mes_id, sign->ID)||!strcmp((char *)mes_mpk, sign->PP))
+        if(!strcmp(mes_id, sign->ID)||!strcmp((char *)mes_mpk, (char *)sign->PP))
         {
             fprintf(stderr, "verify error\n");
         }

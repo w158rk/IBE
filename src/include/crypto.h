@@ -17,7 +17,7 @@ extern "C" {
 #include <openssl/sm4.h>
 
 #include <ibe.h>
-#include <ds.hpp>
+#include <ds.h>
 
 
 /* key lengths */

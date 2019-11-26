@@ -9,7 +9,7 @@
 #include <ds.h>
 #include<utils.h>
 #include<crypto.h>
-#include<string.h>
+#include<string>
 
 
 enum state {
@@ -26,14 +26,6 @@ enum state {
     RECV_SEC_PACKET,
 };
 
-struct SignMesg
-{
-    IBEPublicParameters *PP;
-    char *ID;
-    char *sign_data;
-    struct SignMesg *front;
-};
-
 class AppPacket 
 {
 
@@ -43,7 +35,7 @@ public:
 
     GET_AND_SET(char *, payload);
     GET_AND_SET(char *, head);
-    GET_AND_SET(SignMesg *, sign);
+    GET_AND_SET(struct SignMesg *, sign);
 
     static AppPacket *from_bytes(char *);
     char *to_bytes();
@@ -57,7 +49,7 @@ private:
     char m_head[APP_HEAD_LEN];
     bool m_fhead;
     DECLARE_MEMBER(char *, payload);
-    DECLARE_MEMBER(SignMesg *, sign);
+    DECLARE_MEMBER(struct SignMesg *, sign);
 
 };
 
