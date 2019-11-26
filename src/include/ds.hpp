@@ -9,7 +9,7 @@
 #include <ds.h>
 #include<utils.h>
 #include<crypto.h>
-# include <string>
+#include<string.h>
 
 
 enum state {
@@ -28,10 +28,10 @@ enum state {
 
 struct SignMesg
 {
-    char *PP;
+    IBEPublicParameters *PP;
     char *ID;
     char *sign_data;
-    SignMesg *front;
+    struct SignMesg *front;
 };
 
 class AppPacket 

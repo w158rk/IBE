@@ -17,6 +17,7 @@ extern "C" {
 #include <openssl/sm4.h>
 
 #include <ibe.h>
+#include <ds.hpp>
 
 
 /* key lengths */
@@ -41,6 +42,7 @@ int put_iv_fp(const char* filename, const char* iv, size_t len);
 int get_iv_fp(const char* filename, char* iv, size_t len);
 int gen_random_iv(char *iv);
 int gen_random_key(char *key);
+int run_ibe_verify(struct SignMesg *sig, IBEPublicParameters *mpk, const char *id, size_t id_len);
 
 void gen_random_sm4(unsigned char *key);
 void set_key(unsigned char *key, FILE* filename);

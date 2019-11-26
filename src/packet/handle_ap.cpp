@@ -236,7 +236,7 @@ int handle_sign_request(Packet *target)
 
     SignMesg new_sig;
     new_sig.ID = client_id;
-    new_sig.PP = client_PP;
+    new_sig.PP = ctx->get_mpk();
     char *client_sign = (char *)std::malloc(BUFFER_SIZE);
     long sign_len = BUFFER_SIZE;
 
