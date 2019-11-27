@@ -194,7 +194,23 @@ void SecPacket::unset_head()
     m_fhead = false;
 }
 
-char *SecPacket::get_signature() 
+// char *SecPacket::get_signature() 
+// {
+//     if(!m_fsignature)
+//     {
+//         interface::IUI::error("can not get the signature of sec packet");
+//         throw PacketException("can not get the signature of sec packet");
+//     }
+//     return m_signature;
+// }
+
+// void SecPacket::set_signature(char *signature)
+// {
+//     std::memcpy(m_signature, signature, SIGN_LEN);
+//     m_fsignature = true;
+// }
+
+SignMesg *SecPacket::get_signature()
 {
     if(!m_fsignature)
     {
@@ -204,9 +220,9 @@ char *SecPacket::get_signature()
     return m_signature;
 }
 
-void SecPacket::set_signature(char *signature)
+void SecPacket::set_signature(SignMesg *signature)
 {
-    std::memcpy(m_signature, signature, SIGN_LEN);
+    m_signature = signature;
     m_fsignature = true;
 }
 
@@ -236,6 +252,7 @@ void SecPacket::unset_payload_byte()
     m_fpayload = false;
 }
 
+/*====================================================================*/
 AppPacket *SecPacket::get_payload_app() 
 {
     if(!m_fpayload)
@@ -251,6 +268,8 @@ void SecPacket::set_payload_app(AppPacket *payload)
     m_payload.appPacket = payload;
     m_fpayload = true;
 }
+
+/*====================================================================*/
 
 void SecPacket::unset_payload_app()
 {

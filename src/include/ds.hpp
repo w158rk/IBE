@@ -35,7 +35,6 @@ public:
 
     GET_AND_SET(char *, payload);
     GET_AND_SET(char *, head);
-    GET_AND_SET(struct SignMesg *, sign);
 
     static AppPacket *from_bytes(char *);
     char *to_bytes();
@@ -70,7 +69,7 @@ private:
 
     DECLARE_MEMBER(union payload, payload)
     char m_head[SEC_HEAD_LEN];
-    char m_signature[SIGN_LEN];
+    SignMesg *m_signature;
     bool m_fhead;
     bool m_fsignature;
 
@@ -83,7 +82,7 @@ public:
     GET_AND_SET(char *, payload_byte)
     GET_AND_SET(AppPacket *, payload_app)
     GET_AND_SET(char *, head);
-    GET_AND_SET(char *, signature);
+    GET_AND_SET(SignMesg *, signature);
 
     int get_length();
     int get_type();
