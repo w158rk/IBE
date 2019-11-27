@@ -92,6 +92,21 @@ void AppPacket::unset_head()
     m_fhead = false;
 }
 
+SignMesg *AppPacket::get_sig()
+{
+    if(!m_fsignature)
+    {
+        interface::IUI::error("can not get the sig of app packet");
+        throw PacketException("can not get the sig of app packet");
+    }
+}
+
+void AppPacket::set_sig(SignMesg *sig)
+{
+    m_signature = sig;
+    m_fsignature = false;
+}
+
 int AppPacket::get_length()
 {
     char *head = get_head();

@@ -54,6 +54,8 @@ int handle_sk_request(Packet *target)
 
     IBEMasterSecret msk = NULL;
     IBEPrivateKey sk = NULL;
+    IBEPublicParameters mpk = NULL;
+
 
     interface::IUser *user= target->get_user_ptr();
     char *msk_filename = user->get_msk_filename();
@@ -63,6 +65,11 @@ int handle_sk_request(Packet *target)
         interface::IUI::error(" you don't have the access to msk file");
         throw PacketException(" you don't have the access to msk file");
     }       //从文件中读取s
+
+    if (get_mpk_fp(mpk_filename, &mpk) == 0) {
+        interface::IUI::error(" you don't have the access to msk file");
+        throw PacketException(" you don't have the access to msk file");
+    }
 
     // there is a bug that sucks 
     // it seems that the function get_msk_fp would change the value of p->payload 
@@ -120,7 +127,52 @@ int handle_sk_request(Packet *target)
     // TODO : Not sure if it is necessary to copy the key from sk to psk 
     // If the sk is allocated in the stack, it is 
     // Otherwise, the following three lines can be replaced by a single line
-    send_packet->set_payload (sk);        
+    send_packet->set_payload (sk);
+
+    SignMesg server_sig;
+
+    /* 获取顶级域的sP */
+    IBEPublicParameters ss_mpk = NULL;
+
+    if(ctx->get_dest_id()->father_node==nullptr)
+    {
+        server_sig.ID = ctx->get_dest_id()->id;
+        server_sig.PP = ss_mpk;
+        server_sig.sign_data = NULL;
+        server_sig.sign_len = 0;
+        server_sig.front = nullptr;
+    }
+
+    else
+    {
+        /* 获取自己保存的sig */
+    }
+
+    /* 生成sig_data */
+    char *data = (char *)malloc(client_id_len+IBE_MPK_LEN);
+    memcpy(data,client_id, client_id_len);
+    memcpy(data,mpk,IBE_MPK_LEN);
+    
+    IBEPrivateKey server_sk = NULL;
+    GENERATE_SK_FILENAME((ctx->get_dest_id()))
+    get_sk_fp(filename, &server_sk);
+    FREE_SK_FILENAME
+
+    char *client_sign = (char *)std::malloc(BUFFER_SIZE);
+    size_t sign_len = BUFFER_SIZE;
+
+    if(!(ibe_sign(data, client_id_len+IBE_MPK_LEN, client_sign, &sign_len, &server_sk, 380)))
+    {
+        fprintf(stderr, "sign error\n");
+        return -1;
+    }
+
+    SignMesg send_sig;
+    send_sig.ID = client_id;
+    send_sig.PP = mpk;
+    send_sig.sign_data = client_sign;
+    send_sig.sign_len = sign_len;
+    send_sig.front = &server_sig;
     
     /** set the variables in the context 
      * 1. set the phase as SEND_ADD_PACKET 

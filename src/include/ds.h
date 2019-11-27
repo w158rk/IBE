@@ -57,9 +57,10 @@ typedef struct ID_STR{
 
 struct SignMesg
 {
-    IBEPublicParameters *PP;
     char *ID;
+    IBEPublicParameters PP;
     char *sign_data;
+    int sign_len;
     struct SignMesg *front;
 };
 
