@@ -219,78 +219,78 @@ int handle_message(Packet *target)
     return rnt;
 }
 
-int handle_sign_request(Packet *target)
-{
-    int rnt = 0;
+// int handle_sign_request(Packet *target)
+// {
+//     int rnt = 0;
 
-    PacketCTX *ctx = target->get_ctx();
-    AppPacket *p = ctx->get_payload_app();
-    char *payload = p->get_payload();        //获取的payload为sP加上id
-    int payload_len = p->get_length();
+//     PacketCTX *ctx = target->get_ctx();
+//     AppPacket *p = ctx->get_payload_app();
+//     char *payload = p->get_payload();        //获取的payload为sP加上id
+//     int payload_len = p->get_length();
     
-    char *client_id = payload + IBE_MPK_LEN;
-    int client_id_len = payload_len - IBE_MPK_LEN;
+//     char *client_id = payload + IBE_MPK_LEN;
+//     int client_id_len = payload_len - IBE_MPK_LEN;
 
-    char *client_PP = (char *)std::malloc(IBE_MPK_LEN);
-    memcpy(client_PP, payload, IBE_MPK_LEN);
+//     char *client_PP = (char *)std::malloc(IBE_MPK_LEN);
+//     memcpy(client_PP, payload, IBE_MPK_LEN);
 
-    SignMesg new_sig;
-    new_sig.ID = client_id;
-    new_sig.PP = ctx->get_mpk();
-    char *client_sign = (char *)std::malloc(BUFFER_SIZE);
-    long sign_len = BUFFER_SIZE;
+//     SignMesg new_sig;
+//     new_sig.ID = client_id;
+//     new_sig.PP = ctx->get_mpk();
+//     char *client_sign = (char *)std::malloc(BUFFER_SIZE);
+//     long sign_len = BUFFER_SIZE;
 
-    IBEPrivateKey sk = NULL;
+//     IBEPrivateKey sk = NULL;
 
-    GENERATE_SK_FILENAME((ctx->get_dest_id()))
-    get_sk_fp(filename, &sk);
-    FREE_SK_FILENAME
+//     GENERATE_SK_FILENAME((ctx->get_dest_id()))
+//     get_sk_fp(filename, &sk);
+//     FREE_SK_FILENAME
 
-    if(!(ibe_sign(payload, payload_len, client_sign, (size_t*)sign_len, &sk, 380)))
-    {
-        fprintf(stderr, "sign error\n");
-        return -1;
-    }
-    new_sig.sign_data = client_sign;
+//     if(!(ibe_sign(payload, payload_len, client_sign, (size_t*)sign_len, &sk, 380)))
+//     {
+//         fprintf(stderr, "sign error\n");
+//         return -1;
+//     }
+//     new_sig.sign_data = client_sign;
 
-    interface::IUser *user= target->get_user_ptr();
-    /* 读取自己的sign并将其放在new_sig.front里面 */
+//     interface::IUser *user= target->get_user_ptr();
+//     /* 读取自己的sign并将其放在new_sig.front里面 */
 
-    PacketCTX *send_ctx = new PacketCTX;
-    AppPacket *send_packet = new AppPacket;
+//     PacketCTX *send_ctx = new PacketCTX;
+//     AppPacket *send_packet = new AppPacket;
 
-    send_packet->set_type(SIGN_RESPONSE_TYPE);
-    send_packet->set_sign (&new_sig);        
+//     send_packet->set_type(SIGN_RESPONSE_TYPE);
+//     send_packet->set_sign (&new_sig);        
     
-    send_ctx->set_phase (SEND_APP_PACKET);
-    send_ctx->set_payload_app (send_packet);
+//     send_ctx->set_phase (SEND_APP_PACKET);
+//     send_ctx->set_payload_app (send_packet);
 
-    // send the packet
-#ifdef DEBUG 
-    interface::IUI::debug("begin sending");
-#endif
-    if(0 == target->packet_send(send_ctx)) {
-        Error("send the p error");
-        return -1;
-    }
+//     // send the packet
+// #ifdef DEBUG 
+//     interface::IUI::debug("begin sending");
+// #endif
+//     if(0 == target->packet_send(send_ctx)) {
+//         Error("send the p error");
+//         return -1;
+//     }
 
-    rnt = 1;
-    return rnt;
+//     rnt = 1;
+//     return rnt;
 
-}
+// }
 
-int handle_sign_response(Packet *target)
-{
-    int rnt = 0;
-    PacketCTX *ctx = target->get_ctx();
-    AppPacket *p = ctx->get_payload_app();
-    SignMesg *rec_sig;
-    rec_sig = p->get_sign();
-    /* 保存自己的rec_sig */
+// int handle_sign_response(Packet *target)
+// {
+//     int rnt = 0;
+//     PacketCTX *ctx = target->get_ctx();
+//     AppPacket *p = ctx->get_payload_app();
+//     SignMesg *rec_sig;
+//     rec_sig = p->get_sign();
+//     /* 保存自己的rec_sig */
 
-    rnt = 1;
-    return rnt;
-}
+//     rnt = 1;
+//     return rnt;
+// }
 
 int handle_init_message_1(Packet *target)
 {
@@ -645,14 +645,6 @@ void Packet::handle_ap()
 
         case IBE_MES_TYPE:
             res = handle_message(this);
-            break;
-
-        case SIGN_REQUEST_TYPE:
-            res = handle_sign_request(this);
-            break;
-
-        case SIGN_RESPONSE_TYPE:
-            res = handle_sign_response(this);
             break;
 
         case INIT_MESSAGE_1:

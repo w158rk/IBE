@@ -94,10 +94,6 @@ int UInterface::socket_interface_run()
 			case 3:
 			{
 				user->sys_setup();
-				if(parent!=nullptr)
-				{
-					user->run_get_signdata(parent->ip, parent->port);
-				}
 				break;
 			}
 			case 4:
