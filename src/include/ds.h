@@ -55,6 +55,15 @@ typedef struct ID_STR{
     struct ID_STR *father_node;
 }ID;
 
+struct SignMesg
+{
+    char *ID;
+    IBEPublicParameters PP;
+    char *sign_data;
+    int sign_len;
+    struct SignMesg *front;
+};
+
 int ID_equal(ID *a, ID *b);
 
 #ifdef __cplusplus

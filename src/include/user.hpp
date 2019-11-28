@@ -43,9 +43,6 @@ namespace user {
         void run_get_private_key(char *server_ip, 
 								int server_port,
 								ID *server_id=nullptr);
-        void run_get_signdata(  char *server_ip, 
-							    int server_port,
-							    ID *server_id=nullptr);
         void run_send_message(char *dest_ip, 
 							int dest_port,
 							ID *dest_id);

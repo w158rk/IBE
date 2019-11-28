@@ -18,17 +18,17 @@ void Packet::send_sign()
         throw PacketException("call wrong function");
     }
 
-    SecPacket *p_sec_packet = ctx->get_payload_sec();
-    int sec_type = p_sec_packet->get_type();
+    // SecPacket *p_sec_packet = ctx->get_payload_sec();
+    // int sec_type = p_sec_packet->get_type();
 
-    AppPacket *p_app_packet = p_sec_packet->get_payload_app();
-    int app_length = p_app_packet->get_length();
+    // AppPacket *p_app_packet = p_sec_packet->get_payload_app();
+    // int app_length = p_app_packet->get_length();
 
-    /*获取自己的sign*/
-    SignMesg *sign;
+    // /*获取自己的sign*/
+    // SignMesg *sign = NULL;
     
-    p_app_packet->set_sign(sign);
-    p_sec_packet->set_payload_app(p_app_packet);
+    // p_app_packet->set_sign(sign);
+    // p_sec_packet->set_payload_app(p_app_packet);
 
     ctx->set_phase (SEND_ENC);
 

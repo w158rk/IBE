@@ -1,3 +1,6 @@
+## 11.26
+1. 添加了`GET_AND_SET(SignMesg *, signature)`的功能
+
 ## 11.25
 
 需要解决的问题：
