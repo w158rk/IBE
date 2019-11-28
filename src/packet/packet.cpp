@@ -15,7 +15,7 @@ GET_AND_SET_IMPL(Packet, PacketCTX *, ctx)
 GET_AND_SET_IMPL(PacketException, std::string, message)
 
 GET_AND_SET_IMPL(AppPacket, char *, payload)
-GET_AND_SET_IMPL(AppPacket, SignMesg *, sign)
+// GET_AND_SET_IMPL(AppPacket, SignMesg *, sign)
 
 AppPacket::AppPacket()
 {
