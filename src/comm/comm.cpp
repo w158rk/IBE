@@ -8,7 +8,7 @@
 
 #include<stdio.h>
 #include<comm.hpp>
-#include<interface.hpp>
+#include<ui.hpp>
 
 #include <sstream>
 
@@ -44,6 +44,11 @@ int Comm::send(const void *vptr, size_t n)
 
     return Write(fileno(write_file), vptr, n);    
 
+}
+
+Comm::~Comm() 
+{
+    ui::UInterface::debug("delete Comm");
 }
 
 GET_AND_SET_IMPL(Comm, FILE *, read_file)

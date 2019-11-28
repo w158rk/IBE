@@ -21,7 +21,7 @@ namespace comm
         Comm(   interface::IPacket *packet_ptr,
                 user::User *user_ptr);
         Comm() = default;
-        ~Comm() = default;
+        ~Comm(); 
         
         void connect_to_server(char* ip_addr, int port);
         int send(const void *vptr, size_t n);

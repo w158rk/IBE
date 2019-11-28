@@ -95,6 +95,9 @@ int Comm::run_listen_core()
 		return -1;
 	}
 
+	delete p_ctx;
+	p_ctx = nullptr;
+
 #ifdef DEBUG 
 	get_ui_ptr()->debug("handle received packet finished ");
 #endif

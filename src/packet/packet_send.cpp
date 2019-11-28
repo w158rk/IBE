@@ -1,4 +1,5 @@
 #include <packet.hpp>
+#include <ui.hpp>
 #include <string.h>
 
 #ifdef DEBUG
@@ -10,12 +11,26 @@ using namespace packet;
 int Packet::packet_send(PacketCTX* ctx) {
     
     // store the current ctx and restore it after send
+    int ret = 0;
     PacketCTX *old_ctx = nullptr;
     if(m_fctx){
         old_ctx = m_ctx;
     }
     set_ctx(ctx);
-    packet_send();
+
+    try
+    {
+        packet_send();
+    }
+    catch(PacketException& e)
+    {
+        ui::UInterface::error(e.what());
+        goto end;
+    }
+    
+    ret = 1;
+
+end:
 
     if(old_ctx != nullptr) 
     {
@@ -29,7 +44,7 @@ int Packet::packet_send(PacketCTX* ctx) {
 
     delete ctx->get_payload_sec();
     delete ctx;
-    return 1;
+    return ret;
 
 }
 
@@ -74,7 +89,6 @@ void Packet::packet_send()
     std::free(data);
 
     if (length != len + SEC_HEAD_LEN) {
-        interface::IUI::error("error in write file");
         throw PacketException("error in write file");
     }
 

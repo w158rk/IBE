@@ -27,8 +27,6 @@ int Packet::packet_handle(PacketCTX* ctx) {
         m_fctx = false;
     }
 
-    delete ctx;
-
 #ifdef DEBUG 
     interface::IUI::debug("handle a packet finished");
 #endif

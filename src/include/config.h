@@ -24,6 +24,8 @@
 #define SESSION_KEY_ACK_TYPE        4
 #define SESSION_KEY_FINAL_TYPE      5
 #define IBE_MES_TYPE                6
+#define SIGN_REQUEST_TYPE           10
+#define SIGN_RESPONSE_TYPE          11
 
 // initialization phase 
 # define INIT_MESSAGE_1             7

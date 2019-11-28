@@ -33,7 +33,7 @@ void runuser(int argc, char *argv[])
     ui::UInterface uinterface;
 
     // bind the user    
-    #define REINTER(type, obj) reinterpret_cast<type *>(&obj)
+    #define REINTER(type, obj) static_cast<type *>(&obj)
     bind_objects(REINTER(user::User, user), 
                     REINTER(interface::IComm, comm), 
                     REINTER(interface::IPacket, packet), 

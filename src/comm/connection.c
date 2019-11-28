@@ -14,8 +14,6 @@ History: ...
 #include <config.h>
 
 // 
-static long int current_client_id;
-
 /**
  * create a listening socket
  * @return socket file descriptor or -1 for error
@@ -53,6 +51,8 @@ int create_listening_socket(int listen_port)
 
 int connect_socket_server(char* ip_addr, int port, FILE** read_file, FILE** write_file)
 {
+
+
 	int socket_fd;
 	struct sockaddr_in server_addr;
 
@@ -74,13 +74,26 @@ int connect_socket_server(char* ip_addr, int port, FILE** read_file, FILE** writ
 		return -1;
 	}
 
-	if((*read_file = fdopen(socket_fd, "r+")) == NULL)
+	FILE *tmp = fdopen(socket_fd, "r+");
+
+#ifdef DEBUG
+	FILE *tmp1 = fopen("mpk-Client.conf", "r+");
+	FILE *tmp2 = fopen("mpk-Server.conf", "r+");
+#endif
+
+	if(tmp == NULL)
 	{
 		fprintf(stderr, "convertion from connected socket fd to FILE struct has error\n");
 		return -1;
 	}
-	*write_file = *read_file;
 
+	/** actually, there is some memory leaks about this function. So we manually malloc a 
+	 * block and set the write_file and read_file to that block */
+	// FILE *ret = (FILE *)malloc(sizeof(FILE));
+	// memcpy(ret, tmp, sizeof(FILE));
+
+	*read_file = tmp;
+	*write_file = *read_file;
 	return 0;
 }
 

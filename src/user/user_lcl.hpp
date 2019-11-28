@@ -12,6 +12,9 @@ namespace user
     void comm_file_main(user::User *user, 
 					std::FILE *read_file, 
 					std::FILE *write_file);
+	comm::Comm *comm_new();
+	void comm_delete(comm::Comm *);
+	void comm_connect_to_server(comm::Comm *, char*server_ip, int server_port);
 
 }
 
