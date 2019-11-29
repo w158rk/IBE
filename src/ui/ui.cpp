@@ -98,7 +98,7 @@ int UInterface::socket_interface_run()
 			}
 			case 4:
 			{
-				user->sys_generate();
+				user->sys_read();
 				break;
 			}
 			case 5:

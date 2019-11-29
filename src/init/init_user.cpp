@@ -4,10 +4,15 @@
 using namespace init;
 using namespace user;
 
-char *init::user_get_mpk_filename(user::User *user)
-{
-    return user->get_mpk_filename();
-}
+
+#define DEFINE_USER_FUNC(type, func)      \
+type init::user_##func(user::User *user)        \
+{                           \
+    return user->func();    \
+}   
+
+DEFINE_USER_FUNC(char*, get_mpk_filename)
+
 
 ID *init::user_get_id(User *user)
 {
@@ -37,4 +42,9 @@ void init::user_send_init_message_2(User* user, char *buf, int len1, int len2, I
 void init::user_send_init_message_3(User* user, char *buf, int len, ID *id) 
 {
     user->send_init_message_3(buf, len, id);
+}
+
+void init::user_sys_setup(User* user)
+{
+    user->sys_setup();
 }

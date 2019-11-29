@@ -261,6 +261,12 @@ int ibe_point_store_Ppub2(point_t *point, char *mpk_file)
 	}
 	int length = 129;
 
+	if(smx_mpk->pointPpub2)
+	{
+		ASN1_OCTET_STRING_free(smx_mpk->pointPpub2);
+		smx_mpk->pointPpub2 = NULL;
+	}
+
 	// set the param
 	smx_mpk->pointPpub2 = ASN1_OCTET_STRING_new();
 	if(!smx_mpk->pointPpub2)

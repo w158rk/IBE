@@ -51,8 +51,25 @@ void Initializer::run()
     s << dbg_buff;
     Debug(s.str());
 }
+
+
+#endif
+    user::User *userptr = get_user();
+
+{
+    FILE *fp = NULL;
+
+#ifdef DEBUG 
+    Debug("the local system has not been setup, generate a new system");
 #endif
 
+    if((fp=fopen(user_get_mpk_filename(userptr), "rb")) == NULL)
+    {
+        user_sys_setup(userptr);
+    }
+    fclose(fp);
+
+}
     Print("begin to initialize the system");
 
     /* round one */
