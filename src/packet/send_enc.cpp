@@ -57,17 +57,21 @@ void Packet::send_enc()
             std::cout<<data<<std::endl;
             // encrypt
             IBEPublicParameters mpk = NULL;
-#ifdef DEBUG 
-{
-            std::ostringstream s;
-            s << "Get mpk file: " << user_get_mpk_filename(user_ptr) << std::endl;
-            Debug(s.str()); 
-}
-#endif
-            if(!get_mpk_fp(user_get_mpk_filename(user_ptr), &mpk))
-            {
-                Error("cannot get mpk from file");
-            }
+            ID *user_id = user_get_id(user_ptr);
+            GENERATE_MPK_FILENAME(user_id->father_node->id,strlen(user_id->father_node->id))
+            get_mpk_fp(filename, &mpk);
+            FREE_SK_FILENAME
+// #ifdef DEBUG 
+// {
+//             std::ostringstream s;
+//             s << "Get mpk file: " << user_get_mpk_filename(user_ptr) << std::endl;
+//             Debug(s.str()); 
+// }
+// #endif
+//             if(!get_mpk_fp(user_get_mpk_filename(user_ptr), &mpk))
+//             {
+//                 Error("cannot get mpk from file");
+//             }
 #ifdef DEBUG 
 {
             std::ostringstream s;

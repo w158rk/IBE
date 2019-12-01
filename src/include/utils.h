@@ -124,6 +124,24 @@
 
 #define FREE_SM4_FILENAME free(filename)
 
+#define GENERATE_MPK_FILENAME(id, id_len) \
+    int filename_len = id_len + 10;    \
+    char *filename = (char *)malloc(filename_len);  \
+    filename[0] = 'm';      \
+    filename[1] = 'p';\
+    filename[2] = 'k';\
+    filename[3] = '-';\
+    memcpy(filename+4, id, id_len);\
+    filename[filename_len-6] = '.'; \
+    filename[filename_len-5] = 'c'; \
+    filename[filename_len-4] = 'o'; \
+    filename[filename_len-3] = 'n'; \
+    filename[filename_len-2] = 'f';\
+    filename[filename_len-1] = '\0';
+
+#define FREE_MPK_FILENAME free(filename)
+
+
 #ifdef __cplusplus 
 extern "C" {
 #endif
