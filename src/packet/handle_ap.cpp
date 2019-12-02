@@ -69,8 +69,8 @@ int handle_sk_request(Packet *target)
     }       //从文件中读取s
 
     if (get_mpk_fp(mpk_filename, &mpk) == 0) {
-        interface::IUI::error(" you don't have the access to msk file");
-        throw PacketException(" you don't have the access to msk file");
+        interface::IUI::error(" you don't have the access to mpk file");
+        throw PacketException(" you don't have the access to mpk file");
     }
 
     // there is a bug that sucks 
@@ -271,6 +271,98 @@ int handle_message(Packet *target)
 
     rnt=1;
     return rnt;
+}
+
+int handle_mpk_request(Packet *target)
+{
+    int rtn = 0;
+
+    PacketCTX *ctx = target->get_ctx();
+    AppPacket *p = ctx->get_payload_app();
+    int length = p->get_length();
+    char *payload = p->get_payload();
+
+    PacketCTX *send_ctx = new PacketCTX;
+    AppPacket *send_packet = new AppPacket;
+
+    IBEPublicParameters global_mpk = NULL;
+    IBEPublicParameters mpk = NULL;
+
+    user::User *user= target->get_user_ptr();
+    char *mpk_filename = user_get_mpk_filename(user);
+    if (get_mpk_fp(mpk_filename, &mpk) == 0) {
+        interface::IUI::error(" you don't have the access to mpk file");
+        throw PacketException(" you don't have the access to mpk file");
+    }
+
+    if (get_mpk_fp(GLOBAL_MPK_FILENAME, &global_mpk) == 0) {
+        interface::IUI::error(" you don't have the access to global_mpk file");
+        throw PacketException(" you don't have the access to global_mpk file");
+    }
+
+    char *send_payload = (char*)malloc(IBE_MPK_LEN+IBE_MPK_LEN);
+    memcpy(send_payload,global_mpk,IBE_MPK_LEN);
+    memcpy(send_payload+IBE_MPK_LEN,mpk,IBE_MPK_LEN);
+
+    send_packet->set_type(MPK_RESPONSE_TYPE);
+    send_packet->set_length(IBE_MPK_LEN+IBE_MPK_LEN);
+    send_packet->set_payload(send_payload);
+
+    send_ctx->set_phase (SEND_APP_PACKET);
+    send_ctx->set_payload_app (send_packet);
+
+    if(0 == target->packet_send(send_ctx)) {
+        Error("send the p error");
+        goto end;
+    }
+
+    rtn = 1;
+
+end:
+    return rtn;
+}
+
+int handle_mpk_response(Packet *target)
+{
+    int rtn = 0;
+
+    PacketCTX *ctx = target->get_ctx();
+    AppPacket *p = ctx->get_payload_app();
+    int length = p->get_length();
+    char *payload = p->get_payload();
+    char *global_mpk = (char *)malloc(IBE_MPK_LEN);
+    char *mpk = (char *)malloc(IBE_MPK_LEN);
+     
+    memcpy(global_mpk, payload, IBE_MPK_LEN);
+    memcpy(mpk, payload+IBE_MPK_LEN, IBE_MPK_LEN);
+
+    FILE *fp1;
+    if((fp1=fopen(GLOBAL_MPK_FILENAME,"wb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    fprintf(fp1,"%s", global_mpk);
+    fclose(fp1);
+
+    GENERATE_MPK_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+    FILE *fp2;
+    if((fp2=fopen(filename,"wb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    fprintf(fp2,"%s", mpk);
+    fclose(fp2);
+    FREE_MPK_FILENAME;
+
+    if(length!=IBE_MPK_LEN+IBE_MPK_LEN)
+    {
+        Error("handle mpk error");
+        goto end;
+    }
+    
+    rtn = 1;
+end:
+    return rtn;
 }
 
 // int handle_sign_request(Packet *target)
@@ -678,6 +770,14 @@ void Packet::handle_ap()
 
         case IBE_MES_TYPE:
             res = handle_message(this);
+            break;
+
+        case MPK_REQUEST_TYPE:
+            res = handle_mpk_request(this);
+            break;
+
+        case MPK_RESPONSE_TYPE:
+            res = handle_mpk_response(this);
             break;
 
         case INIT_MESSAGE_1:

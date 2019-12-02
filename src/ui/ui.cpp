@@ -46,6 +46,7 @@ int UInterface::socket_interface_run()
 		printf("\t3. Set up your system\n");
 		printf("\t4. Read your system files\n");
 		printf("\t5. Init the whole system\n");
+		printf("\t6. Get global and domain mpk\n");
 		
 		int choise;
 		scanf("%d", &choise);
@@ -104,6 +105,19 @@ int UInterface::socket_interface_run()
 			case 5:
 			{
 				user->sys_init();
+				break;
+			}
+			case 6:
+			{
+				try 
+				{
+					user->run_get_mpk(parent->ip, parent->port);
+				}			
+				catch(user::UserException& e)
+				{
+					std::cerr << e.what() << std::endl;
+					return -1;
+				}
 				break;
 			}
 			default:
