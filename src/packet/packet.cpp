@@ -494,24 +494,57 @@ int sign_to_bytes(SignMesg *sig, char *buf)
     int len = 0;
     while(sig->front!=nullptr)
     {
-        char *id_len = (char *)malloc(SIGN_ID_LEN);
-        memcpy(id_len, sig->len, SIGN_ID_LEN);
-        int idlen = *(int *)id_len;
-        char *sign_len = sig->len+SIGN_ID_LEN;
-        int signlen = *(int *)sign_len;
-        len = len+idlen+IBE_MPK_LEN+signlen;
-        memcpy(buf,sig->len, SIGN_LEN);
-        memcpy(buf,sig->ID, idlen);
-        memcpy(buf,sig->PP, IBE_MPK_LEN);
-        memcpy(buf,sig->sign_data, signlen);
+        int idlen = *(int *)sig->id_len;
+
+        int signlen = *(int *)sig->sign_len;
+
+        memcpy(buf+len,sig->id_len, SIGN_ID_LEN);
+        len = len + SIGN_ID_LEN;
+        memcpy(buf+len,sig->sign_len, SIGN_LEN);
+        len = len + SIGN_LEN;
+        memcpy(buf+len,sig->ID, idlen);
+        len = len + idlen;
+        memcpy(buf+len,sig->PP, IBE_MPK_LEN);
+        len = len +IBE_MPK_LEN;
+        memcpy(buf+len,sig->sign_data, signlen);
+        len = len + signlen;
         sig = sig->front;
+        fprintf(stderr, "sig is: %s\n", buf);
     }
-    char *id_len = (char *)malloc(SIGN_ID_LEN);
-    memcpy(id_len, sig->len, SIGN_ID_LEN);
-    int idlen = *(int *)id_len;
-    memcpy(buf,sig->len, SIGN_LEN);
-    memcpy(buf,sig->ID, idlen);
-    memcpy(buf,sig->PP, IBE_MPK_LEN);
-    len = len+idlen+IBE_MPK_LEN;
+    
+    int idlen = *(int *)sig->id_len;
+    memcpy(buf+len,sig->id_len, SIGN_LEN);
+    len = len + SIGN_ID_LEN + SIGN_LEN;
+    memcpy(buf+len,sig->ID, idlen);
+    len = len + idlen;
+    memcpy(buf+len,sig->PP, IBE_MPK_LEN);
+    len = len + IBE_MPK_LEN;
+
     return len;
+}
+
+SignMesg *sign_from_bytes(char *sig, int sig_len)
+{
+    SignMesg *sign;
+    int len = 0;
+    while(sig_len!=len)
+    {
+        char *id_len = (char *)malloc(SIGN_ID_LEN);
+        memcpy(id_len, sig, SIGN_ID_LEN);
+        int idlen = *(int *)id_len;
+        fprintf(stderr,"ID_len is%d\n", idlen);
+
+        len = len + SIGN_ID_LEN;
+        char *sig_length = (char *)malloc(SIGN_LEN);
+        memcpy(sig_length, sig+SIGN_ID_LEN, SIGN_LEN);
+        int siglen = *(int *)sig_length;
+        fprintf(stderr,"len is%d\n", siglen);
+        // char *id = (char *)malloc(idlen);
+        // len = len + SIGN_LEN;
+        // memcpy(id, sig+len, idlen);
+        // fprintf(stderr,"id is%s\n", id);
+        len = sig_len;
+
+    }
+    return sign;
 }

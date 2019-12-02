@@ -144,8 +144,8 @@ int handle_sk_request(Packet *target)
         server_sig.PP = ss_mpk;
         server_sig.sign_data = NULL;
         int id_len = strlen(ctx->get_dest_id()->id);
-        *(int *)(server_sig.len) = id_len;
-        *(int *)(server_sig.len+SIGN_ID_LEN) = 0;
+        *(int *)(server_sig.id_len) = id_len;
+        *(int *)(server_sig.sign_len) = 0;
         server_sig.front = nullptr;
     }
 
@@ -177,12 +177,13 @@ int handle_sk_request(Packet *target)
     send_sig.ID = client_id;
     send_sig.PP = mpk;
     send_sig.sign_data = client_sign;
-    *(int *)(send_sig.len) = client_id_len;
-    *(int *)(send_sig.len+SIGN_ID_LEN) = sign_len;
+    *(int *)(send_sig.id_len) = client_id_len;
+    *(int *)(send_sig.sign_len) = sign_len;
     send_sig.front = &server_sig;
 
     char *sig = (char *)malloc(BUFFER_LEN);
     int sig_len = sign_to_bytes(&send_sig, sig);
+    SignMesg *test = sign_from_bytes(sig, sig_len);
     
     /** set the variables in the context 
      * 1. set the phase as SEND_ADD_PACKET 
