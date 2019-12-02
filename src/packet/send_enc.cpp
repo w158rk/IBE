@@ -174,6 +174,8 @@ void Packet::send_enc()
             memcpy(tmp, cipher, c_len);       //加密后的信息放在sec_packet下的payload.sk_data中
             p_sec_packet->set_payload_byte(tmp);
             p_sec_packet->set_length(c_len);
+            SignMesg *rec_sig = p_app_packet->get_sig();
+            
 
             break;
         }

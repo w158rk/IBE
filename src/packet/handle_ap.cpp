@@ -135,6 +135,7 @@ int handle_sk_request(Packet *target)
 
     /* 获取顶级域的sP */
     IBEPublicParameters ss_mpk = NULL;
+    get_mpk_fp(GLOBAL_MPK_FILENAME, &ss_mpk);
 
     if(ctx->get_dest_id()->father_node==nullptr)
     {
@@ -175,6 +176,8 @@ int handle_sk_request(Packet *target)
     send_sig.sign_data = client_sign;
     send_sig.sign_len = sign_len;
     send_sig.front = &server_sig;
+
+    send_packet->set_sig(&send_sig);
     
     /** set the variables in the context 
      * 1. set the phase as SEND_ADD_PACKET 
@@ -232,7 +235,7 @@ int handle_sk_response(Packet *target) {
 #endif
 
     FREE_SK_FILENAME;
-    
+
     rtn = 1;
     return rtn;
 
