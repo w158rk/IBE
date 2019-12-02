@@ -180,6 +180,9 @@ int handle_sk_request(Packet *target)
     *(int *)(send_sig.len) = client_id_len;
     *(int *)(send_sig.len+SIGN_ID_LEN) = sign_len;
     send_sig.front = &server_sig;
+
+    char *sig = (char *)malloc(BUFFER_LEN);
+    int sig_len = sign_to_bytes(&send_sig, sig);
     
     /** set the variables in the context 
      * 1. set the phase as SEND_ADD_PACKET 

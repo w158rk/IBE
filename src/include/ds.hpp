@@ -95,7 +95,7 @@ public:
 
     static SecPacket *from_bytes(char *);
     char *to_bytes();
-    char *sign_to_bytes(SignMesg *sig);
+    // char *sign_to_bytes(SignMesg *sig);
 
 };
 

@@ -488,3 +488,30 @@ void PacketCTX::unset_payload_sec()
 // {
 //     m_fsig = false;
 // }
+
+int sign_to_bytes(SignMesg *sig, char *buf)
+{
+    int len = 0;
+    while(sig->front!=nullptr)
+    {
+        char *id_len = (char *)malloc(SIGN_ID_LEN);
+        memcpy(id_len, sig->len, SIGN_ID_LEN);
+        int idlen = *(int *)id_len;
+        char *sign_len = sig->len+SIGN_ID_LEN;
+        int signlen = *(int *)sign_len;
+        len = len+idlen+IBE_MPK_LEN+signlen;
+        memcpy(buf,sig->len, SIGN_LEN);
+        memcpy(buf,sig->ID, idlen);
+        memcpy(buf,sig->PP, IBE_MPK_LEN);
+        memcpy(buf,sig->sign_data, signlen);
+        sig = sig->front;
+    }
+    char *id_len = (char *)malloc(SIGN_ID_LEN);
+    memcpy(id_len, sig->len, SIGN_ID_LEN);
+    int idlen = *(int *)id_len;
+    memcpy(buf,sig->len, SIGN_LEN);
+    memcpy(buf,sig->ID, idlen);
+    memcpy(buf,sig->PP, IBE_MPK_LEN);
+    len = len+idlen+IBE_MPK_LEN;
+    return len;
+}
