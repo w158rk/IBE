@@ -124,8 +124,6 @@ void Packet::handle_dec() {
 
     case SM4_TYPE:
     {
-        SignMesg *sig = p_sec_packet->get_signature();
-        fprintf(stderr, "sig ID is %s\n", sig->ID);
         sm4_context sm4ctx;
 
         // get the key from the packet object

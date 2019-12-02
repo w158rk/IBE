@@ -42,7 +42,8 @@ typedef struct point_t point_t;
 #define APP_HEAD_LEN    8
 /* 24 originally */
 #define SEC_HEAD_LEN    8       
-#define SIGN_LEN        32
+#define SIGN_LEN        16
+#define SIGN_ID_LEN     8
 #define MES_LEN         10000
 #define ENC_PARAMETER       1
 #define DEC_PARAMETER       0
@@ -58,10 +59,10 @@ typedef struct ID_STR{
 
 struct SignMesg
 {
+    char len[SIGN_LEN];
     char *ID;
     IBEPublicParameters PP;
     char *sign_data;
-    int sign_len;
     struct SignMesg *front;
 };
 

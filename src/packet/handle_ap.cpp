@@ -139,10 +139,13 @@ int handle_sk_request(Packet *target)
 
     if(ctx->get_dest_id()->father_node==nullptr)
     {
+
         server_sig.ID = ctx->get_dest_id()->id;
         server_sig.PP = ss_mpk;
         server_sig.sign_data = NULL;
-        server_sig.sign_len = 0;
+        int id_len = strlen(ctx->get_dest_id()->id);
+        *(int *)(server_sig.len) = id_len;
+        *(int *)(server_sig.len+SIGN_ID_LEN) = 0;
         server_sig.front = nullptr;
     }
 
@@ -174,10 +177,9 @@ int handle_sk_request(Packet *target)
     send_sig.ID = client_id;
     send_sig.PP = mpk;
     send_sig.sign_data = client_sign;
-    send_sig.sign_len = sign_len;
+    *(int *)(send_sig.len) = client_id_len;
+    *(int *)(send_sig.len+SIGN_ID_LEN) = sign_len;
     send_sig.front = &server_sig;
-
-    send_packet->set_sig(&send_sig);
     
     /** set the variables in the context 
      * 1. set the phase as SEND_ADD_PACKET 

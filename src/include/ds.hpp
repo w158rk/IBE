@@ -35,7 +35,7 @@ public:
 
     GET_AND_SET(char *, payload);
     GET_AND_SET(char *, head);
-    GET_AND_SET(SignMesg *, sig);
+    // GET_AND_SET(SignMesg *, sig);
 
     static AppPacket *from_bytes(char *);
     char *to_bytes();
@@ -47,9 +47,9 @@ public:
 
 private:
     char m_head[APP_HEAD_LEN];
-    SignMesg *m_signature;
+    // SignMesg *m_signature;
     bool m_fhead;
-    bool m_fsignature;
+    // bool m_fsignature;
     DECLARE_MEMBER(char *, payload);
 
 };
@@ -71,9 +71,10 @@ private:
 
     DECLARE_MEMBER(union payload, payload)
     char m_head[SEC_HEAD_LEN];
-    SignMesg *m_signature;
+    // SignMesg *m_signature;
+    // int signlen;
     bool m_fhead;
-    bool m_fsignature;
+    // bool m_fsignature;
 
 
 
@@ -84,7 +85,8 @@ public:
     GET_AND_SET(char *, payload_byte)
     GET_AND_SET(AppPacket *, payload_app)
     GET_AND_SET(char *, head);
-    GET_AND_SET(SignMesg *, signature);
+    // GET_AND_SET(SignMesg *, signature);
+    // GET_AND_SET(int, sig_len);
 
     int get_length();
     int get_type();
@@ -93,6 +95,7 @@ public:
 
     static SecPacket *from_bytes(char *);
     char *to_bytes();
+    char *sign_to_bytes(SignMesg *sig);
 
 };
 
@@ -119,7 +122,7 @@ private:
     DECLARE_MEMBER(ID *, dest_id)
     DECLARE_MEMBER(IBEPublicParameters*, mpk)
     DECLARE_MEMBER(IBEPrivateKey*, sk)
-    DECLARE_MEMBER(SignMesg*, sig)
+    // DECLARE_MEMBER(SignMesg*, sig)
 
     union payload 
     {
@@ -148,7 +151,7 @@ public:
     GET_AND_SET(AppPacket*, payload_app)
     GET_AND_SET(SecPacket*, payload_sec)
     GET_AND_SET(enum state, phase)
-    GET_AND_SET(SignMesg*, sig)
+    // GET_AND_SET(SignMesg*, sig)
 
 
 };

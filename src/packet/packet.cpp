@@ -93,26 +93,26 @@ void AppPacket::unset_head()
     m_fhead = false;
 }
 
-SignMesg *AppPacket::get_sig()
-{
-    if(!m_fsignature)
-    {
-        interface::IUI::error("can not get the sig of app packet");
-        throw PacketException("can not get the sig of app packet");
-    }
-    return m_signature;
-}
+// SignMesg *AppPacket::get_sig()
+// {
+//     if(!m_fsignature)
+//     {
+//         interface::IUI::error("can not get the sig of app packet");
+//         throw PacketException("can not get the sig of app packet");
+//     }
+//     return m_signature;
+// }
 
-void AppPacket::set_sig(SignMesg *sig)
-{
-    m_signature = sig;
-    m_fsignature = true;
-}
+// void AppPacket::set_sig(SignMesg *sig)
+// {
+//     m_signature = sig;
+//     m_fsignature = true;
+// }
 
-void AppPacket::unset_sig()
-{
-    m_fsignature = false;
-}
+// void AppPacket::unset_sig()
+// {
+//     m_fsignature = false;
+// }
 
 int AppPacket::get_length()
 {
@@ -232,26 +232,26 @@ void SecPacket::unset_head()
 //     m_fsignature = true;
 // }
 
-SignMesg *SecPacket::get_signature()
-{
-    if(!m_fsignature)
-    {
-        interface::IUI::error("can not get the signature of sec packet");
-        throw PacketException("can not get the signature of sec packet");
-    }
-    return m_signature;
-}
+// SignMesg *SecPacket::get_signature()
+// {
+//     if(!m_fsignature)
+//     {
+//         interface::IUI::error("can not get the signature of sec packet");
+//         throw PacketException("can not get the signature of sec packet");
+//     }
+//     return m_signature;
+// }
 
-void SecPacket::set_signature(SignMesg *signature)
-{
-    m_signature = signature;
-    m_fsignature = true;
-}
+// void SecPacket::set_signature(SignMesg *signature)
+// {
+//     m_signature = signature;
+//     m_fsignature = true;
+// }
 
-void SecPacket::unset_signature()
-{
-    m_fsignature = false;
-}
+// void SecPacket::unset_signature()
+// {
+//     m_fsignature = false;
+// }
 
 char *SecPacket::get_payload_byte() 
 {
@@ -375,6 +375,46 @@ char *SecPacket::to_bytes()
     return rtn;
 }
 
+// void SecPacket::set_sig_len(int len)
+// {
+//     signlen = len;
+// }
+
+// int SecPacket::get_sig_len()
+// {
+//     return signlen;
+// }
+
+// char *SecPacket::sign_to_bytes(SignMesg *sig)
+// {
+//     char *buf = (char *)malloc(1000000);
+//     int len = 0;
+//     while(sig->front!=nullptr)
+//     {
+//         char *id_len = (char *)malloc(SIGN_ID_LEN);
+//         memcpy(id_len, sig->len, SIGN_ID_LEN);
+//         int idlen = *(int *)id_len;
+//         char *sign_len = sig->len+SIGN_ID_LEN;
+//         int signlen = *(int *)sign_len;
+//         len = len+idlen+IBE_MPK_LEN+signlen;
+//         memcpy(buf,sig->len, SIGN_LEN);
+//         memcpy(buf,sig->ID, idlen);
+//         memcpy(buf,sig->PP, IBE_MPK_LEN);
+//         memcpy(buf,sig->sign_data, signlen);
+//     }
+//     char *id_len = (char *)malloc(SIGN_ID_LEN);
+//     memcpy(id_len, sig->len, SIGN_ID_LEN);
+//     int idlen = *(int *)id_len;
+//     memcpy(buf,sig->len, SIGN_LEN);
+//     memcpy(buf,sig->ID, idlen);
+//     memcpy(buf,sig->PP, IBE_MPK_LEN);
+//     len = len+idlen+IBE_MPK_LEN;
+//     char *sig_bytes = (char *)malloc(len);
+//     memcpy(sig_bytes, buf, len);
+//     return sig_bytes;
+
+// }
+
 //===================================================================
 //          ctx
 //===================================================================
@@ -428,23 +468,23 @@ void PacketCTX::unset_payload_sec()
     m_fpayload = false;
 }
 
-SignMesg *PacketCTX::get_sig()
-{
-    if(!m_fsig)
-    {
-        interface::IUI::error("can not get the sig of ctx");
-        throw PacketException("can not get the sig of ctx");
-    }
-    return m_sig;
-}
+// SignMesg *PacketCTX::get_sig()
+// {
+//     if(!m_fsig)
+//     {
+//         interface::IUI::error("can not get the sig of ctx");
+//         throw PacketException("can not get the sig of ctx");
+//     }
+//     return m_sig;
+// }
 
-void PacketCTX::set_sig(SignMesg *sig)
-{
-    m_sig = sig;
-    m_fsig = true;
-}
+// void PacketCTX::set_sig(SignMesg *sig)
+// {
+//     m_sig = sig;
+//     m_fsig = true;
+// }
 
-void PacketCTX::unset_sig()
-{
-    m_fsig = false;
-}
+// void PacketCTX::unset_sig()
+// {
+//     m_fsig = false;
+// }
