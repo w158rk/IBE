@@ -232,26 +232,26 @@ void SecPacket::unset_head()
 //     m_fsignature = true;
 // }
 
-// SignMesg *SecPacket::get_signature()
-// {
-//     if(!m_fsignature)
-//     {
-//         interface::IUI::error("can not get the signature of sec packet");
-//         throw PacketException("can not get the signature of sec packet");
-//     }
-//     return m_signature;
-// }
+SignMesg *SecPacket::get_signature()
+{
+    if(!m_fsignature)
+    {
+        interface::IUI::error("can not get the signature of sec packet");
+        throw PacketException("can not get the signature of sec packet");
+    }
+    return m_signature;
+}
 
-// void SecPacket::set_signature(SignMesg *signature)
-// {
-//     m_signature = signature;
-//     m_fsignature = true;
-// }
+void SecPacket::set_signature(SignMesg *signature)
+{
+    m_signature = signature;
+    m_fsignature = true;
+}
 
-// void SecPacket::unset_signature()
-// {
-//     m_fsignature = false;
-// }
+void SecPacket::unset_signature()
+{
+    m_fsignature = false;
+}
 
 char *SecPacket::get_payload_byte() 
 {

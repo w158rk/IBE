@@ -347,15 +347,15 @@ int handle_mpk_response(Packet *target)
     fprintf(fp1,"%s", global_mpk);
     fclose(fp1);
 
-    GENERATE_MPK_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+    user::User *user= target->get_user_ptr();
+    char *mpk_filename = user_get_mpk_filename(user);
     FILE *fp2;
-    if((fp2=fopen(filename,"wb+"))==NULL)
+    if((fp2=fopen(mpk_filename,"wb+"))==NULL)
     {
         interface::IUI::error("file cannot open \n");  
     }
     fprintf(fp2,"%s", mpk);
     fclose(fp2);
-    FREE_MPK_FILENAME;
 
     if(length!=IBE_MPK_LEN+IBE_MPK_LEN)
     {
