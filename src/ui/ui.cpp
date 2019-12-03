@@ -83,7 +83,7 @@ int UInterface::socket_interface_run()
 				fprintf(stderr, "ip is: %s  port is: %d  id is: %s\n", ip_ad, port, id_cstr);
 				try 
 				{
-					user->run_send_message(ip_ad, port, &dest_id);
+					user->try_send_message(ip_ad, port, &dest_id);
 				}
 				catch(user::UserException& e)
 				{

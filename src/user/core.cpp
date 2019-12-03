@@ -29,6 +29,119 @@ using namespace user;
  * internal functions
  */ 
 
+void User::try_send_message(char *dest_ip, 
+					int dest_port,
+					ID *dest_id)
+{
+
+	
+	// try
+	// {
+	// 	comm->file_main();
+	// }
+	// catch(const std::exception& e)
+	// {
+	// 	std::cerr << e.what() << '\n';
+	// 	throw e;
+	// }
+
+	/* 需要加密的文件放在id_message.txt中 */
+	// fprintf(stderr, "len is%d\n", dest_id->length);
+	// int filename_message_len = dest_id->length + 13;
+	
+	// memcpy(filename_message, dest_id->id, dest_id->length);
+	// memcpy(filename_message+dest_id->length, "_message.txt", 14);
+
+	/* 读取信息 */
+	// FILE *fp;
+	// if((fp=fopen(filename_message,"rb+"))==NULL)
+    // {
+    //     printf("file_massge cannot open \n");
+	// 	throw std::exception();
+    // }
+	// char *message = (char *)malloc(MES_LEN);
+	// if(!fread(message, sizeof(char), MES_LEN, fp))
+	// {
+	// 	printf("error in read file \n");
+	// 	throw std::exception();
+	// }
+	// fclose(fp);
+	// int len = strlen(message);
+
+	GENERATE_SIGN_LEN_FILENAME(User::get_id()->id, strlen(User::get_id()->id)) 
+
+    FILE *fp1; 
+    if((fp1=fopen(filename_len_sign,"rb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    char *sign_len = (char *)malloc(4);
+	if(!fread(sign_len, sizeof(char), 4 , fp1))
+	{
+		printf("error in read file \n");
+		throw std::exception();
+	}
+    fclose(fp1);
+
+    FREE_SIGN_LEN_FILENAME;
+
+	int signlen = *(int *)sign_len;
+
+	fprintf(stderr, "siglen is %x\n", sign_len);
+
+	GENERATE_SIGN_FILENAME(User::get_id()->id, strlen(User::get_id()->id)) 
+
+    FILE *fp;
+    if((fp=fopen(filename_sign,"rb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    char *sign = (char *)malloc(BUFFER_SIZE);
+	if(!fread(sign, sizeof(char), BUFFER_SIZE, fp))
+	{
+		printf("error in read file \n");
+		throw std::exception();
+	}
+    fclose(fp);
+
+    FREE_SIGN_FILENAME;
+
+	/* 组织包 */
+
+	AppPacket *p_app_packet = new AppPacket ; 
+	
+	/* set the head */
+	/**
+	 * the format is : 
+	 * --------------------------------------
+	 * |	type	|	length of payload	|
+	 * --------------------------------------
+	 */
+	p_app_packet->set_type(IBE_MES_TYPE);
+	// p_app_packet->set_length(len);
+	// p_app_packet->set_payload(message);
+
+	PacketCTX *ctx = new PacketCTX;
+
+	ctx->set_phase(SEND_APP_PACKET);
+	ctx->set_payload_app (p_app_packet);
+	ctx->set_dest_id(dest_id);
+
+	IBEPublicParameters mpk = NULL;
+	get_mpk_fp(get_mpk_filename(), &mpk);
+
+	ctx->set_mpk(&mpk);		//将sP放入包中
+
+	interface::IComm *comm = get_comm_ptr();
+	comm->connect_to_server(dest_ip, dest_port);
+
+	// must connect to the server before this point
+	if(0 == get_packet_ptr()->packet_send(ctx)) {
+		throw UserException("wrong when make the packet to send");
+	}
+
+}
+
 
 
 void User::run_send_message(char *dest_ip, 
@@ -47,7 +160,7 @@ void User::run_send_message(char *dest_ip,
 	// 	throw e;
 	// }
 
-	/* 需要加密的文件放在id_message.txt中 */
+	/* 需要加密的文件放在dest_id_message.txt中 */
 	fprintf(stderr, "len is%d\n", dest_id->length);
 	int filename_message_len = dest_id->length + 13;
 	char *filename_message = (char *)malloc(filename_message_len);

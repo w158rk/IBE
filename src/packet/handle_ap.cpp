@@ -267,6 +267,21 @@ int handle_sk_response(Packet *target) {
 
     FREE_SIGN_FILENAME;
 
+    char *siglen = (char *)malloc(SIGN_LEN);
+    *(int *) siglen = sign_len;
+
+    GENERATE_SIGN_LEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+
+    FILE *fp3;
+    if((fp3=fopen(filename_len_sign,"wb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    fprintf(fp3,"%s", sign_len);
+    fclose(fp3);
+
+    FREE_SIGN_LEN_FILENAME;
+
     rtn = 1;
     return rtn;
 

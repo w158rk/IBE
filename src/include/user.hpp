@@ -49,6 +49,9 @@ namespace user {
         void run_get_mpk(char *server_ip, 
 						int server_port,
 						ID *server_id=nullptr);
+        void try_send_message(char *dest_ip, 
+            int dest_port,
+            ID *dest_id);
         void sys_init();
 
         void add_client(interface::IComm *comm);
