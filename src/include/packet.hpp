@@ -69,6 +69,6 @@ namespace packet {
 }
 
 int sign_to_bytes(SignMesg *sig, char *buf);
-SignMesg *sign_from_bytes(char *sig, int sig_len);
+SignMesg *sign_from_bytes(char *sig, int sig_len, int len);
 
 #endif

@@ -183,8 +183,13 @@ int handle_sk_request(Packet *target)
 
     char *sig = (char *)malloc(BUFFER_LEN);
     int sig_len = sign_to_bytes(&send_sig, sig);
-    SignMesg *test = sign_from_bytes(sig, sig_len);
-    
+    // SignMesg *test = sign_from_bytes(sig, sig_len, 0);
+
+    // if(!ibe_verify(data, client_id_len+IBE_MPK_LEN, test->sign_data, *(int *)test->sign_len, &test->PP, 239, "Server", 6))
+    // {
+    //     fprintf(stderr, "verify error\n");
+    // }
+
     /** set the variables in the context 
      * 1. set the phase as SEND_ADD_PACKET 
      * 2. set the payload 

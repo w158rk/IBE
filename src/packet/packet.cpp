@@ -509,7 +509,6 @@ int sign_to_bytes(SignMesg *sig, char *buf)
         memcpy(buf+len,sig->sign_data, signlen);
         len = len + signlen;
         sig = sig->front;
-        fprintf(stderr, "sig is: %s\n", buf);
     }
     
     int idlen = *(int *)sig->id_len;
@@ -523,27 +522,43 @@ int sign_to_bytes(SignMesg *sig, char *buf)
     return len;
 }
 
-SignMesg *sign_from_bytes(char *sig, int sig_len)
+SignMesg *sign_from_bytes(char *sig, int sig_len, int len)
 {
-    SignMesg *sign;
-    int len = 0;
-    while(sig_len!=len)
-    {
-        char *id_len = (char *)malloc(SIGN_ID_LEN);
-        memcpy(id_len, sig, SIGN_ID_LEN);
-        int idlen = *(int *)id_len;
-        fprintf(stderr,"ID_len is%d\n", idlen);
+    SignMesg *sign = new SignMesg();
+    char *id_len = (char *)malloc(SIGN_ID_LEN);
+    memcpy(id_len, sig, SIGN_ID_LEN);
+    int idlen = *(int *)id_len;
+    *(int *)sign->id_len = idlen;
+    len = len + SIGN_ID_LEN;
+    char *sig_length = (char *)malloc(SIGN_LEN);
+    memcpy(sig_length, sig+len, SIGN_LEN);
+    int siglen = *(int *)sig_length;
+    *(int *)sign->sign_len = siglen;
+    len = len + SIGN_LEN;
 
-        len = len + SIGN_ID_LEN;
-        char *sig_length = (char *)malloc(SIGN_LEN);
-        memcpy(sig_length, sig+SIGN_ID_LEN, SIGN_LEN);
-        int siglen = *(int *)sig_length;
-        fprintf(stderr,"len is%d\n", siglen);
-        // char *id = (char *)malloc(idlen);
-        // len = len + SIGN_LEN;
-        // memcpy(id, sig+len, idlen);
-        // fprintf(stderr,"id is%s\n", id);
-        len = sig_len;
+    char *id = (char *)malloc(idlen);
+    memcpy(id, sig+len, idlen);
+    sign->ID = id;
+    len = len + idlen;
+
+    char *mpk = (char *)malloc(IBE_MPK_LEN);
+    memcpy(mpk, sig+len, IBE_MPK_LEN);
+    len = len + IBE_MPK_LEN;
+    sign->PP = mpk;
+
+    if(len==sig_len)
+    {
+        sign->sign_data = NULL;
+        sign->front = nullptr;
+    }
+    else
+    {
+        char *sign_data = (char *)malloc(siglen);
+        memcpy(sign_data, sig+len, siglen);
+        len = len + siglen;
+        sign->sign_data = sign_data;
+
+        sign->front = sign_from_bytes(sig, sig_len, len);
 
     }
     return sign;
