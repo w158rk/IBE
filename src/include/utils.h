@@ -141,6 +141,23 @@
 
 #define FREE_MPK_FILENAME free(filename)
 
+#define GENERATE_SIGN_FILENAME(id, id_len) \
+    int filename_sign_len = id_len + 11;    \
+    char *filename_sign = (char *)malloc(filename_sign_len);  \
+    filename_sign[0] = 's';      \
+    filename_sign[1] = 'i';\
+    filename_sign[2] = 'g';\
+    filename_sign[3] = 'n';\
+    filename_sign[4] = '_';\
+    memcpy(filename_sign+5, id, id_len);\
+    filename_sign[filename_sign_len-6] = '.'; \
+    filename_sign[filename_sign_len-5] = 'c'; \
+    filename_sign[filename_sign_len-4] = 'o'; \
+    filename_sign[filename_sign_len-3] = 'n'; \
+    filename_sign[filename_sign_len-2] = 'f';\
+    filename_sign[filename_sign_len-1] = '\0';
+
+#define FREE_SIGN_FILENAME free(filename_sign)
 
 #ifdef __cplusplus 
 extern "C" {

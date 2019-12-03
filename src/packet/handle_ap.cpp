@@ -112,25 +112,6 @@ int handle_sk_request(Packet *target)
 #endif
     }
 
-    // TODO 
-    // finish extracting the requested private key 
-    // the next step is to send the key to the client 
-    // the following code is not checked
-
-    PacketCTX *send_ctx = new PacketCTX;
-    AppPacket *send_packet = new AppPacket;
-
-    // store the type of the app packet and the length of the 
-    // private key at the header of the packet
-    send_packet->set_type(PRIVATE_KEY_RESPONSE_TYPE);
-    send_packet->set_length(sk_len);
-
-    // store the private key in the payload 
-    // TODO : Not sure if it is necessary to copy the key from sk to psk 
-    // If the sk is allocated in the stack, it is 
-    // Otherwise, the following three lines can be replaced by a single line
-    send_packet->set_payload (sk);
-
     SignMesg server_sig;
 
     /* 获取顶级域的sP */
@@ -190,6 +171,29 @@ int handle_sk_request(Packet *target)
     //     fprintf(stderr, "verify error\n");
     // }
 
+     // TODO 
+    // finish extracting the requested private key 
+    // the next step is to send the key to the client 
+    // the following code is not checked
+
+    PacketCTX *send_ctx = new PacketCTX;
+    AppPacket *send_packet = new AppPacket;
+
+    // store the type of the app packet and the length of the 
+    // private key at the header of the packet
+    send_packet->set_type(PRIVATE_KEY_RESPONSE_TYPE);
+    send_packet->set_length(sk_len + sig_len);
+
+    char *send_payload = (char *)malloc(sk_len + sig_len);
+    memcpy(send_payload, sk, sk_len);
+    memcpy(send_payload+sk_len, sig, sig_len);
+
+    // store the private key in the payload 
+    // TODO : Not sure if it is necessary to copy the key from sk to psk 
+    // If the sk is allocated in the stack, it is 
+    // Otherwise, the following three lines can be replaced by a single line
+    send_packet->set_payload (send_payload);
+
     /** set the variables in the context 
      * 1. set the phase as SEND_ADD_PACKET 
      * 2. set the payload 
@@ -225,8 +229,12 @@ int handle_sk_response(Packet *target) {
 
     AppPacket *p_app_packet = ctx->get_payload_app();
     int len = p_app_packet->get_length();
-    char *sk = (char *)std::malloc(len);
-    memcpy(sk, p_app_packet->get_payload(), len);
+    char *sk = (char *)std::malloc(IBE_SK_LEN);
+    memcpy(sk, p_app_packet->get_payload(), IBE_SK_LEN);
+    int sign_len = len-IBE_SK_LEN;
+    char *sign = (char *)malloc(sign_len);
+    memcpy(sign, p_app_packet->get_payload()+IBE_SK_LEN, sign_len);
+    // SignMesg *test = sign_from_bytes(sign, len-IBE_SK_LEN, 0);
 
     GENERATE_SK_FILENAME(ctx->get_dest_id())        
 
@@ -234,18 +242,30 @@ int handle_sk_response(Packet *target) {
     interface::IUI::debug("sk_filename is " + std::string(filename));
 #endif
 
-    FILE *fp2;
-    if((fp2=fopen(filename,"wb+"))==NULL)
+    FILE *fp;
+    if((fp=fopen(filename,"wb+"))==NULL)
     {
         interface::IUI::error("file cannot open \n");  
     }
-    fprintf(fp2,"%s", sk);
-    fclose(fp2);
+    fprintf(fp,"%s", sk);
+    fclose(fp);
 #ifdef DEBUG
     interface::IUI::debug(std::string(filename) + " generated");
 #endif
 
     FREE_SK_FILENAME;
+
+    GENERATE_SIGN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+
+    FILE *fp2;
+    if((fp2=fopen(filename_sign,"wb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    fprintf(fp2,"%s", sign);
+    fclose(fp2);
+
+    FREE_SIGN_FILENAME;
 
     rtn = 1;
     return rtn;
