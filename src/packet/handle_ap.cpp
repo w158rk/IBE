@@ -411,78 +411,26 @@ end:
     return rtn;
 }
 
-// int handle_sign_request(Packet *target)
-// {
-//     int rnt = 0;
+int handle_try_mes(Packet *target)
+{
+    int rtn = 0;
 
-//     PacketCTX *ctx = target->get_ctx();
-//     AppPacket *p = ctx->get_payload_app();
-//     char *payload = p->get_payload();        //获取的payload为sP加上id
-//     int payload_len = p->get_length();
-    
-//     char *client_id = payload + IBE_MPK_LEN;
-//     int client_id_len = payload_len - IBE_MPK_LEN;
+    PacketCTX *ctx = target->get_ctx();
+    AppPacket *p = ctx->get_payload_app();
+    int length = p->get_length();
+    int sign_len = length-IBE_MPK_LEN;
+    char *payload = p->get_payload();
+    char *mpk = (char *)malloc(IBE_MPK_LEN);
+    memcpy(mpk, payload, IBE_MPK_LEN);
+    char *sign = (char *)malloc(sign_len);
+    memcpy(sign, payload, sign_len);
+    fprintf(stderr, "len is %d\n", sign_len);
+    SignMesg *sig = sign_from_bytes(sign, sign_len, 0);
+    fprintf(stderr, "id is %s\n", sig->ID);
 
-//     char *client_PP = (char *)std::malloc(IBE_MPK_LEN);
-//     memcpy(client_PP, payload, IBE_MPK_LEN);
-
-//     SignMesg new_sig;
-//     new_sig.ID = client_id;
-//     new_sig.PP = ctx->get_mpk();
-//     char *client_sign = (char *)std::malloc(BUFFER_SIZE);
-//     long sign_len = BUFFER_SIZE;
-
-//     IBEPrivateKey sk = NULL;
-
-//     GENERATE_SK_FILENAME((ctx->get_dest_id()))
-//     get_sk_fp(filename, &sk);
-//     FREE_SK_FILENAME
-
-//     if(!(ibe_sign(payload, payload_len, client_sign, (size_t*)sign_len, &sk, 380)))
-//     {
-//         fprintf(stderr, "sign error\n");
-//         return -1;
-//     }
-//     new_sig.sign_data = client_sign;
-
-//     interface::IUser *user= target->get_user_ptr();
-//     /* 读取自己的sign并将其放在new_sig.front里面 */
-
-//     PacketCTX *send_ctx = new PacketCTX;
-//     AppPacket *send_packet = new AppPacket;
-
-//     send_packet->set_type(SIGN_RESPONSE_TYPE);
-//     send_packet->set_sign (&new_sig);        
-    
-//     send_ctx->set_phase (SEND_APP_PACKET);
-//     send_ctx->set_payload_app (send_packet);
-
-//     // send the packet
-// #ifdef DEBUG 
-//     interface::IUI::debug("begin sending");
-// #endif
-//     if(0 == target->packet_send(send_ctx)) {
-//         Error("send the p error");
-//         return -1;
-//     }
-
-//     rnt = 1;
-//     return rnt;
-
-// }
-
-// int handle_sign_response(Packet *target)
-// {
-//     int rnt = 0;
-//     PacketCTX *ctx = target->get_ctx();
-//     AppPacket *p = ctx->get_payload_app();
-//     SignMesg *rec_sig;
-//     rec_sig = p->get_sign();
-//     /* 保存自己的rec_sig */
-
-//     rnt = 1;
-//     return rnt;
-// }
+    int rnt = 1;
+    return rnt;
+}
 
 int handle_init_message_1(Packet *target)
 {
@@ -824,6 +772,10 @@ void Packet::handle_ap()
 
         case MPK_RESPONSE_TYPE:
             res = handle_mpk_response(this);
+            break;
+
+        case TRY_MES_TYPE:
+            res = handle_try_mes(this);
             break;
 
         case INIT_MESSAGE_1:

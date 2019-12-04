@@ -43,10 +43,11 @@ int UInterface::socket_interface_run()
 		printf("Choose from :\n");
 		printf("\t1. Extract your Private Key\n");
 		printf("\t2. Send message\n");
-		printf("\t3. Set up your system\n");
-		printf("\t4. Read your system files\n");
-		printf("\t5. Init the whole system\n");
-		printf("\t6. Get global and domain mpk\n");
+		printf("\t3. Send message cross-domain\n");
+		printf("\t4. Set up your system\n");
+		printf("\t5. Read your system files\n");
+		printf("\t6. Init the whole system\n");
+		printf("\t7. Get global and domain mpk\n");
 		
 		int choise;
 		scanf("%d", &choise);
@@ -83,7 +84,7 @@ int UInterface::socket_interface_run()
 				fprintf(stderr, "ip is: %s  port is: %d  id is: %s\n", ip_ad, port, id_cstr);
 				try 
 				{
-					user->try_send_message(ip_ad, port, &dest_id);
+					user->run_send_message(ip_ad, port, &dest_id);
 				}
 				catch(user::UserException& e)
 				{
@@ -94,20 +95,42 @@ int UInterface::socket_interface_run()
 			}
 			case 3:
 			{
-				user->sys_setup();
+				printf("Please input whom you want to send to(IP_ADDRESS LISTEN_PORT ID)\n");
+				char ip_ad[20], id_cstr[20];
+				int port;
+				scanf("%s %d %s",&ip_ad, &port, &id_cstr);
+				ID dest_id;
+				dest_id.id = id_cstr;
+				int len = strlen(id_cstr);
+				dest_id.length = len;
+				fprintf(stderr, "ip is: %s  port is: %d  id is: %s\n", ip_ad, port, id_cstr);
+				try 
+				{
+					user->try_send_message(ip_ad, port, &dest_id);
+				}
+				catch(user::UserException& e)
+				{
+					std::cerr << e.what() << std::endl;
+					return -1;
+				}			
 				break;
 			}
 			case 4:
 			{
-				user->sys_generate();
+				user->sys_setup();
 				break;
 			}
 			case 5:
 			{
-				user->sys_init();
+				user->sys_generate();
 				break;
 			}
 			case 6:
+			{
+				user->sys_init();
+				break;
+			}
+			case 7:
 			{
 				try 
 				{

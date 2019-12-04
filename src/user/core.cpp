@@ -98,6 +98,13 @@ void User::try_send_message(char *dest_ip,
 
     FREE_SIGN_FILENAME;
 
+	IBEPublicParameters mpk = NULL;
+	get_mpk_fp(get_mpk_filename(), &mpk);
+
+	char *payload = (char *)malloc(sign_len+IBE_MPK_LEN);
+	memcpy(payload, mpk, IBE_MPK_LEN);
+	memcpy(payload, sign, sign_len);
+
 	/* 组织包 */
 
 	AppPacket *p_app_packet = new AppPacket ; 
@@ -109,20 +116,15 @@ void User::try_send_message(char *dest_ip,
 	 * |	type	|	length of payload	|
 	 * --------------------------------------
 	 */
-	p_app_packet->set_type(IBE_MES_TYPE);
-	// p_app_packet->set_length(len);
-	// p_app_packet->set_payload(message);
+	p_app_packet->set_type(TRY_MES_TYPE);
+	p_app_packet->set_length(sign_len + IBE_MPK_LEN);
+	p_app_packet->set_payload(payload);
 
 	PacketCTX *ctx = new PacketCTX;
 
 	ctx->set_phase(SEND_APP_PACKET);
 	ctx->set_payload_app (p_app_packet);
 	ctx->set_dest_id(dest_id);
-
-	IBEPublicParameters mpk = NULL;
-	get_mpk_fp(get_mpk_filename(), &mpk);
-
-	ctx->set_mpk(&mpk);		//将sP放入包中
 
 	interface::IComm *comm = get_comm_ptr();
 	comm->connect_to_server(dest_ip, dest_port);
