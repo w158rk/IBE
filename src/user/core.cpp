@@ -81,10 +81,17 @@ void User::try_send_message(char *dest_ip,
 	FREE_SIGN_FILENAME;
 
 	IBEPublicParameters mpk = NULL;
-	
-	GENERATE_MPK_FILENAME(User::get_id()->father_node->id,strlen(User::get_id()->father_node->id))
-	get_mpk_fp(mpk_filename, &mpk);
-	FREE_MPK_FILENAME;
+
+	if(User::get_id()->father_node!=nullptr)
+	{
+		GENERATE_MPK_FILENAME(User::get_id()->father_node->id,strlen(User::get_id()->father_node->id))
+		get_mpk_fp(mpk_filename, &mpk);
+		FREE_MPK_FILENAME;
+	}
+	else
+	{
+		get_mpk_fp(GLOBAL_MPK_FILENAME, &mpk);
+	}
 
 	char *payload = (char *)malloc(sign_len+IBE_MPK_LEN);
 	memcpy(payload, mpk, IBE_MPK_LEN);

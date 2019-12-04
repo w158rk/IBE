@@ -156,7 +156,7 @@
     mpk2_filename[mpk2_filename_len-2] = 'f';\
     mpk2_filename[mpk2_filename_len-1] = '\0';
 
-#define FREE_MPK2_FILENAME free(mpk_filename)
+#define FREE_MPK2_FILENAME free(mpk2_filename)
 
 #define GENERATE_SIGN_FILENAME(id, id_len) \
     int filename_sign_len = id_len + 11;    \

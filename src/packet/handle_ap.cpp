@@ -520,7 +520,7 @@ int handle_try_mes(Packet *target)
 
     if(ctx->get_dest_id()->father_node!=nullptr)
     {
-        GENERATE_MPK2_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id))
+        GENERATE_MPK2_FILENAME(ctx->get_dest_id()->father_node->id, strlen(ctx->get_dest_id()->father_node->id))
         get_mpk_fp(mpk2_filename, &send_mpk);
         FREE_MPK2_FILENAME;
     }
@@ -580,7 +580,6 @@ int handle_try_res(Packet *target)
 
     char *sign = (char *)malloc(sign_len);
     memcpy(sign, payload+IBE_MPK_LEN, sign_len);
-    fprintf(stderr, "sign is %s\n", sign);
     SignMesg *sig = sign_from_bytes(sign, sign_len, 0);
 
     if(strcmp(mpk,sig->PP))
@@ -588,11 +587,11 @@ int handle_try_res(Packet *target)
         Error("verify mpk error");
         goto end;
     }
-    // if(!sig_verify(sig, ss_mpk))
-    // {
-    //     Error("verify sig error");
-    //     goto end;
-    // }
+    if(!sig_verify(sig, ss_mpk))
+    {
+        Error("verify sig error");
+        goto end;
+    }
     fprintf(stderr, "verify done.\n");
     rnt = 1;
 end:
