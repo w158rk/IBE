@@ -141,6 +141,23 @@
 
 #define FREE_MPK_FILENAME free(mpk_filename)
 
+#define GENERATE_MPK2_FILENAME(id, id_len) \
+    int mpk2_filename_len = id_len + 10;    \
+    char *mpk2_filename = (char *)malloc(mpk2_filename_len);  \
+    mpk2_filename[0] = 'm';      \
+    mpk2_filename[1] = 'p';\
+    mpk2_filename[2] = 'k';\
+    mpk2_filename[3] = '-';\
+    memcpy(mpk2_filename+4, id, id_len);\
+    mpk2_filename[mpk2_filename_len-6] = '.'; \
+    mpk2_filename[mpk2_filename_len-5] = 'c'; \
+    mpk2_filename[mpk2_filename_len-4] = 'o'; \
+    mpk2_filename[mpk2_filename_len-3] = 'n'; \
+    mpk2_filename[mpk2_filename_len-2] = 'f';\
+    mpk2_filename[mpk2_filename_len-1] = '\0';
+
+#define FREE_MPK2_FILENAME free(mpk_filename)
+
 #define GENERATE_SIGN_FILENAME(id, id_len) \
     int filename_sign_len = id_len + 11;    \
     char *filename_sign = (char *)malloc(filename_sign_len);  \

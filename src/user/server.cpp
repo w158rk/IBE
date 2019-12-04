@@ -13,6 +13,7 @@ extern "C" {
 }
 
 #include<user.hpp>
+#include<packet.hpp>
 #ifdef DEBUG 
 #include<sstream>
 #endif
@@ -149,6 +150,45 @@ void User::sys_generate()
     interface::IUI::debug(s.str());
 }    
 #endif
+
+    if(User::get_id()->father_node==nullptr)
+    {
+        /* 获取顶级域的sP */
+        IBEPublicParameters ss_mpk = NULL;
+        get_mpk_fp(GLOBAL_MPK_FILENAME, &ss_mpk);
+        SignMesg server_sig;
+        server_sig.ID = User::get_id()->id;
+        server_sig.PP = ss_mpk;
+        server_sig.sign_data = NULL;
+        int id_len = strlen(User::get_id()->id);
+        *(int *)(server_sig.id_len) = id_len;
+        *(int *)(server_sig.sign_len) = 0;
+        server_sig.front = nullptr;
+        char *sig = (char *)malloc(BUFFER_LEN);
+        int server_sig_len = sign_to_bytes(&server_sig, sig);
+
+        GENERATE_SIGN_FILENAME(User::get_id()->id, strlen(User::get_id()->id)) 
+        FILE *fp1;
+        if((fp1=fopen(filename_sign,"wb+"))==NULL)
+        {
+            interface::IUI::error("file cannot open \n");  
+        }
+        std::fwrite(sig, 1,  server_sig_len, fp1);
+        fclose(fp1);
+        FREE_SIGN_FILENAME;
+
+        GENERATE_SIGN_LEN_FILENAME(User::get_id()->id, strlen(User::get_id()->id)) 
+
+        FILE *fp2;
+        if((fp2=fopen(filename_len_sign,"wb+"))==NULL)
+        {
+            interface::IUI::error("file cannot open \n");  
+        }
+        std::fwrite(&server_sig_len, sizeof(server_sig_len), 1, fp2);
+        fclose(fp2);
+
+        FREE_SIGN_LEN_FILENAME;
+    }
 
 
 }

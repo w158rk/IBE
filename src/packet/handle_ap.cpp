@@ -490,72 +490,52 @@ int handle_try_mes(Packet *target)
     PacketCTX *send_ctx = new PacketCTX;
     AppPacket *send_packet = new AppPacket;
 
+    GENERATE_SIGN_LEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+    FILE *fp1; 
+    if((fp1=fopen(filename_len_sign,"rb"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    int send_sign_len;
+    std::fread(&send_sign_len, sizeof(send_sign_len), 1, fp1);
+    fclose(fp1);
+    FREE_SIGN_LEN_FILENAME;
+
+    GENERATE_SIGN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id))
+    char *send_sign = (char*)malloc(send_sign_len);
+    FILE *fp_sign;
+	if((fp_sign=fopen(filename_sign,"rb+"))==NULL)
+	{
+		interface::IUI::error("file cannot open \n");  
+	}
+	if(!fread(send_sign, 1, send_sign_len, fp_sign))
+	{
+		printf("error in read file \n");
+		throw std::exception();
+	}
+    fclose(fp_sign);
+    FREE_SIGN_FILENAME;
+
+    IBEPublicParameters send_mpk = NULL;
+
     if(ctx->get_dest_id()->father_node!=nullptr)
     {
-        GENERATE_SIGN_LEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
-        FILE *fp1; 
-        if((fp1=fopen(filename_len_sign,"rb"))==NULL)
-        {
-            interface::IUI::error("file cannot open \n");  
-        }
-        int sign_len;
-        std::fread(&sign_len, sizeof(sign_len), 1, fp1);
-        fclose(fp1);
-        FREE_SIGN_LEN_FILENAME;
-
-        GENERATE_SIGN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
-        FILE *fp;
-        if((fp=fopen(filename_sign,"rb+"))==NULL)
-        {
-            interface::IUI::error("file cannot open \n");  
-        }
-        char *sign = (char*)malloc(sign_len);
-        if(!fread(sign, 1, sign_len, fp))
-        {
-            printf("error in read file \n");
-            throw std::exception();
-        }
-        fclose(fp);
-
-        FREE_SIGN_FILENAME;
-
-        IBEPublicParameters mpk = NULL;
-        
-        GENERATE_MPK_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id))
-        get_mpk_fp(mpk_filename, &mpk);
-        FREE_MPK_FILENAME;
-
-        char *payload = (char *)malloc(sign_len+IBE_MPK_LEN);
-        memcpy(payload, mpk, IBE_MPK_LEN);
-        memcpy(payload+IBE_MPK_LEN, sign, sign_len);
-
-        send_packet->set_type(TRY_HANDLE_TYPE);
-        send_packet->set_length(sign_len+IBE_MPK_LEN);
-        send_packet->set_payload (payload);
-
+        GENERATE_MPK2_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id))
+        get_mpk_fp(mpk2_filename, &send_mpk);
+        FREE_MPK2_FILENAME;
     }
     else
     {
-        SignMesg server_sig;
-        server_sig.ID = ctx->get_dest_id()->id;
-        server_sig.PP = ss_mpk;
-        server_sig.sign_data = NULL;
-        int id_len = strlen(ctx->get_dest_id()->id);
-        *(int *)(server_sig.id_len) = id_len;
-        *(int *)(server_sig.sign_len) = 0;
-        server_sig.front = nullptr;
-        char *sig = (char *)malloc(BUFFER_LEN);
-        int sig_len = sign_to_bytes(&server_sig, sig);
+         get_mpk_fp(GLOBAL_MPK_FILENAME, &send_mpk);
+    }
 
-        char *payload = (char *)malloc(sig_len+IBE_MPK_LEN);
-        memcpy(payload, ss_mpk, IBE_MPK_LEN);
-        memcpy(payload+IBE_MPK_LEN, sig, sig_len);
+    char *send_payload = (char *)malloc(send_sign_len+IBE_MPK_LEN);
+    memcpy(send_payload, send_mpk, IBE_MPK_LEN);
+    memcpy(send_payload+IBE_MPK_LEN, send_sign, send_sign_len);
 
-        send_packet->set_type(TRY_HANDLE_TYPE);
-        send_packet->set_length(sig_len+IBE_MPK_LEN);
-        send_packet->set_payload (payload);
-
-    } 
+    send_packet->set_type(TRY_HANDLE_TYPE);
+    send_packet->set_length(send_sign_len+IBE_MPK_LEN);
+    send_packet->set_payload (send_payload);
 
     send_ctx->set_phase (SEND_APP_PACKET);
     send_ctx->set_payload_app (send_packet);
@@ -582,6 +562,8 @@ int handle_try_res(Packet *target)
     char *mpk = (char *)malloc(IBE_MPK_LEN);
     memcpy(mpk, payload, IBE_MPK_LEN);
 
+    fprintf(stderr, "mpk is %s\n", mpk);
+
     user::User *user= target->get_user_ptr();
     char *mpk_filename = user_get_mpk_filename(user);
     FILE *fp;
@@ -598,6 +580,7 @@ int handle_try_res(Packet *target)
 
     char *sign = (char *)malloc(sign_len);
     memcpy(sign, payload+IBE_MPK_LEN, sign_len);
+    fprintf(stderr, "sign is %s\n", sign);
     SignMesg *sig = sign_from_bytes(sign, sign_len, 0);
 
     if(strcmp(mpk,sig->PP))
@@ -605,11 +588,11 @@ int handle_try_res(Packet *target)
         Error("verify mpk error");
         goto end;
     }
-    if(!sig_verify(sig, ss_mpk))
-    {
-        Error("verify sig error");
-        goto end;
-    }
+    // if(!sig_verify(sig, ss_mpk))
+    // {
+    //     Error("verify sig error");
+    //     goto end;
+    // }
     fprintf(stderr, "verify done.\n");
     rnt = 1;
 end:
