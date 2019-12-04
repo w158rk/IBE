@@ -71,33 +71,25 @@ void User::try_send_message(char *dest_ip,
 	GENERATE_SIGN_LEN_FILENAME(User::get_id()->id, strlen(User::get_id()->id)) 
 
     FILE *fp1; 
-    if((fp1=fopen(filename_len_sign,"rb+"))==NULL)
+    if((fp1=fopen(filename_len_sign,"rb"))==NULL)
     {
         interface::IUI::error("file cannot open \n");  
     }
-    char *sign_len = (char *)malloc(4);
-	if(!fread(sign_len, sizeof(char), 4 , fp1))
-	{
-		printf("error in read file \n");
-		throw std::exception();
-	}
+	int sign_len;
+    std::fread(&sign_len, sizeof(sign_len), 1, fp1);
     fclose(fp1);
 
     FREE_SIGN_LEN_FILENAME;
 
-	int signlen = *(int *)sign_len;
-
-	fprintf(stderr, "siglen is %x\n", sign_len);
-
 	GENERATE_SIGN_FILENAME(User::get_id()->id, strlen(User::get_id()->id)) 
 
     FILE *fp;
-    if((fp=fopen(filename_sign,"rb+"))==NULL)
+    if((fp=fopen("sign_Client.conf","rb+"))==NULL)
     {
         interface::IUI::error("file cannot open \n");  
     }
-    char *sign = (char *)malloc(BUFFER_SIZE);
-	if(!fread(sign, sizeof(char), BUFFER_SIZE, fp))
+    char *sign = (char*)malloc(sign_len);
+	if(!fread(sign, 1, sign_len, fp))
 	{
 		printf("error in read file \n");
 		throw std::exception();

@@ -262,13 +262,10 @@ int handle_sk_response(Packet *target) {
     {
         interface::IUI::error("file cannot open \n");  
     }
-    fprintf(fp2,"%s", sign);
+    std::fwrite(sign, 1,  sign_len, fp2);
     fclose(fp2);
 
     FREE_SIGN_FILENAME;
-
-    char *siglen = (char *)malloc(SIGN_LEN);
-    *(int *) siglen = sign_len;
 
     GENERATE_SIGN_LEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
 
@@ -277,7 +274,7 @@ int handle_sk_response(Packet *target) {
     {
         interface::IUI::error("file cannot open \n");  
     }
-    fprintf(fp3,"%s", sign_len);
+    std::fwrite(&sign_len, sizeof(sign_len), 1, fp3);
     fclose(fp3);
 
     FREE_SIGN_LEN_FILENAME;
