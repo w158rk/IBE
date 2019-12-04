@@ -7,7 +7,7 @@ Version: ...
 Date: 2019-06-16
 History: ...
 *****************************************************************************/
-
+#include "user_lcl.hpp"
 #include <user.hpp>
 #include <iostream>
 #include <config.h>
@@ -34,69 +34,51 @@ void User::try_send_message(char *dest_ip,
 					ID *dest_id)
 {
 
-	
-	// try
-	// {
-	// 	comm->file_main();
-	// }
-	// catch(const std::exception& e)
-	// {
-	// 	std::cerr << e.what() << '\n';
-	// 	throw e;
-	// }
+	interface::IComm *comm = get_comm_ptr();
+	comm->connect_to_server(dest_ip, dest_port);
 
-	/* 需要加密的文件放在id_message.txt中 */
-	// fprintf(stderr, "len is%d\n", dest_id->length);
-	// int filename_message_len = dest_id->length + 13;
-	
-	// memcpy(filename_message, dest_id->id, dest_id->length);
-	// memcpy(filename_message+dest_id->length, "_message.txt", 14);
-
-	/* 读取信息 */
-	// FILE *fp;
-	// if((fp=fopen(filename_message,"rb+"))==NULL)
-    // {
-    //     printf("file_massge cannot open \n");
-	// 	throw std::exception();
-    // }
-	// char *message = (char *)malloc(MES_LEN);
-	// if(!fread(message, sizeof(char), MES_LEN, fp))
-	// {
-	// 	printf("error in read file \n");
-	// 	throw std::exception();
-	// }
-	// fclose(fp);
-	// int len = strlen(message);
+	// QUESTION : is it necessary to run a listening thread for the connection ?	
+	 try
+	 {
+		// get the files from the comm object
+		comm_file_main(this, comm->get_read_file(), 
+									comm->get_write_file());
+	 }
+	 catch(const std::exception& e)
+	 {
+	 	std::cerr << e.what() << '\n';
+	 	throw e;
+	 }
 
 	GENERATE_SIGN_LEN_FILENAME(User::get_id()->id, strlen(User::get_id()->id)) 
 
-    FILE *fp1; 
-    if((fp1=fopen(filename_len_sign,"rb"))==NULL)
-    {
-        interface::IUI::error("file cannot open \n");  
-    }
+	FILE *fp1; 
+	if((fp1=fopen(filename_len_sign,"rb"))==NULL)
+	{
+		interface::IUI::error("file cannot open \n");  
+	}
 	int sign_len;
-    std::fread(&sign_len, sizeof(sign_len), 1, fp1);
-    fclose(fp1);
+	std::fread(&sign_len, sizeof(sign_len), 1, fp1);
+	fclose(fp1);
 
-    FREE_SIGN_LEN_FILENAME;
+	FREE_SIGN_LEN_FILENAME;
 
 	GENERATE_SIGN_FILENAME(User::get_id()->id, strlen(User::get_id()->id)) 
 
-    FILE *fp;
-    if((fp=fopen(filename_sign,"rb+"))==NULL)
-    {
-        interface::IUI::error("file cannot open \n");  
-    }
-    char *sign = (char*)malloc(sign_len);
+	FILE *fp;
+	if((fp=fopen(filename_sign,"rb+"))==NULL)
+	{
+		interface::IUI::error("file cannot open \n");  
+	}
+	char *sign = (char*)malloc(sign_len);
 	if(!fread(sign, 1, sign_len, fp))
 	{
 		printf("error in read file \n");
 		throw std::exception();
 	}
-    fclose(fp);
+	fclose(fp);
 
-    FREE_SIGN_FILENAME;
+	FREE_SIGN_FILENAME;
 
 	IBEPublicParameters mpk = NULL;
 	
@@ -129,13 +111,11 @@ void User::try_send_message(char *dest_ip,
 	ctx->set_payload_app (p_app_packet);
 	ctx->set_dest_id(dest_id);
 
-	interface::IComm *comm = get_comm_ptr();
-	comm->connect_to_server(dest_ip, dest_port);
-
 	// must connect to the server before this point
 	if(0 == get_packet_ptr()->packet_send(ctx)) {
 		throw UserException("wrong when make the packet to send");
 	}
+	
 
 }
 

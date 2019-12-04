@@ -107,7 +107,7 @@ int handle_sk_request(Packet *target)
 #endif
     }
 
-    SignMesg server_sig;
+    SignMesg *server_sig = new SignMesg();
 
     /* 获取顶级域的sP */
     IBEPublicParameters ss_mpk = NULL;
@@ -116,18 +116,50 @@ int handle_sk_request(Packet *target)
     if(ctx->get_dest_id()->father_node==nullptr)
     {
 
-        server_sig.ID = ctx->get_dest_id()->id;
-        server_sig.PP = ss_mpk;
-        server_sig.sign_data = NULL;
+        server_sig->ID = ctx->get_dest_id()->id;
+        server_sig->PP = ss_mpk;
+        server_sig->sign_data = NULL;
         int id_len = strlen(ctx->get_dest_id()->id);
-        *(int *)(server_sig.id_len) = id_len;
-        *(int *)(server_sig.sign_len) = 0;
-        server_sig.front = nullptr;
+        *(int *)(server_sig->id_len) = id_len;
+        *(int *)(server_sig->sign_len) = 0;
+        server_sig->front = nullptr;
     }
 
     else
     {
         /* 获取自己保存的sig */
+        GENERATE_SIGN_LEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+
+        FILE *fp1; 
+        if((fp1=fopen(filename_len_sign,"rb"))==NULL)
+        {
+            interface::IUI::error("file cannot open \n");  
+        }
+        int sign_len;
+        std::fread(&sign_len, sizeof(sign_len), 1, fp1);
+        fclose(fp1);
+
+        FREE_SIGN_LEN_FILENAME;
+
+        GENERATE_SIGN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+
+        FILE *fp;
+        if((fp=fopen(filename_sign,"rb+"))==NULL)
+        {
+            interface::IUI::error("file cannot open \n");  
+        }
+        char *sign = (char*)malloc(sign_len);
+        if(!fread(sign, 1, sign_len, fp))
+        {
+            printf("error in read file \n");
+            throw std::exception();
+        }
+        fclose(fp);
+
+        FREE_SIGN_FILENAME;
+
+        server_sig = sign_from_bytes(sign, sign_len, 0);
+
     }
 
     /* 生成sig_data */
@@ -160,7 +192,7 @@ int handle_sk_request(Packet *target)
     send_sig.sign_data = client_sign;
     *(int *)(send_sig.id_len) = client_id_len;
     *(int *)(send_sig.sign_len) = sign_len;
-    send_sig.front = &server_sig;
+    send_sig.front = server_sig;
 
     char *sig = (char *)malloc(BUFFER_LEN);
     int sig_len = sign_to_bytes(&send_sig, sig);
@@ -446,18 +478,140 @@ int handle_try_mes(Packet *target)
     if(strcmp(mpk,sig->PP))
     {
         Error("verify mpk error");
-        goto end;
-    }
 
+    }
     if(!sig_verify(sig, ss_mpk))
     {
         Error("verify sig error");
     }
 
+    fprintf(stderr, "verify done.\n");
 
+    PacketCTX *send_ctx = new PacketCTX;
+    AppPacket *send_packet = new AppPacket;
+
+    if(ctx->get_dest_id()->father_node!=nullptr)
+    {
+        GENERATE_SIGN_LEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+        FILE *fp1; 
+        if((fp1=fopen(filename_len_sign,"rb"))==NULL)
+        {
+            interface::IUI::error("file cannot open \n");  
+        }
+        int sign_len;
+        std::fread(&sign_len, sizeof(sign_len), 1, fp1);
+        fclose(fp1);
+        FREE_SIGN_LEN_FILENAME;
+
+        GENERATE_SIGN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+        FILE *fp;
+        if((fp=fopen(filename_sign,"rb+"))==NULL)
+        {
+            interface::IUI::error("file cannot open \n");  
+        }
+        char *sign = (char*)malloc(sign_len);
+        if(!fread(sign, 1, sign_len, fp))
+        {
+            printf("error in read file \n");
+            throw std::exception();
+        }
+        fclose(fp);
+
+        FREE_SIGN_FILENAME;
+
+        IBEPublicParameters mpk = NULL;
+        
+        GENERATE_MPK_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id))
+        get_mpk_fp(mpk_filename, &mpk);
+        FREE_MPK_FILENAME;
+
+        char *payload = (char *)malloc(sign_len+IBE_MPK_LEN);
+        memcpy(payload, mpk, IBE_MPK_LEN);
+        memcpy(payload+IBE_MPK_LEN, sign, sign_len);
+
+        send_packet->set_type(TRY_HANDLE_TYPE);
+        send_packet->set_length(sign_len+IBE_MPK_LEN);
+        send_packet->set_payload (payload);
+
+    }
+    else
+    {
+        SignMesg server_sig;
+        server_sig.ID = ctx->get_dest_id()->id;
+        server_sig.PP = ss_mpk;
+        server_sig.sign_data = NULL;
+        int id_len = strlen(ctx->get_dest_id()->id);
+        *(int *)(server_sig.id_len) = id_len;
+        *(int *)(server_sig.sign_len) = 0;
+        server_sig.front = nullptr;
+        char *sig = (char *)malloc(BUFFER_LEN);
+        int sig_len = sign_to_bytes(&server_sig, sig);
+
+        char *payload = (char *)malloc(sig_len+IBE_MPK_LEN);
+        memcpy(payload, ss_mpk, IBE_MPK_LEN);
+        memcpy(payload+IBE_MPK_LEN, sig, sig_len);
+
+        send_packet->set_type(TRY_HANDLE_TYPE);
+        send_packet->set_length(sig_len+IBE_MPK_LEN);
+        send_packet->set_payload (payload);
+
+    } 
+
+    send_ctx->set_phase (SEND_APP_PACKET);
+    send_ctx->set_payload_app (send_packet);
+
+     if(0 == target->packet_send(send_ctx)) {
+        Error("send the p error");
+        goto end;
+    }
 
     rnt = 1;
 
+end:
+    return rnt;
+}
+
+int handle_try_res(Packet *target)
+{
+    int rnt = 0;
+    PacketCTX *ctx = target->get_ctx();
+    AppPacket *p = ctx->get_payload_app();
+    int length = p->get_length();
+    int sign_len = length-IBE_MPK_LEN;
+    char *payload = p->get_payload();
+    char *mpk = (char *)malloc(IBE_MPK_LEN);
+    memcpy(mpk, payload, IBE_MPK_LEN);
+
+    user::User *user= target->get_user_ptr();
+    char *mpk_filename = user_get_mpk_filename(user);
+    FILE *fp;
+    if((fp=fopen(mpk_filename,"wb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    fprintf(fp,"%s", mpk);
+    fclose(fp);
+
+    /* 获取顶级域的sP */
+    IBEPublicParameters ss_mpk = NULL;
+    get_mpk_fp(GLOBAL_MPK_FILENAME, &ss_mpk);
+
+    char *sign = (char *)malloc(sign_len);
+    memcpy(sign, payload+IBE_MPK_LEN, sign_len);
+    SignMesg *sig = sign_from_bytes(sign, sign_len, 0);
+
+    if(strcmp(mpk,sig->PP))
+    {
+        Error("verify mpk error");
+        goto end;
+    }
+    if(!sig_verify(sig, ss_mpk))
+    {
+        Error("verify sig error");
+        goto end;
+    }
+    fprintf(stderr, "verify done.\n");
+    rnt = 1;
 end:
     return rnt;
 }
@@ -806,6 +960,10 @@ void Packet::handle_ap()
 
         case TRY_MES_TYPE:
             res = handle_try_mes(this);
+            break;
+        
+        case TRY_HANDLE_TYPE:
+            res = handle_try_res(this);
             break;
 
         case INIT_MESSAGE_1:
