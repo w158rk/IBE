@@ -391,7 +391,8 @@ int handle_mpk_response(Packet *target)
     fclose(fp1);
 
     user::User *user= target->get_user_ptr();
-    char *mpk_filename = user_get_mpk_filename(user);
+    ID *user_id = user_get_id(user);
+    GENERATE_MPK_FILENAME(user_id->father_node->id, strlen(user_id->father_node->id));
     FILE *fp2;
     if((fp2=fopen(mpk_filename,"wb+"))==NULL)
     {
@@ -399,6 +400,7 @@ int handle_mpk_response(Packet *target)
     }
     fprintf(fp2,"%s", mpk);
     fclose(fp2);
+    FREE_MPK_FILENAME;
 
     if(length!=IBE_MPK_LEN+IBE_MPK_LEN)
     {
@@ -422,11 +424,24 @@ int handle_try_mes(Packet *target)
     char *payload = p->get_payload();
     char *mpk = (char *)malloc(IBE_MPK_LEN);
     memcpy(mpk, payload, IBE_MPK_LEN);
+
+    user::User *user= target->get_user_ptr();
+    char *mpk_filename = user_get_mpk_filename(user);
+    FILE *fp;
+    if((fp=fopen(mpk_filename,"wb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    fprintf(fp,"%s", mpk);
+    fclose(fp);
+
     char *sign = (char *)malloc(sign_len);
     memcpy(sign, payload, sign_len);
     fprintf(stderr, "len is %d\n", sign_len);
     SignMesg *sig = sign_from_bytes(sign, sign_len, 0);
     fprintf(stderr, "id is %s\n", sig->ID);
+
+
 
     int rnt = 1;
     return rnt;

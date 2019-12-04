@@ -59,8 +59,8 @@ void Packet::send_enc()
             IBEPublicParameters mpk = NULL;
             ID *user_id = user_get_id(user_ptr);
             GENERATE_MPK_FILENAME(user_id->father_node->id,strlen(user_id->father_node->id))
-            get_mpk_fp(filename, &mpk);
-            FREE_SK_FILENAME
+            get_mpk_fp(mpk_filename, &mpk);
+            FREE_MPK_FILENAME;
 // #ifdef DEBUG 
 // {
 //             std::ostringstream s;

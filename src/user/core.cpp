@@ -84,7 +84,7 @@ void User::try_send_message(char *dest_ip,
 	GENERATE_SIGN_FILENAME(User::get_id()->id, strlen(User::get_id()->id)) 
 
     FILE *fp;
-    if((fp=fopen("sign_Client.conf","rb+"))==NULL)
+    if((fp=fopen(filename_sign,"rb+"))==NULL)
     {
         interface::IUI::error("file cannot open \n");  
     }
@@ -99,7 +99,11 @@ void User::try_send_message(char *dest_ip,
     FREE_SIGN_FILENAME;
 
 	IBEPublicParameters mpk = NULL;
-	get_mpk_fp(get_mpk_filename(), &mpk);
+	
+	GENERATE_MPK_FILENAME(User::get_id()->father_node->id,strlen(User::get_id()->father_node->id))
+	fprintf(stderr,"filename is %s\n", mpk_filename);
+	get_mpk_fp(mpk_filename, &mpk);
+	FREE_MPK_FILENAME;
 
 	char *payload = (char *)malloc(sign_len+IBE_MPK_LEN);
 	memcpy(payload, mpk, IBE_MPK_LEN);

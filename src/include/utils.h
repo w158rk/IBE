@@ -125,21 +125,21 @@
 #define FREE_SM4_FILENAME free(filename)
 
 #define GENERATE_MPK_FILENAME(id, id_len) \
-    int filename_len = id_len + 10;    \
-    char *filename = (char *)malloc(filename_len);  \
-    filename[0] = 'm';      \
-    filename[1] = 'p';\
-    filename[2] = 'k';\
-    filename[3] = '-';\
-    memcpy(filename+4, id, id_len);\
-    filename[filename_len-6] = '.'; \
-    filename[filename_len-5] = 'c'; \
-    filename[filename_len-4] = 'o'; \
-    filename[filename_len-3] = 'n'; \
-    filename[filename_len-2] = 'f';\
-    filename[filename_len-1] = '\0';
+    int mpk_filename_len = id_len + 10;    \
+    char *mpk_filename = (char *)malloc(mpk_filename_len);  \
+    mpk_filename[0] = 'm';      \
+    mpk_filename[1] = 'p';\
+    mpk_filename[2] = 'k';\
+    mpk_filename[3] = '-';\
+    memcpy(mpk_filename+4, id, id_len);\
+    mpk_filename[mpk_filename_len-6] = '.'; \
+    mpk_filename[mpk_filename_len-5] = 'c'; \
+    mpk_filename[mpk_filename_len-4] = 'o'; \
+    mpk_filename[mpk_filename_len-3] = 'n'; \
+    mpk_filename[mpk_filename_len-2] = 'f';\
+    mpk_filename[mpk_filename_len-1] = '\0';
 
-#define FREE_MPK_FILENAME free(filename)
+#define FREE_MPK_FILENAME free(mpk_filename)
 
 #define GENERATE_SIGN_FILENAME(id, id_len) \
     int filename_sign_len = id_len + 11;    \
