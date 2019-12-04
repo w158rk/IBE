@@ -563,3 +563,37 @@ SignMesg *sign_from_bytes(char *sig, int sig_len, int len)
     }
     return sign;
 }
+
+int sig_verify(SignMesg *sig, IBEPublicParameters ss_mpk)
+{
+    int rnt = 0;
+    if(sig->front!=nullptr)
+    {
+        if(!sig_verify(sig->front, ss_mpk))
+            goto end;
+        int id_len = *(int *)sig->id_len;
+        int sig_len = *(int *)sig->sign_len;
+        char *data = (char *)malloc(id_len+IBE_MPK_LEN);
+        memcpy(data, sig->ID, id_len);
+        memcpy(data+id_len, sig->PP, IBE_MPK_LEN);
+        
+        if(!ibe_verify(data, id_len+IBE_MPK_LEN, sig->sign_data, sig_len, &sig->PP, 239, sig->front->ID, *(int *)sig->front->ID))
+        {
+            fprintf(stderr, "verify error\n");
+            goto end;
+        }
+
+    }
+    else
+    {
+        if(strcmp(sig->PP, ss_mpk))
+        {
+            fprintf(stderr, "error in verify global mpk\n");
+            goto end;
+        }
+    }
+    
+    rnt = 1;
+end:
+    return rnt;
+}

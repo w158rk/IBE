@@ -56,22 +56,17 @@ int handle_sk_request(Packet *target)
 
     IBEMasterSecret msk = NULL;
     IBEPrivateKey sk = NULL;
-    IBEPublicParameters mpk = NULL;
+    
 
 
     user::User *user= target->get_user_ptr();
     char *msk_filename = user_get_msk_filename(user);
-    char *mpk_filename = user_get_mpk_filename(user);
+   
 
     if (get_msk_fp(msk_filename, &msk) == 0) {
         interface::IUI::error(" you don't have the access to msk file");
         throw PacketException(" you don't have the access to msk file");
     }       //从文件中读取s
-
-    if (get_mpk_fp(mpk_filename, &mpk) == 0) {
-        interface::IUI::error(" you don't have the access to mpk file");
-        throw PacketException(" you don't have the access to mpk file");
-    }
 
     // there is a bug that sucks 
     // it seems that the function get_msk_fp would change the value of p->payload 
@@ -136,9 +131,14 @@ int handle_sk_request(Packet *target)
     }
 
     /* 生成sig_data */
+    IBEPublicParameters mpk = NULL;
+    ID *user_id = user_get_id(user);
+    GENERATE_MPK_FILENAME(user_id->id, strlen(user_id->id));
+    get_mpk_fp(mpk_filename, &mpk);
+    FREE_MPK_FILENAME;
     char *data = (char *)malloc(client_id_len+IBE_MPK_LEN);
     memcpy(data,client_id, client_id_len);
-    memcpy(data,mpk,IBE_MPK_LEN);
+    memcpy(data+client_id_len,mpk,IBE_MPK_LEN);
     
     IBEPrivateKey server_sk = NULL;
     GENERATE_SK_FILENAME((ctx->get_dest_id()))
@@ -415,7 +415,7 @@ end:
 
 int handle_try_mes(Packet *target)
 {
-    int rtn = 0;
+    int rnt = 0;
 
     PacketCTX *ctx = target->get_ctx();
     AppPacket *p = ctx->get_payload_app();
@@ -435,15 +435,30 @@ int handle_try_mes(Packet *target)
     fprintf(fp,"%s", mpk);
     fclose(fp);
 
+    /* 获取顶级域的sP */
+    IBEPublicParameters ss_mpk = NULL;
+    get_mpk_fp(GLOBAL_MPK_FILENAME, &ss_mpk);
+
     char *sign = (char *)malloc(sign_len);
-    memcpy(sign, payload, sign_len);
-    fprintf(stderr, "len is %d\n", sign_len);
+    memcpy(sign, payload+IBE_MPK_LEN, sign_len);
     SignMesg *sig = sign_from_bytes(sign, sign_len, 0);
-    fprintf(stderr, "id is %s\n", sig->ID);
+
+    if(strcmp(mpk,sig->PP))
+    {
+        Error("verify mpk error");
+        goto end;
+    }
+
+    if(!sig_verify(sig, ss_mpk))
+    {
+        Error("verify sig error");
+    }
 
 
 
-    int rnt = 1;
+    rnt = 1;
+
+end:
     return rnt;
 }
 

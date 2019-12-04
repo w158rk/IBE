@@ -101,13 +101,12 @@ void User::try_send_message(char *dest_ip,
 	IBEPublicParameters mpk = NULL;
 	
 	GENERATE_MPK_FILENAME(User::get_id()->father_node->id,strlen(User::get_id()->father_node->id))
-	fprintf(stderr,"filename is %s\n", mpk_filename);
 	get_mpk_fp(mpk_filename, &mpk);
 	FREE_MPK_FILENAME;
 
 	char *payload = (char *)malloc(sign_len+IBE_MPK_LEN);
 	memcpy(payload, mpk, IBE_MPK_LEN);
-	memcpy(payload, sign, sign_len);
+	memcpy(payload+IBE_MPK_LEN, sign, sign_len);
 
 	/* 组织包 */
 
