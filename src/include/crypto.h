@@ -29,7 +29,7 @@ extern "C" {
 #define SM4_KEY_LEN             (SM4_KEY_BITS/8)
 #define IBE_MPK_LEN             237
 #define IBE_SK_LEN              380
-
+#define IBE_SIGN_LEN            72
 
 
 

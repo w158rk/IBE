@@ -5,7 +5,15 @@
  * @brief add signature to the sec packet
  */
 
+extern "C" {
+#include <sys.h>
+#include<config.h>
+#include <string.h>
+}
+
 #include<packet.hpp>
+
+#include "packet_lcl.hpp"
 
 using namespace packet;
 
@@ -18,17 +26,36 @@ void Packet::send_sign()
         throw PacketException("call wrong function");
     }
 
-    // SecPacket *p_sec_packet = ctx->get_payload_sec();
-    // int sec_type = p_sec_packet->get_type();
+    SecPacket *p_sec_packet = ctx->get_payload_sec();
+    AppPacket *p_packet = p_sec_packet->get_payload_app();
+    int type = p_packet->get_type();
 
-    // AppPacket *p_app_packet = p_sec_packet->get_payload_app();
-    // int app_length = p_app_packet->get_length();
+    if(type==IBE_MES_TYPE)
+    {
+        char data[BUFFER_SIZE];
+        int app_length = p_packet->get_length();
+        int len = (size_t)app_length+APP_HEAD_LEN;
+        memcpy(data, p_packet->to_bytes(), len);
 
-    // /*获取自己的sign*/
-    // SignMesg *sign = NULL;
-    
-    // p_app_packet->set_sign(sign);
-    // p_sec_packet->set_payload_app(p_app_packet);
+        char sign_data[BUFFER_SIZE] = {'\0'};
+        size_t sign_len;
+
+        IBEPrivateKey sk = NULL;
+
+        char *filename = NULL;
+        user::User *user_ptr = get_user_ptr();
+        ibe_gen_sk_filename(&filename, user_get_id(user_ptr));
+        get_sk_fp(filename, &sk);
+        ibe_free_filename(filename);
+
+        if(!(ibe_sign(data, len, sign_data, &sign_len, &sk, 380)))
+        {
+            fprintf(stderr, "sign error\n");
+        }
+
+        p_sec_packet->set_signature(sign_data);
+
+    }
 
     ctx->set_phase (SEND_ENC);
 

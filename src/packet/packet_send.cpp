@@ -85,10 +85,10 @@ void Packet::packet_send()
     char *data = p_sec_packet->to_bytes();
 
     // send the packet from the comm object
-    int length = get_comm_ptr()->send(data, len+SEC_HEAD_LEN);
+    int length = get_comm_ptr()->send(data, len+SEC_HEAD_LEN+IBE_SIGN_LEN);
     std::free(data);
 
-    if (length != len + SEC_HEAD_LEN) {
+    if (length != len + SEC_HEAD_LEN+IBE_SIGN_LEN) {
         throw PacketException("error in write file");
     }
 
