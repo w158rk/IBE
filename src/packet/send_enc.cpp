@@ -54,13 +54,13 @@ void Packet::send_enc()
             int len = (size_t)app_length+APP_HEAD_LEN;
             char data[BUFFER_SIZE];
             memcpy(data, p_app_packet->to_bytes(), len);
-            std::cout<<data<<std::endl;
+            // std::cout<<data<<std::endl;
             // encrypt
             IBEPublicParameters mpk = NULL;
-            ID *user_id = user_get_id(user_ptr);
-            GENERATE_MPK_FILENAME(user_id->father_node->id,strlen(user_id->father_node->id))
+            GENERATE_MPK_FILENAME(ctx->get_dest_id()->id,strlen(ctx->get_dest_id()->id))
             get_mpk_fp(mpk_filename, &mpk);
             FREE_MPK_FILENAME;
+            
 // #ifdef DEBUG 
 // {
 //             std::ostringstream s;
