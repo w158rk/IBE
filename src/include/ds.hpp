@@ -85,8 +85,10 @@ public:
 
     int get_length();
     int get_type();
+    char *get_id();
     void set_length(int);
     void set_type(int);
+    void set_id(char *);
 
     static SecPacket *from_bytes(char *);
     char *to_bytes();

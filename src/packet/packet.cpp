@@ -259,12 +259,18 @@ void SecPacket::unset_payload_app()
 int SecPacket::get_length()
 {
     char *head = get_head();
-    return *(int *)(head+4);
+    return *(int *)(head+8);
 }
 int SecPacket::get_type()
 {
     char *head = get_head();
     return *(int *)(head);
+}
+char *SecPacket::get_id()
+{
+    char *head = get_head();
+    char *id = (char *)malloc(4);
+    memcpy(id, head+4, 4);
 }
 void SecPacket::set_length(int length)
 {
@@ -282,7 +288,7 @@ void SecPacket::set_length(int length)
         std::memset(head, 0, APP_HEAD_LEN);
 
     }
-    *(int *)(head+4) = length;
+    *(int *)(head+8) = length;
     set_head(head);
 }
 void SecPacket::set_type(int type)
@@ -302,6 +308,26 @@ void SecPacket::set_type(int type)
 
     }
     *(int *)(head) = type;
+    set_head(head);
+}
+
+void SecPacket::set_id(char *id)
+{
+    char *head = nullptr;
+    if(m_fhead)
+    {
+
+        head = m_head;
+
+    } 
+    else 
+    {
+
+        head = (char *)std::malloc(APP_HEAD_LEN);
+        std::memset(head, 0, APP_HEAD_LEN);
+
+    }
+    memcpy(head+4, id, 4);
     set_head(head);
 }
 
