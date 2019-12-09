@@ -26,7 +26,6 @@ void Packet::handle_verify() {
 
     AppPacket *p = ctx->get_payload_app();
     int type = p->get_type();
-    fprintf(stderr, "type is %d\n", type);
     if(type==IBE_MES_TYPE)
     {
         char *sign = packet->get_signature();

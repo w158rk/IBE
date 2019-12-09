@@ -43,7 +43,7 @@ int UInterface::socket_interface_run()
 		printf("Choose from :\n");
 		printf("\t1. Extract your Private Key\n");
 		printf("\t2. Send message\n");
-		printf("\t3. Send message cross-domain\n");
+		printf("\t3. Try to send message cross-domain\n");
 		printf("\t4. Set up your system\n");
 		printf("\t5. Read your system files\n");
 		printf("\t6. Init the whole system\n");

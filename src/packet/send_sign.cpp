@@ -56,6 +56,12 @@ void Packet::send_sign()
         p_sec_packet->set_signature(sign_data);
 
     }
+    else
+    {
+        char sign_data[IBE_SIGN_LEN] = {'\0'};
+        p_sec_packet->set_signature(sign_data);
+    }
+    
 
     ctx->set_phase (SEND_ENC);
 
