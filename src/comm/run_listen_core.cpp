@@ -80,7 +80,7 @@ int Comm::run_listen_core()
 	#endif
 
 	// length of the packet without the head
-	int length = *(int *) (buffer+16);
+	int length = *(int *) (buffer+TYPE_LEN+ID_LEN_MAX);
 
 	if(!fread(buffer+SEC_HEAD_LEN+IBE_SIGN_LEN, sizeof(char), length, m_read_file))
 	{

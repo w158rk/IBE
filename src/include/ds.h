@@ -41,7 +41,9 @@ typedef struct point_t point_t;
 
 #define APP_HEAD_LEN    8
 /* 24 originally */
-#define SEC_HEAD_LEN    20
+#define SEC_HEAD_LEN    28      //TYPE_LEN+ID_LEN_MAX+LEN
+#define TYPE_LEN        4
+#define ID_LEN_MAX      20
 #define BUFFER_LEN      1000000       
 #define SIGN_LEN        16
 #define SIGN_ID_LEN     8
