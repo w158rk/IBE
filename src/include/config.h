@@ -4,7 +4,7 @@
 #define CONFIG__H
 
 /* buffer sizes */
-#define BUFFER_SIZE             1024
+#define BUFFER_SIZE             10000
 #define SECURITY_BITS           256
 #define MAX_ID_LEN              (SECURITY_BITS/8)
 #define IBE_BUFFER_SIZE         128
