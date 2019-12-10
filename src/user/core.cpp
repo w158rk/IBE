@@ -188,13 +188,10 @@ void User::run_send_message(char *dest_ip,
 	ctx->set_payload_app (p_app_packet);
 	ctx->set_dest_id(dest_id);
 
-	IBEPublicParameters mpk = NULL;
-	get_mpk_fp(get_mpk_filename(), &mpk);
-
-	ctx->set_mpk(&mpk);		//将sP放入包中
-
 	interface::IComm *comm = get_comm_ptr();
 	comm->connect_to_server(dest_ip, dest_port);
+
+
 
 	// must connect to the server before this point
 	if(0 == get_packet_ptr()->packet_send(ctx)) {

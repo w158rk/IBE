@@ -29,9 +29,14 @@ void Packet::handle_verify() {
     if(type==IBE_MES_TYPE)
     {
         char *sign = packet->get_signature();
-
+        char *id = packet->get_id();
+#ifdef DEBUG
+        fprintf(stderr, "id is %s\n", id);
+#endif
         IBEPublicParameters mpk = NULL;
-        get_mpk_fp("mpk-Client.conf", &mpk);
+        GENERATE_MPK_FILENAME(id,strlen(id))
+        get_mpk_fp(mpk_filename, &mpk);
+        FREE_MPK_FILENAME;
 
         int length = p->get_length();
 

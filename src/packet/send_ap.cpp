@@ -59,6 +59,8 @@ void Packet::send_ap()
     SecPacket *p_send_packet = new SecPacket;  
 
     p_send_packet->set_type(send_type);
+    ID *user_id = user_get_id(user_ptr);
+    p_send_packet->set_id(user_id->id);
     p_send_packet->set_payload_app(p_packet);
     ctx->set_payload_sec(p_send_packet);
     ctx->set_phase(SEND_SIGN);

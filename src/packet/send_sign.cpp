@@ -44,7 +44,6 @@ void Packet::send_sign()
 
         char *filename = NULL;
         user::User *user_ptr = get_user_ptr();
-        fprintf(stderr, "filename is %s\n", filename);
         ibe_gen_sk_filename(&filename, user_get_id(user_ptr));
         get_sk_fp(filename, &sk);
         ibe_free_filename(filename);

@@ -75,8 +75,12 @@ int Comm::run_listen_core()
 		}
 	}
 
+	#ifdef DEBUG 
+	get_ui_ptr()->debug("finish reading the sign");
+	#endif
+
 	// length of the packet without the head
-	int length = *(int *) (buffer+4);
+	int length = *(int *) (buffer+16);
 
 	if(!fread(buffer+SEC_HEAD_LEN+IBE_SIGN_LEN, sizeof(char), length, m_read_file))
 	{
