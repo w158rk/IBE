@@ -146,21 +146,12 @@ void User::run_send_message(char *dest_ip,
 	// 	throw e;
 	// }
 
-<<<<<<< HEAD
 	/* 需要加密的文件放在id_message.txt中 */
 	// fprintf(stderr, "len is%d\n", dest_id->length);
 	// int filename_message_len = dest_id->length + 13;
 	// char *filename_message = (char *)malloc(filename_message_len);
 	// memcpy(filename_message, dest_id->id, dest_id->length);
 	// memcpy(filename_message+dest_id->length, "_message.txt", 14);
-=======
-	/* 需要加密的文件放在dest_id_message.txt中 */
-	fprintf(stderr, "len is%d\n", dest_id->length);
-	int filename_message_len = dest_id->length + 13;
-	char *filename_message = (char *)malloc(filename_message_len);
-	memcpy(filename_message, dest_id->id, dest_id->length);
-	memcpy(filename_message+dest_id->length, "_message.txt", 14);
->>>>>>> b9920d02f021894591a9b92b65913baa91a16f9d
 
 	/* 读取信息 */
 	// FILE *fp;

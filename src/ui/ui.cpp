@@ -117,16 +117,12 @@ int UInterface::socket_interface_run()
 			}
 			case 4:
 			{
-<<<<<<< HEAD
-				user->sys_read();
-=======
 				user->sys_setup();
->>>>>>> b9920d02f021894591a9b92b65913baa91a16f9d
 				break;
 			}
 			case 5:
 			{
-				user->sys_generate();
+				user->sys_read();
 				break;
 			}
 			case 6:
