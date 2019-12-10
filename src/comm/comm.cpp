@@ -46,9 +46,22 @@ int Comm::send(const void *vptr, size_t n)
 
 }
 
+
+Comm::Comm() 
+{   
+    Comm::cnt ++; 
+    ui::UInterface::debug("delete Comm");
+}
+
 Comm::~Comm() 
 {
-    ui::UInterface::debug("delete Comm");
+    Comm::cnt --; 
+
+    std::ostringstream s;
+    s << "delete Comm" << std::endl;
+    s << "the rest of Comm object: " << Comm::cnt << std::endl;
+
+    ui::UInterface::debug(s.str());
 }
 
 GET_AND_SET_IMPL(Comm, FILE *, read_file)
@@ -59,3 +72,5 @@ GET_AND_SET_IMPL(Comm, interface::IUI *, ui_ptr)
 GET_AND_SET_IMPL(Comm, std::thread *, thread)
 GET_AND_SET_IMPL(Comm, char *, err_sig)
 GET_AND_SET_IMPL(CommException, std::string, message)
+
+int Comm::cnt = 0;

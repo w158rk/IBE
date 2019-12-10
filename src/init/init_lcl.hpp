@@ -14,6 +14,7 @@ namespace init
     void user_send_init_message_1(user::User* user, char *buf, int len, ID *id);
     void user_send_init_message_2(user::User* user, char *buf, int len, int, ID *id);
     void user_send_init_message_3(user::User* user, char *buf, int len, ID *id);
+    void user_sys_setup(user::User* user);
 
 }
 

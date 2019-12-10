@@ -13,6 +13,8 @@ namespace comm
         friend class interface::IComm;
 
     public : 
+
+        static int cnt;
     
         Comm(   FILE *read_file, 
                 FILE *write_file, 
@@ -20,7 +22,7 @@ namespace comm
                 user::User *user_ptr);
         Comm(   interface::IPacket *packet_ptr,
                 user::User *user_ptr);
-        Comm() = default;
+        Comm();
         ~Comm(); 
         
         void connect_to_server(char* ip_addr, int port);

@@ -174,6 +174,12 @@ int ibe_ec_store_Ppub1(EC_POINT *point, char *mpk_file)
 	}
 
 	// set the param
+	if(smx_mpk->pointPpub1)
+	{
+		ASN1_OCTET_STRING_free(smx_mpk->pointPpub1);
+		smx_mpk->pointPpub1 = NULL;
+	}
+
 	smx_mpk->pointPpub1 = ASN1_OCTET_STRING_new();
 	if(!smx_mpk->pointPpub1)
 	{
@@ -410,7 +416,7 @@ int ibe_ec_id2point(
 	if(*point != NULL)
 	{
 		ERROR(MEM_POINTER_NOT_NULL_ERROR);
-		goto end;
+		return 0;
 	}
 
     // read the mpk from file 
@@ -420,7 +426,7 @@ int ibe_ec_id2point(
     FILE *mpk_fp = fopen(mpk_file, "rb");
     if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
 		ERROR(MPK_FROM_FILE_ERROR);
-        goto end;
+		return 0;
     }
     
     fclose(mpk_fp);
@@ -480,7 +486,6 @@ int ibe_ec_id2point(
 	ret = 1;
 
 end:
-	EC_GROUP_free(group);
 	if (bn_ctx) {
 		BN_CTX_end(bn_ctx);
 	}

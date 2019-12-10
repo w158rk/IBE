@@ -16,6 +16,8 @@ extern "C" {
 #include<packet.hpp>
 #ifdef DEBUG 
 #include<sstream>
+#include<ui.hpp>
+#define Debug(info) ui::UInterface::debug(info)
 #endif
 # include <init.hpp>
 
@@ -100,7 +102,7 @@ void User::sys_setup()
 
 }
 
-void User::sys_generate()
+void User::sys_read()
 {
 
     /* read the length from the mpk-len and msk-len file */
@@ -201,6 +203,7 @@ void User::sys_init()
     {
         init::Initializer* initializer = new init::Initializer(this);
     }
+
     get_initializer()->run();
     unset_initializer();
 }
