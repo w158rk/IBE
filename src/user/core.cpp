@@ -7,7 +7,7 @@ Version: ...
 Date: 2019-06-16
 History: ...
 *****************************************************************************/
-
+#include "user_lcl.hpp"
 #include <user.hpp>
 #include <iostream>
 #include <config.h>
@@ -31,6 +31,103 @@ using namespace user;
  * internal functions
  */ 
 
+void User::try_send_message(char *dest_ip, 
+					int dest_port,
+					ID *dest_id)
+{
+
+	interface::IComm *comm = get_comm_ptr();
+	comm->connect_to_server(dest_ip, dest_port);
+
+	// QUESTION : is it necessary to run a listening thread for the connection ?	
+	 try
+	 {
+		// get the files from the comm object
+		comm_file_main(this, comm->get_read_file(), 
+									comm->get_write_file());
+	 }
+	 catch(const std::exception& e)
+	 {
+	 	std::cerr << e.what() << '\n';
+	 	throw e;
+	 }
+
+	GENERATE_SIGN_LEN_FILENAME(User::get_id()->id, strlen(User::get_id()->id)) 
+
+	FILE *fp1; 
+	if((fp1=fopen(filename_len_sign,"rb"))==NULL)
+	{
+		interface::IUI::error("file cannot open \n");  
+	}
+	int sign_len;
+	std::fread(&sign_len, sizeof(sign_len), 1, fp1);
+	fclose(fp1);
+
+	FREE_SIGN_LEN_FILENAME;
+
+	GENERATE_SIGN_FILENAME(User::get_id()->id, strlen(User::get_id()->id)) 
+
+	FILE *fp;
+	if((fp=fopen(filename_sign,"rb+"))==NULL)
+	{
+		interface::IUI::error("file cannot open \n");  
+	}
+	char *sign = (char*)malloc(sign_len);
+	if(!fread(sign, 1, sign_len, fp))
+	{
+		printf("error in read file \n");
+		throw std::exception();
+	}
+	fclose(fp);
+
+	FREE_SIGN_FILENAME;
+
+	IBEPublicParameters mpk = NULL;
+
+	if(User::get_id()->father_node!=nullptr)
+	{
+		GENERATE_MPK_FILENAME(User::get_id()->father_node->id,strlen(User::get_id()->father_node->id))
+		get_mpk_fp(mpk_filename, &mpk);
+		FREE_MPK_FILENAME;
+	}
+	else
+	{
+		get_mpk_fp(GLOBAL_MPK_FILENAME, &mpk);
+	}
+
+	char *payload = (char *)malloc(sign_len+IBE_MPK_LEN);
+	memcpy(payload, mpk, IBE_MPK_LEN);
+	memcpy(payload+IBE_MPK_LEN, sign, sign_len);
+
+	/* 组织包 */
+
+	AppPacket *p_app_packet = new AppPacket ; 
+	
+	/* set the head */
+	/**
+	 * the format is : 
+	 * --------------------------------------
+	 * |	type	|	length of payload	|
+	 * --------------------------------------
+	 */
+	p_app_packet->set_type(TRY_MES_TYPE);
+	p_app_packet->set_length(sign_len + IBE_MPK_LEN);
+	p_app_packet->set_payload(payload);
+
+	PacketCTX *ctx = new PacketCTX;
+
+	ctx->set_phase(SEND_APP_PACKET);
+	ctx->set_payload_app (p_app_packet);
+	ctx->set_dest_id(dest_id);
+
+	// must connect to the server before this point
+	if(0 == get_packet_ptr()->packet_send(ctx)) {
+		throw UserException("wrong when make the packet to send");
+	}
+	
+
+}
+
 
 
 void User::run_send_message(char *dest_ip, 
@@ -49,12 +146,21 @@ void User::run_send_message(char *dest_ip,
 	// 	throw e;
 	// }
 
+<<<<<<< HEAD
 	/* 需要加密的文件放在id_message.txt中 */
 	// fprintf(stderr, "len is%d\n", dest_id->length);
 	// int filename_message_len = dest_id->length + 13;
 	// char *filename_message = (char *)malloc(filename_message_len);
 	// memcpy(filename_message, dest_id->id, dest_id->length);
 	// memcpy(filename_message+dest_id->length, "_message.txt", 14);
+=======
+	/* 需要加密的文件放在dest_id_message.txt中 */
+	fprintf(stderr, "len is%d\n", dest_id->length);
+	int filename_message_len = dest_id->length + 13;
+	char *filename_message = (char *)malloc(filename_message_len);
+	memcpy(filename_message, dest_id->id, dest_id->length);
+	memcpy(filename_message+dest_id->length, "_message.txt", 14);
+>>>>>>> b9920d02f021894591a9b92b65913baa91a16f9d
 
 	/* 读取信息 */
 	// FILE *fp;

@@ -124,6 +124,80 @@
 
 #define FREE_SM4_FILENAME free(filename)
 
+#define GENERATE_MPK_FILENAME(id, id_len) \
+    int mpk_filename_len = id_len + 10;    \
+    char *mpk_filename = (char *)malloc(mpk_filename_len);  \
+    mpk_filename[0] = 'm';      \
+    mpk_filename[1] = 'p';\
+    mpk_filename[2] = 'k';\
+    mpk_filename[3] = '-';\
+    memcpy(mpk_filename+4, id, id_len);\
+    mpk_filename[mpk_filename_len-6] = '.'; \
+    mpk_filename[mpk_filename_len-5] = 'c'; \
+    mpk_filename[mpk_filename_len-4] = 'o'; \
+    mpk_filename[mpk_filename_len-3] = 'n'; \
+    mpk_filename[mpk_filename_len-2] = 'f';\
+    mpk_filename[mpk_filename_len-1] = '\0';
+
+#define FREE_MPK_FILENAME free(mpk_filename)
+
+#define GENERATE_MPK2_FILENAME(id, id_len) \
+    int mpk2_filename_len = id_len + 10;    \
+    char *mpk2_filename = (char *)malloc(mpk2_filename_len);  \
+    mpk2_filename[0] = 'm';      \
+    mpk2_filename[1] = 'p';\
+    mpk2_filename[2] = 'k';\
+    mpk2_filename[3] = '-';\
+    memcpy(mpk2_filename+4, id, id_len);\
+    mpk2_filename[mpk2_filename_len-6] = '.'; \
+    mpk2_filename[mpk2_filename_len-5] = 'c'; \
+    mpk2_filename[mpk2_filename_len-4] = 'o'; \
+    mpk2_filename[mpk2_filename_len-3] = 'n'; \
+    mpk2_filename[mpk2_filename_len-2] = 'f';\
+    mpk2_filename[mpk2_filename_len-1] = '\0';
+
+#define FREE_MPK2_FILENAME free(mpk2_filename)
+
+#define GENERATE_SIGN_FILENAME(id, id_len) \
+    int filename_sign_len = id_len + 11;    \
+    char *filename_sign = (char *)malloc(filename_sign_len);  \
+    filename_sign[0] = 's';      \
+    filename_sign[1] = 'i';\
+    filename_sign[2] = 'g';\
+    filename_sign[3] = 'n';\
+    filename_sign[4] = '_';\
+    memcpy(filename_sign+5, id, id_len);\
+    filename_sign[filename_sign_len-6] = '.'; \
+    filename_sign[filename_sign_len-5] = 'c'; \
+    filename_sign[filename_sign_len-4] = 'o'; \
+    filename_sign[filename_sign_len-3] = 'n'; \
+    filename_sign[filename_sign_len-2] = 'f';\
+    filename_sign[filename_sign_len-1] = '\0';
+
+#define FREE_SIGN_FILENAME free(filename_sign)
+
+#define GENERATE_SIGN_LEN_FILENAME(id, id_len) \
+    int sig_len = id_len + 15;    \
+    char *filename_len_sign = (char *)malloc(sig_len);  \
+    filename_len_sign[0] = 's';      \
+    filename_len_sign[1] = 'i';\
+    filename_len_sign[2] = 'g';\
+    filename_len_sign[3] = 'n';\
+    filename_len_sign[4] = '-';\
+    filename_len_sign[5] = 'l';\
+    filename_len_sign[6] = 'e';\
+    filename_len_sign[7] = 'n';\
+    filename_len_sign[8] = '_';\
+    memcpy(filename_len_sign+9, id, id_len);\
+    filename_len_sign[sig_len-6] = '.'; \
+    filename_len_sign[sig_len-5] = 'c'; \
+    filename_len_sign[sig_len-4] = 'o'; \
+    filename_len_sign[sig_len-3] = 'n'; \
+    filename_len_sign[sig_len-2] = 'f';\
+    filename_len_sign[sig_len-1] = '\0';
+
+#define FREE_SIGN_LEN_FILENAME free(filename_len_sign)
+
 #ifdef __cplusplus 
 extern "C" {
 #endif

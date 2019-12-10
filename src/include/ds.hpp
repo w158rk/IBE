@@ -35,7 +35,6 @@ public:
 
     GET_AND_SET(char *, payload);
     GET_AND_SET(char *, head);
-    GET_AND_SET(SignMesg *, sig);
 
     static AppPacket *from_bytes(char *);
     char *to_bytes();
@@ -47,9 +46,7 @@ public:
 
 private:
     char m_head[APP_HEAD_LEN];
-    SignMesg *m_signature;
     bool m_fhead;
-    bool m_fsignature;
     DECLARE_MEMBER(char *, payload);
 
 };
@@ -71,7 +68,7 @@ private:
 
     DECLARE_MEMBER(union payload, payload)
     char m_head[SEC_HEAD_LEN];
-    SignMesg *m_signature;
+    char m_signature[IBE_SIGN_LEN];
     bool m_fhead;
     bool m_fsignature;
 
@@ -84,7 +81,7 @@ public:
     GET_AND_SET(char *, payload_byte)
     GET_AND_SET(AppPacket *, payload_app)
     GET_AND_SET(char *, head);
-    GET_AND_SET(SignMesg *, signature);
+    GET_AND_SET(char *, signature);
 
     int get_length();
     int get_type();

@@ -1,6 +1,7 @@
 #include <packet.hpp>
 #include <string.h>
 #include <sys.h>
+#include <config.h>
 
 #ifdef DEBUG 
 #include<iostream>
@@ -10,9 +11,7 @@
 using namespace packet;
 
 void Packet::handle_verify() {
-    PacketCTX *ctx = get_ctx();
-
-    ctx->set_phase(RECV_APP_PACKET);
+    PacketCTX *ctx = get_ctx();   
  
 #ifdef DEBUG       
     std::cerr << " type: " << ctx->get_payload_sec()->get_payload_app()->get_type() << std::endl;
@@ -25,57 +24,28 @@ void Packet::handle_verify() {
     std::cerr << " type: " << ctx->get_payload_app()->get_type() << std::endl;
 #endif
 
+    AppPacket *p = ctx->get_payload_app();
+    int type = p->get_type();
+    if(type==IBE_MES_TYPE)
+    {
+        char *sign = packet->get_signature();
 
-//     /* 从ctx包中获取发送方的ID及sP */
-//     IBEPublicParameters *mes_mpk = NULL;
-//     mes_mpk = ctx->get_mpk();
-//     char *mes_id;
-//     mes_id = ctx->get_src_id()->id;
-//     size_t id_len = strlen(mes_id);
-//     char *data = (char *)malloc(id_len + IBE_MPK_LEN);
-//     memcpy(data, mes_mpk, IBE_MPK_LEN);
-//     memcpy(data + IBE_MPK_LEN, mes_id, id_len);
+        IBEPublicParameters mpk = NULL;
+        get_mpk_fp("mpk-Client.conf", &mpk);
 
-// #ifdef DEBUG       
-//     std::cerr << " type: " << ctx->get_payload_sec()->get_payload_app()->get_type() << std::endl;
-// #endif
+        int length = p->get_length();
 
-//     SecPacket *packet = ctx->get_payload_sec();
-//     ctx->set_payload_app(packet->get_payload_app());
-//     delete packet;
-// #ifdef DEBUG       
-//     std::cerr << " type: " << ctx->get_payload_app()->get_type() << std::endl;
-// #endif
+        char *message = p->get_payload();
 
-//     AppPacket *p = packet->get_payload_app();
-//     SignMesg *sign;
-//     sign = p->get_sign();
-//     if(sign->front==nullptr)
-//     {
-//         if(!strcmp(mes_id, sign->ID)||!strcmp((char *)mes_mpk, (char *)sign->PP))
-//         {
-//             fprintf(stderr, "verify error\n");
-//         }
+        if(!ibe_verify(message, length, sign, IBE_SIGN_LEN, &mpk, 239, "Client", 6))
+        {
+            fprintf(stderr, "verify error\n");
+        }
 
-//         /* 获取顶级的sP */
-//         IBEPublicParameters mpk = NULL;
+    }
 
-//         if(!ibe_verify(data, id_len + IBE_MPK_LEN, sign->sign_data, strlen(sign->sign_data), &mpk, 239, ctx->get_src_id()->father_node->id, strlen(ctx->get_src_id()->father_node->id)))
-//         {
-//             fprintf(stderr, "verify error\n");
-//         }  
+    ctx->set_phase(RECV_APP_PACKET);
 
-//     }
-//     else
-//     {
-//         SignMesg *verify_sign;
-//         verify_sign = sign;
-//         while(verify_sign->front!=nullptr)
-//         {
-//             verify_sign = sign->front;
-
-//         }
-//     }
     
     
 }

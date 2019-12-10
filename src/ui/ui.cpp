@@ -43,9 +43,11 @@ int UInterface::socket_interface_run()
 		printf("Choose from :\n");
 		printf("\t1. Extract your Private Key\n");
 		printf("\t2. Send message\n");
-		printf("\t3. Set up your system\n");
-		printf("\t4. Read your system files\n");
-		printf("\t5. Init the whole system\n");
+		printf("\t3. Try to send message cross-domain\n");
+		printf("\t4. Set up your system\n");
+		printf("\t5. Read your system files\n");
+		printf("\t6. Init the whole system\n");
+		printf("\t7. Get global and domain mpk\n");
 		
 		int choise;
 		scanf("%d", &choise);
@@ -93,17 +95,56 @@ int UInterface::socket_interface_run()
 			}
 			case 3:
 			{
-				user->sys_setup();
+				printf("Please input whom you want to send to(IP_ADDRESS LISTEN_PORT ID)\n");
+				char ip_ad[20], id_cstr[20];
+				int port;
+				scanf("%s %d %s",&ip_ad, &port, &id_cstr);
+				ID dest_id;
+				dest_id.id = id_cstr;
+				int len = strlen(id_cstr);
+				dest_id.length = len;
+				fprintf(stderr, "ip is: %s  port is: %d  id is: %s\n", ip_ad, port, id_cstr);
+				try 
+				{
+					user->try_send_message(ip_ad, port, &dest_id);
+				}
+				catch(user::UserException& e)
+				{
+					std::cerr << e.what() << std::endl;
+					return -1;
+				}			
 				break;
 			}
 			case 4:
 			{
+<<<<<<< HEAD
 				user->sys_read();
+=======
+				user->sys_setup();
+>>>>>>> b9920d02f021894591a9b92b65913baa91a16f9d
 				break;
 			}
 			case 5:
 			{
+				user->sys_generate();
+				break;
+			}
+			case 6:
+			{
 				user->sys_init();
+				break;
+			}
+			case 7:
+			{
+				try 
+				{
+					user->run_get_mpk(parent->ip, parent->port);
+				}			
+				catch(user::UserException& e)
+				{
+					std::cerr << e.what() << std::endl;
+					return -1;
+				}
 				break;
 			}
 			default:

@@ -54,20 +54,24 @@ void Packet::send_enc()
             int len = (size_t)app_length+APP_HEAD_LEN;
             char data[BUFFER_SIZE];
             memcpy(data, p_app_packet->to_bytes(), len);
-            std::cout<<data<<std::endl;
+            // std::cout<<data<<std::endl;
             // encrypt
             IBEPublicParameters mpk = NULL;
-#ifdef DEBUG 
-{
-            std::ostringstream s;
-            s << "Get mpk file: " << user_get_mpk_filename(user_ptr) << std::endl;
-            Debug(s.str()); 
-}
-#endif
-            if(!get_mpk_fp(user_get_mpk_filename(user_ptr), &mpk))
-            {
-                Error("cannot get mpk from file");
-            }
+            GENERATE_MPK_FILENAME(ctx->get_dest_id()->id,strlen(ctx->get_dest_id()->id))
+            get_mpk_fp(mpk_filename, &mpk);
+            FREE_MPK_FILENAME;
+            
+// #ifdef DEBUG 
+// {
+//             std::ostringstream s;
+//             s << "Get mpk file: " << user_get_mpk_filename(user_ptr) << std::endl;
+//             Debug(s.str()); 
+// }
+// #endif
+//             if(!get_mpk_fp(user_get_mpk_filename(user_ptr), &mpk))
+//             {
+//                 Error("cannot get mpk from file");
+//             }
 #ifdef DEBUG 
 {
             std::ostringstream s;
@@ -170,7 +174,7 @@ void Packet::send_enc()
             memcpy(tmp, cipher, c_len);       //加密后的信息放在sec_packet下的payload.sk_data中
             p_sec_packet->set_payload_byte(tmp);
             p_sec_packet->set_length(c_len);
-
+            
             break;
         }
         

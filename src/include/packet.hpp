@@ -14,7 +14,7 @@ namespace packet {
         int packet_handle(PacketCTX *ctx);    
         int packet_send(PacketCTX *ctx);    
         void packet_handle();    
-        void packet_send();    
+        void packet_send();  
 
         GET_AND_SET(interface::IUI *, ui_ptr)
         GET_AND_SET(user::User *, user_ptr)
@@ -41,7 +41,7 @@ namespace packet {
 
     void free_ctx(PacketCTX *ctx);
     void free_app_packet(AppPacket *packet);
-    void free_sec_packet(SecPacket *packet);
+    void free_sec_packet(SecPacket *packet);  
 
     class PacketException : RootException 
     {
@@ -67,5 +67,9 @@ namespace packet {
         DECLARE_MEMBER(std::string, message)
     };
 }
+
+int sign_to_bytes(SignMesg *sig, char *buf);
+SignMesg *sign_from_bytes(char *sig, int sig_len, int len);
+int sig_verify(SignMesg *sig, IBEPublicParameters ss_mpk);
 
 #endif

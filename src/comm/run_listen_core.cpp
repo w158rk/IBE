@@ -59,10 +59,26 @@ int Comm::run_listen_core()
 	get_ui_ptr()->debug("finish reading the head");
 	#endif
 
+	// read sign
+	if(!fread(buffer+SEC_HEAD_LEN, sizeof(char), IBE_SIGN_LEN, read_file))
+	{
+		if(feof(read_file))
+		{
+			get_ui_ptr()->error("client close its connection abruptly");
+			return -1;
+		}
+		else
+		{
+			std::ostringstream buffer; 
+			buffer << "can't get user request: " << strerror(errno);
+			Error(buffer.str());
+		}
+	}
+
 	// length of the packet without the head
 	int length = *(int *) (buffer+4);
 
-	if(!fread(buffer+SEC_HEAD_LEN, sizeof(char), length, m_read_file))
+	if(!fread(buffer+SEC_HEAD_LEN+IBE_SIGN_LEN, sizeof(char), length, m_read_file))
 	{
 		if(feof(m_read_file))
 		{

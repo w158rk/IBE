@@ -56,22 +56,17 @@ int handle_sk_request(Packet *target)
 
     IBEMasterSecret msk = NULL;
     IBEPrivateKey sk = NULL;
-    IBEPublicParameters mpk = NULL;
+    
 
 
     user::User *user= target->get_user_ptr();
     char *msk_filename = user_get_msk_filename(user);
-    char *mpk_filename = user_get_mpk_filename(user);
+   
 
     if (get_msk_fp(msk_filename, &msk) == 0) {
         interface::IUI::error(" you don't have the access to msk file");
         throw PacketException(" you don't have the access to msk file");
     }       //从文件中读取s
-
-    if (get_mpk_fp(mpk_filename, &mpk) == 0) {
-        interface::IUI::error(" you don't have the access to msk file");
-        throw PacketException(" you don't have the access to msk file");
-    }
 
     // there is a bug that sucks 
     // it seems that the function get_msk_fp would change the value of p->payload 
@@ -112,48 +107,70 @@ int handle_sk_request(Packet *target)
 #endif
     }
 
-    // TODO 
-    // finish extracting the requested private key 
-    // the next step is to send the key to the client 
-    // the following code is not checked
-
-    PacketCTX *send_ctx = new PacketCTX;
-    AppPacket *send_packet = new AppPacket;
-
-    // store the type of the app packet and the length of the 
-    // private key at the header of the packet
-    send_packet->set_type(PRIVATE_KEY_RESPONSE_TYPE);
-    send_packet->set_length(sk_len);
-
-    // store the private key in the payload 
-    // TODO : Not sure if it is necessary to copy the key from sk to psk 
-    // If the sk is allocated in the stack, it is 
-    // Otherwise, the following three lines can be replaced by a single line
-    send_packet->set_payload (sk);
-
-    SignMesg server_sig;
+    SignMesg *server_sig = new SignMesg();
 
     /* 获取顶级域的sP */
     IBEPublicParameters ss_mpk = NULL;
+    get_mpk_fp(GLOBAL_MPK_FILENAME, &ss_mpk);
 
     if(ctx->get_dest_id()->father_node==nullptr)
     {
-        server_sig.ID = ctx->get_dest_id()->id;
-        server_sig.PP = ss_mpk;
-        server_sig.sign_data = NULL;
-        server_sig.sign_len = 0;
-        server_sig.front = nullptr;
+
+        server_sig->ID = ctx->get_dest_id()->id;
+        server_sig->PP = ss_mpk;
+        server_sig->sign_data = NULL;
+        int id_len = strlen(ctx->get_dest_id()->id);
+        *(int *)(server_sig->id_len) = id_len;
+        *(int *)(server_sig->sign_len) = 0;
+        server_sig->front = nullptr;
     }
 
     else
     {
         /* 获取自己保存的sig */
+        GENERATE_SIGN_LEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+
+        FILE *fp1; 
+        if((fp1=fopen(filename_len_sign,"rb"))==NULL)
+        {
+            interface::IUI::error("file cannot open \n");  
+        }
+        int sign_len;
+        std::fread(&sign_len, sizeof(sign_len), 1, fp1);
+        fclose(fp1);
+
+        FREE_SIGN_LEN_FILENAME;
+
+        GENERATE_SIGN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+
+        FILE *fp;
+        if((fp=fopen(filename_sign,"rb+"))==NULL)
+        {
+            interface::IUI::error("file cannot open \n");  
+        }
+        char *sign = (char*)malloc(sign_len);
+        if(!fread(sign, 1, sign_len, fp))
+        {
+            printf("error in read file \n");
+            throw std::exception();
+        }
+        fclose(fp);
+
+        FREE_SIGN_FILENAME;
+
+        server_sig = sign_from_bytes(sign, sign_len, 0);
+
     }
 
     /* 生成sig_data */
+    IBEPublicParameters mpk = NULL;
+    ID *user_id = user_get_id(user);
+    GENERATE_MPK_FILENAME(user_id->id, strlen(user_id->id));
+    get_mpk_fp(mpk_filename, &mpk);
+    FREE_MPK_FILENAME;
     char *data = (char *)malloc(client_id_len+IBE_MPK_LEN);
     memcpy(data,client_id, client_id_len);
-    memcpy(data,mpk,IBE_MPK_LEN);
+    memcpy(data+client_id_len,mpk,IBE_MPK_LEN);
     
     IBEPrivateKey server_sk = NULL;
     GENERATE_SK_FILENAME((ctx->get_dest_id()))
@@ -173,9 +190,42 @@ int handle_sk_request(Packet *target)
     send_sig.ID = client_id;
     send_sig.PP = mpk;
     send_sig.sign_data = client_sign;
-    send_sig.sign_len = sign_len;
-    send_sig.front = &server_sig;
-    
+    *(int *)(send_sig.id_len) = client_id_len;
+    *(int *)(send_sig.sign_len) = sign_len;
+    send_sig.front = server_sig;
+
+    char *sig = (char *)malloc(BUFFER_LEN);
+    int sig_len = sign_to_bytes(&send_sig, sig);
+    // SignMesg *test = sign_from_bytes(sig, sig_len, 0);
+
+    // if(!ibe_verify(data, client_id_len+IBE_MPK_LEN, test->sign_data, *(int *)test->sign_len, &test->PP, 239, "Server", 6))
+    // {
+    //     fprintf(stderr, "verify error\n");
+    // }
+
+     // TODO 
+    // finish extracting the requested private key 
+    // the next step is to send the key to the client 
+    // the following code is not checked
+
+    PacketCTX *send_ctx = new PacketCTX;
+    AppPacket *send_packet = new AppPacket;
+
+    // store the type of the app packet and the length of the 
+    // private key at the header of the packet
+    send_packet->set_type(PRIVATE_KEY_RESPONSE_TYPE);
+    send_packet->set_length(sk_len + sig_len);
+
+    char *send_payload = (char *)malloc(sk_len + sig_len);
+    memcpy(send_payload, sk, sk_len);
+    memcpy(send_payload+sk_len, sig, sig_len);
+
+    // store the private key in the payload 
+    // TODO : Not sure if it is necessary to copy the key from sk to psk 
+    // If the sk is allocated in the stack, it is 
+    // Otherwise, the following three lines can be replaced by a single line
+    send_packet->set_payload (send_payload);
+
     /** set the variables in the context 
      * 1. set the phase as SEND_ADD_PACKET 
      * 2. set the payload 
@@ -211,8 +261,12 @@ int handle_sk_response(Packet *target) {
 
     AppPacket *p_app_packet = ctx->get_payload_app();
     int len = p_app_packet->get_length();
-    char *sk = (char *)std::malloc(len);
-    memcpy(sk, p_app_packet->get_payload(), len);
+    char *sk = (char *)std::malloc(IBE_SK_LEN);
+    memcpy(sk, p_app_packet->get_payload(), IBE_SK_LEN);
+    int sign_len = len-IBE_SK_LEN;
+    char *sign = (char *)malloc(sign_len);
+    memcpy(sign, p_app_packet->get_payload()+IBE_SK_LEN, sign_len);
+    // SignMesg *test = sign_from_bytes(sign, len-IBE_SK_LEN, 0);
 
     GENERATE_SK_FILENAME(ctx->get_dest_id())        
 
@@ -220,19 +274,43 @@ int handle_sk_response(Packet *target) {
     interface::IUI::debug("sk_filename is " + std::string(filename));
 #endif
 
-    FILE *fp2;
-    if((fp2=fopen(filename,"wb+"))==NULL)
+    FILE *fp;
+    if((fp=fopen(filename,"wb+"))==NULL)
     {
         interface::IUI::error("file cannot open \n");  
     }
-    fprintf(fp2,"%s", sk);
-    fclose(fp2);
+    fprintf(fp,"%s", sk);
+    fclose(fp);
 #ifdef DEBUG
     interface::IUI::debug(std::string(filename) + " generated");
 #endif
 
     FREE_SK_FILENAME;
-    
+
+    GENERATE_SIGN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+
+    FILE *fp2;
+    if((fp2=fopen(filename_sign,"wb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    std::fwrite(sign, 1,  sign_len, fp2);
+    fclose(fp2);
+
+    FREE_SIGN_FILENAME;
+
+    GENERATE_SIGN_LEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+
+    FILE *fp3;
+    if((fp3=fopen(filename_len_sign,"wb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    std::fwrite(&sign_len, sizeof(sign_len), 1, fp3);
+    fclose(fp3);
+
+    FREE_SIGN_LEN_FILENAME;
+
     rtn = 1;
     return rtn;
 
@@ -273,78 +351,252 @@ int handle_message(Packet *target)
     return rnt;
 }
 
-// int handle_sign_request(Packet *target)
-// {
-//     int rnt = 0;
+int handle_mpk_request(Packet *target)
+{
+    int rtn = 0;
 
-//     PacketCTX *ctx = target->get_ctx();
-//     AppPacket *p = ctx->get_payload_app();
-//     char *payload = p->get_payload();        //获取的payload为sP加上id
-//     int payload_len = p->get_length();
+    PacketCTX *ctx = target->get_ctx();
+    AppPacket *p = ctx->get_payload_app();
+    int length = p->get_length();
+    char *payload = p->get_payload();
+
+    PacketCTX *send_ctx = new PacketCTX;
+    AppPacket *send_packet = new AppPacket;
+
+    IBEPublicParameters global_mpk = NULL;
+    IBEPublicParameters mpk = NULL;
+
+    user::User *user= target->get_user_ptr();
+    char *mpk_filename = user_get_mpk_filename(user);
+    if (get_mpk_fp(mpk_filename, &mpk) == 0) {
+        interface::IUI::error(" you don't have the access to mpk file");
+        throw PacketException(" you don't have the access to mpk file");
+    }
+
+    if (get_mpk_fp(GLOBAL_MPK_FILENAME, &global_mpk) == 0) {
+        interface::IUI::error(" you don't have the access to global_mpk file");
+        throw PacketException(" you don't have the access to global_mpk file");
+    }
+
+    char *send_payload = (char*)malloc(IBE_MPK_LEN+IBE_MPK_LEN);
+    memcpy(send_payload,global_mpk,IBE_MPK_LEN);
+    memcpy(send_payload+IBE_MPK_LEN,mpk,IBE_MPK_LEN);
+
+    send_packet->set_type(MPK_RESPONSE_TYPE);
+    send_packet->set_length(IBE_MPK_LEN+IBE_MPK_LEN);
+    send_packet->set_payload(send_payload);
+
+    send_ctx->set_phase (SEND_APP_PACKET);
+    send_ctx->set_payload_app (send_packet);
+
+    if(0 == target->packet_send(send_ctx)) {
+        Error("send the p error");
+        goto end;
+    }
+
+    rtn = 1;
+
+end:
+    return rtn;
+}
+
+int handle_mpk_response(Packet *target)
+{
+    int rtn = 0;
+
+    PacketCTX *ctx = target->get_ctx();
+    AppPacket *p = ctx->get_payload_app();
+    int length = p->get_length();
+    char *payload = p->get_payload();
+    char *global_mpk = (char *)malloc(IBE_MPK_LEN);
+    char *mpk = (char *)malloc(IBE_MPK_LEN);
+     
+    memcpy(global_mpk, payload, IBE_MPK_LEN);
+    memcpy(mpk, payload+IBE_MPK_LEN, IBE_MPK_LEN);
+
+    FILE *fp1;
+    if((fp1=fopen(GLOBAL_MPK_FILENAME,"wb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    fprintf(fp1,"%s", global_mpk);
+    fclose(fp1);
+
+    user::User *user= target->get_user_ptr();
+    ID *user_id = user_get_id(user);
+    GENERATE_MPK_FILENAME(user_id->father_node->id, strlen(user_id->father_node->id));
+    FILE *fp2;
+    if((fp2=fopen(mpk_filename,"wb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    fprintf(fp2,"%s", mpk);
+    fclose(fp2);
+    FREE_MPK_FILENAME;
+
+    if(length!=IBE_MPK_LEN+IBE_MPK_LEN)
+    {
+        Error("handle mpk error");
+        goto end;
+    }
     
-//     char *client_id = payload + IBE_MPK_LEN;
-//     int client_id_len = payload_len - IBE_MPK_LEN;
+    rtn = 1;
+end:
+    return rtn;
+}
 
-//     char *client_PP = (char *)std::malloc(IBE_MPK_LEN);
-//     memcpy(client_PP, payload, IBE_MPK_LEN);
+int handle_try_mes(Packet *target)
+{
+    int rnt = 0;
 
-//     SignMesg new_sig;
-//     new_sig.ID = client_id;
-//     new_sig.PP = ctx->get_mpk();
-//     char *client_sign = (char *)std::malloc(BUFFER_SIZE);
-//     long sign_len = BUFFER_SIZE;
+    PacketCTX *ctx = target->get_ctx();
+    AppPacket *p = ctx->get_payload_app();
+    int length = p->get_length();
+    int sign_len = length-IBE_MPK_LEN;
+    char *payload = p->get_payload();
+    char *mpk = (char *)malloc(IBE_MPK_LEN);
+    memcpy(mpk, payload, IBE_MPK_LEN);
 
-//     IBEPrivateKey sk = NULL;
+    user::User *user= target->get_user_ptr();
+    char *mpk_filename = user_get_mpk_filename(user);
+    FILE *fp;
+    if((fp=fopen(mpk_filename,"wb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    fprintf(fp,"%s", mpk);
+    fclose(fp);
 
-//     GENERATE_SK_FILENAME((ctx->get_dest_id()))
-//     get_sk_fp(filename, &sk);
-//     FREE_SK_FILENAME
+    /* 获取顶级域的sP */
+    IBEPublicParameters ss_mpk = NULL;
+    get_mpk_fp(GLOBAL_MPK_FILENAME, &ss_mpk);
 
-//     if(!(ibe_sign(payload, payload_len, client_sign, (size_t*)sign_len, &sk, 380)))
-//     {
-//         fprintf(stderr, "sign error\n");
-//         return -1;
-//     }
-//     new_sig.sign_data = client_sign;
+    char *sign = (char *)malloc(sign_len);
+    memcpy(sign, payload+IBE_MPK_LEN, sign_len);
+    SignMesg *sig = sign_from_bytes(sign, sign_len, 0);
 
-//     interface::IUser *user= target->get_user_ptr();
-//     /* 读取自己的sign并将其放在new_sig.front里面 */
+    if(strcmp(mpk,sig->PP))
+    {
+        Error("verify mpk error");
 
-//     PacketCTX *send_ctx = new PacketCTX;
-//     AppPacket *send_packet = new AppPacket;
+    }
+    if(!sig_verify(sig, ss_mpk))
+    {
+        Error("verify sig error");
+    }
 
-//     send_packet->set_type(SIGN_RESPONSE_TYPE);
-//     send_packet->set_sign (&new_sig);        
-    
-//     send_ctx->set_phase (SEND_APP_PACKET);
-//     send_ctx->set_payload_app (send_packet);
+    fprintf(stderr, "verify done.\n");
 
-//     // send the packet
-// #ifdef DEBUG 
-//     interface::IUI::debug("begin sending");
-// #endif
-//     if(0 == target->packet_send(send_ctx)) {
-//         Error("send the p error");
-//         return -1;
-//     }
+    PacketCTX *send_ctx = new PacketCTX;
+    AppPacket *send_packet = new AppPacket;
 
-//     rnt = 1;
-//     return rnt;
+    GENERATE_SIGN_LEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+    FILE *fp1; 
+    if((fp1=fopen(filename_len_sign,"rb"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    int send_sign_len;
+    std::fread(&send_sign_len, sizeof(send_sign_len), 1, fp1);
+    fclose(fp1);
+    FREE_SIGN_LEN_FILENAME;
 
-// }
+    GENERATE_SIGN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id))
+    char *send_sign = (char*)malloc(send_sign_len);
+    FILE *fp_sign;
+	if((fp_sign=fopen(filename_sign,"rb+"))==NULL)
+	{
+		interface::IUI::error("file cannot open \n");  
+	}
+	if(!fread(send_sign, 1, send_sign_len, fp_sign))
+	{
+		printf("error in read file \n");
+		throw std::exception();
+	}
+    fclose(fp_sign);
+    FREE_SIGN_FILENAME;
 
-// int handle_sign_response(Packet *target)
-// {
-//     int rnt = 0;
-//     PacketCTX *ctx = target->get_ctx();
-//     AppPacket *p = ctx->get_payload_app();
-//     SignMesg *rec_sig;
-//     rec_sig = p->get_sign();
-//     /* 保存自己的rec_sig */
+    IBEPublicParameters send_mpk = NULL;
 
-//     rnt = 1;
-//     return rnt;
-// }
+    if(ctx->get_dest_id()->father_node!=nullptr)
+    {
+        GENERATE_MPK2_FILENAME(ctx->get_dest_id()->father_node->id, strlen(ctx->get_dest_id()->father_node->id))
+        get_mpk_fp(mpk2_filename, &send_mpk);
+        FREE_MPK2_FILENAME;
+    }
+    else
+    {
+         get_mpk_fp(GLOBAL_MPK_FILENAME, &send_mpk);
+    }
+
+    char *send_payload = (char *)malloc(send_sign_len+IBE_MPK_LEN);
+    memcpy(send_payload, send_mpk, IBE_MPK_LEN);
+    memcpy(send_payload+IBE_MPK_LEN, send_sign, send_sign_len);
+
+    send_packet->set_type(TRY_HANDLE_TYPE);
+    send_packet->set_length(send_sign_len+IBE_MPK_LEN);
+    send_packet->set_payload (send_payload);
+
+    send_ctx->set_phase (SEND_APP_PACKET);
+    send_ctx->set_payload_app (send_packet);
+
+     if(0 == target->packet_send(send_ctx)) {
+        Error("send the p error");
+        goto end;
+    }
+
+    rnt = 1;
+
+end:
+    return rnt;
+}
+
+int handle_try_res(Packet *target)
+{
+    int rnt = 0;
+    PacketCTX *ctx = target->get_ctx();
+    AppPacket *p = ctx->get_payload_app();
+    int length = p->get_length();
+    int sign_len = length-IBE_MPK_LEN;
+    char *payload = p->get_payload();
+    char *mpk = (char *)malloc(IBE_MPK_LEN);
+    memcpy(mpk, payload, IBE_MPK_LEN);
+
+    fprintf(stderr, "mpk is %s\n", mpk);
+
+    user::User *user= target->get_user_ptr();
+    char *mpk_filename = user_get_mpk_filename(user);
+    FILE *fp;
+    if((fp=fopen(mpk_filename,"wb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    fprintf(fp,"%s", mpk);
+    fclose(fp);
+
+    /* 获取顶级域的sP */
+    IBEPublicParameters ss_mpk = NULL;
+    get_mpk_fp(GLOBAL_MPK_FILENAME, &ss_mpk);
+
+    char *sign = (char *)malloc(sign_len);
+    memcpy(sign, payload+IBE_MPK_LEN, sign_len);
+    SignMesg *sig = sign_from_bytes(sign, sign_len, 0);
+
+    if(strcmp(mpk,sig->PP))
+    {
+        Error("verify mpk error");
+        goto end;
+    }
+    if(!sig_verify(sig, ss_mpk))
+    {
+        Error("verify sig error");
+        goto end;
+    }
+    fprintf(stderr, "verify done.\n");
+    rnt = 1;
+end:
+    return rnt;
+}
 
 int handle_init_message_1(Packet *target)
 {
@@ -678,6 +930,22 @@ void Packet::handle_ap()
 
         case IBE_MES_TYPE:
             res = handle_message(this);
+            break;
+
+        case MPK_REQUEST_TYPE:
+            res = handle_mpk_request(this);
+            break;
+
+        case MPK_RESPONSE_TYPE:
+            res = handle_mpk_response(this);
+            break;
+
+        case TRY_MES_TYPE:
+            res = handle_try_mes(this);
+            break;
+        
+        case TRY_HANDLE_TYPE:
+            res = handle_try_res(this);
             break;
 
         case INIT_MESSAGE_1:

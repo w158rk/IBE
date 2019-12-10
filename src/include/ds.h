@@ -41,11 +41,14 @@ typedef struct point_t point_t;
 
 #define APP_HEAD_LEN    8
 /* 24 originally */
-#define SEC_HEAD_LEN    8       
-#define SIGN_LEN        32
+#define SEC_HEAD_LEN    8
+#define BUFFER_LEN      1000000       
+#define SIGN_LEN        16
+#define SIGN_ID_LEN     8
 #define MES_LEN         10000
 #define ENC_PARAMETER       1
 #define DEC_PARAMETER       0
+#define GLOBAL_MPK_FILENAME "mpk-global.conf"
 
 typedef struct ID_STR{
     char *id;
@@ -57,10 +60,11 @@ typedef struct ID_STR{
 
 struct SignMesg
 {
+    char id_len[SIGN_ID_LEN];
+    char sign_len[SIGN_LEN];
     char *ID;
     IBEPublicParameters PP;
     char *sign_data;
-    int sign_len;
     struct SignMesg *front;
 };
 

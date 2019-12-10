@@ -1,3 +1,9 @@
+## 12.1
+
+- 顶级域的mpk文件`mpk-global.conf`
+- 父节点给的用于通信的mpk文件`mpk-Server.conf`
+- 节点自己产生的域的mpk文件`mpk-Client.conf`
+
 ## 11.26
 1. 添加了`GET_AND_SET(SignMesg *, signature)`的功能
 
