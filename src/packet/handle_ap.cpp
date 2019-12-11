@@ -444,16 +444,14 @@ int handle_try_mes(Packet *target)
     char *sign = (char *)malloc(sign_len);
     memcpy(sign, payload+IBE_MPK_LEN, sign_len);
     SignMesg *sig = sign_from_bytes(sign, sign_len, 0);
+    if(strcmp(rec_id, sig->ID))
+        Error("verify ID error");
 
     if(strcmp(mpk,sig->PP))
-    {
         Error("verify mpk error");
 
-    }
     if(!sig_verify(sig, ss_mpk))
-    {
         Error("verify sig error");
-    }
 
     fprintf(stderr, "verify done.\n");
 
@@ -549,6 +547,11 @@ int handle_try_res(Packet *target)
     memcpy(sign, payload+IBE_MPK_LEN, sign_len);
     SignMesg *sig = sign_from_bytes(sign, sign_len, 0);
 
+    if(strcmp(rec_id, sig->ID))
+    {
+        Error("verify ID error");
+        goto end;
+    }
     if(strcmp(mpk,sig->PP))
     {
         Error("verify mpk error");
