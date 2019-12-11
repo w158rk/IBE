@@ -22,7 +22,13 @@
 
 ---
 ## 域内节点进行通信
+1. 节点运行`Send message`进行信息的传输
 
 ---
 ## 域间节点通信前身份验证
 1. 节点A运行`Try to send message cross-domain`，验证成功后，节点A得到节点B的`mpk-B.conf`，节点B得到节点A的`mpk-A.conf`
+2. 之后可以运行`Send message`进行信息的传输
+
+---
+## 注意：
+1. 顶级节点拥有2个mpk文件和2个sk文件，顶级域的为`mpk-global.conf`和`sk-global_id.conf`，自己生成的域的为`mpk-id.conf`和`sk_id.conf`。在进行通信加解密及跨域身份验证的时候使用的是`mpk-id.conf`和`sk_id.conf`。

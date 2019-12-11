@@ -257,14 +257,9 @@ int handle_sk_response(Packet *target) {
 #ifdef DEBUG
     interface::IUI::debug("sk_filename is " + std::string(filename));
 #endif
+    IBEPrivateKey *sk_ibe = &sk;
+    put_sk_fp(filename, sk_ibe, IBE_SK_LEN);
 
-    FILE *fp;
-    if((fp=fopen(filename,"wb+"))==NULL)
-    {
-        interface::IUI::error("file cannot open \n");  
-    }
-    fprintf(fp,"%s", sk);
-    fclose(fp);
 #ifdef DEBUG
     interface::IUI::debug(std::string(filename) + " generated");
 #endif
@@ -435,16 +430,11 @@ int handle_try_mes(Packet *target)
     char *payload = p->get_payload();
     char *mpk = (char *)malloc(IBE_MPK_LEN);
     memcpy(mpk, payload, IBE_MPK_LEN);
+    IBEPrivateKey *ibe_mpk = &mpk;
 
     char *rec_id = p->get_id();
     GENERATE_MPK_FILENAME(rec_id, strlen(rec_id))
-    FILE *fp;
-    if((fp=fopen(mpk_filename,"wb+"))==NULL)
-    {
-        interface::IUI::error("file cannot open \n");  
-    }
-    fprintf(fp,"%s", mpk);
-    fclose(fp);
+    put_mpk_fp(mpk_filename, ibe_mpk, IBE_MPK_LEN);
     FREE_MPK_FILENAME;
 
     /* 获取顶级域的sP */

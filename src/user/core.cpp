@@ -92,7 +92,9 @@ void User::try_send_message(char *dest_ip,
 	}
 	else
 	{
-		get_mpk_fp(GLOBAL_MPK_FILENAME, &mpk);
+		GENERATE_MPK_FILENAME(User::get_id()->id,strlen(User::get_id()->id))
+		get_mpk_fp(mpk_filename, &mpk);
+		FREE_MPK_FILENAME;
 	}
 
 	char *payload = (char *)malloc(sign_len+IBE_MPK_LEN);
