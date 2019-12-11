@@ -44,6 +44,35 @@ end:
     return 0;
 }
 
+int put_mpk_fp(const char* mpk_filename, IBEPublicParameters* mpk, long mpk_len) {
+    int ret;
+    
+    char *mpk_str = (char *)malloc(mpk_len+1);
+    mpk_str[mpk_len] = 0;
+    memcpy(mpk_str, *mpk, mpk_len);
+
+    SMXPublicParameters *smx_mpk = NULL;
+    if(!d2i_SMXPublicParameters(&smx_mpk, &mpk_str, mpk_len))
+    {
+        ERROR("convert from bytes to mpk fails");
+        goto end;
+    }
+
+    FILE *mpk_fp = fopen(mpk_filename, "wb");
+    
+    if (! i2d_SMXPrivateKey_fp(mpk_fp, smx_mpk)) {
+        ERROR("cannot put sk to file");
+        goto end;
+    }
+
+    ret = 1;
+
+end:
+    fclose(mpk_fp);
+    return ret;    
+}
+
+
 int get_msk_fp(const char* msk_filename, IBEMasterSecret* msk) {
 
     int ret = 0;

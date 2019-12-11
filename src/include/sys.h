@@ -35,6 +35,9 @@ int get_mpk_fp(const char* mpk_filename, IBEPublicParameters* mpk);
  * @param[out] msk 
  * @return 1 if no error, 0 else
  */
+
+int put_mpk_fp(const char* mpk_filename, IBEPublicParameters* mpk, long mpk_len);
+
 int get_msk_fp(const char* msk_filename, IBEMasterSecret* msk);
 
 /**

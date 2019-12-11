@@ -410,28 +410,18 @@ int handle_mpk_response(Packet *target)
     char *payload = p->get_payload();
     char *global_mpk = (char *)malloc(IBE_MPK_LEN);
     char *mpk = (char *)malloc(IBE_MPK_LEN);
-     
     memcpy(global_mpk, payload, IBE_MPK_LEN);
     memcpy(mpk, payload+IBE_MPK_LEN, IBE_MPK_LEN);
+    IBEPublicParameters *mpk_sp = &mpk;
+    IBEPublicParameters *global_sp = &global_mpk;
 
-    FILE *fp1;
-    if((fp1=fopen(GLOBAL_MPK_FILENAME,"wb+"))==NULL)
-    {
-        interface::IUI::error("file cannot open \n");  
-    }
-    fprintf(fp1,"%s", global_mpk);
-    fclose(fp1);
+
+    put_mpk_fp(GLOBAL_MPK_FILENAME, global_sp, IBE_MPK_LEN);
 
     user::User *user= target->get_user_ptr();
     ID *user_id = user_get_id(user);
     GENERATE_MPK_FILENAME(user_id->father_node->id, strlen(user_id->father_node->id));
-    FILE *fp2;
-    if((fp2=fopen(mpk_filename,"wb+"))==NULL)
-    {
-        interface::IUI::error("file cannot open \n");  
-    }
-    fprintf(fp2,"%s", mpk);
-    fclose(fp2);
+    put_mpk_fp(mpk_filename, mpk_sp, IBE_MPK_LEN);
     FREE_MPK_FILENAME;
 
     long mpk_len = length/2;
@@ -455,6 +445,7 @@ int handle_try_mes(Packet *target)
     int rnt = 0;
 
     PacketCTX *ctx = target->get_ctx();
+    SecPacket *sec_packet = ctx->get_payload_sec();
     AppPacket *p = ctx->get_payload_app();
     int length = p->get_length();
     int sign_len = length-IBE_MPK_LEN;
@@ -462,8 +453,8 @@ int handle_try_mes(Packet *target)
     char *mpk = (char *)malloc(IBE_MPK_LEN);
     memcpy(mpk, payload, IBE_MPK_LEN);
 
-    user::User *user= target->get_user_ptr();
-    char *mpk_filename = user_get_mpk_filename(user);
+    char *rec_id = sec_packet->get_id();
+    GENERATE_MPK_FILENAME(rec_id, strlen(rec_id))
     FILE *fp;
     if((fp=fopen(mpk_filename,"wb+"))==NULL)
     {
@@ -471,6 +462,7 @@ int handle_try_mes(Packet *target)
     }
     fprintf(fp,"%s", mpk);
     fclose(fp);
+    FREE_MPK_FILENAME;
 
     /* 获取顶级域的sP */
     IBEPublicParameters ss_mpk = NULL;
