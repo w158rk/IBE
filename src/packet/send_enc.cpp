@@ -45,6 +45,7 @@ void Packet::send_enc()
 
     switch (sec_type)
     {
+        case IBE_DOMAIN_TYPE:
         case IBE_TYPE:
         {
             // encrypt the message with the IBE encryption
@@ -60,7 +61,7 @@ void Packet::send_enc()
             GENERATE_MPK_FILENAME(ctx->get_dest_id()->id,strlen(ctx->get_dest_id()->id))
             get_mpk_fp(mpk_filename, &mpk);
             FREE_MPK_FILENAME;
-            
+
 // #ifdef DEBUG 
 // {
 //             std::ostringstream s;

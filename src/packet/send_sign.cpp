@@ -44,10 +44,20 @@ void Packet::send_sign()
 
         char *filename = NULL;
         user::User *user_ptr = get_user_ptr();
-        ibe_gen_sk_filename(&filename, user_get_id(user_ptr));
-        get_sk_fp(filename, &sk);
-        ibe_free_filename(filename);
-
+        ID *user_id = user_get_id(user_ptr);
+        if(user_id->father_node!=nullptr)
+        {
+            GENERATE_DOMAIN_SK_FILENAME(user_id)
+            get_sk_fp(domain_filename, &sk);
+            FREE_DOMAIN_SK_FILENAME
+        }
+        else
+        {
+            ibe_gen_sk_filename(&filename, user_get_id(user_ptr));
+            get_sk_fp(filename, &sk);
+            ibe_free_filename(filename);
+        }
+        
         if(!(ibe_sign(data, len, sign_data, &sign_len, &sk, 380)))
         {
             fprintf(stderr, "sign error\n");

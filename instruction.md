@@ -18,7 +18,7 @@
 默认节点已知父节点的mpk信息，文件保存在`mpk-id.conf`中，mpk的长度保存在
 > 如果父节点是顶级结点，mpk信息为global的
 1. 父节点默认先运行`Read your system files`读取自己的参数
-2. 子节点运行`Extract your Private Key`获取自己的私钥文件`sk_id.conf`，证书文件`sign_id.conf`以及证书的长度文件`sign-len_id.conf`
+2. 子节点运行`Extract your Private Key`获取自己在父节点域中的私钥文件`sk-domain_id.conf`，证书文件`sign_id.conf`以及证书的长度文件`sign-len_id.conf`
 
 ---
 ## 域内节点进行通信
@@ -26,9 +26,16 @@
 
 ---
 ## 域间节点通信前身份验证
-1. 节点A运行`Try to send message cross-domain`，验证成功后，节点A得到节点B的`mpk-B.conf`，节点B得到节点A的`mpk-A.conf`
-2. 之后可以运行`Send message`进行信息的传输
+1. 节点A运行`Try to send message cross-domain`，节点A将自己父节点的mpk和证书发送给节点B。
+   
+   ***注意：*** 当节点A为顶级节点的时候，发送的是自己生成域的mpk。
+2. 节点B对节点A的证书进行验证，验证成功后，将自己父节点的mpk和证书发送给节点A。
+   
+   ***注意：*** 当节点B为顶级节点的时候，发送的是自己生成域的mpk。
+3. 节点A对节点B的证书进行验证，得到节点B的`mpk-B.conf`，节点B得到节点A的`mpk-A.conf`
+4. 之后可以运行`Send message`进行信息的传输
 
 ---
 ## 注意：
 1. 顶级节点拥有2个mpk文件和2个sk文件，顶级域的为`mpk-global.conf`和`sk-global_id.conf`，自己生成的域的为`mpk-id.conf`和`sk_id.conf`。在进行通信加解密及跨域身份验证的时候使用的是`mpk-id.conf`和`sk_id.conf`。
+2. 除顶级节点外的管理节点也拥有2个mpk文件和2个sk文件，父节点域的为`mpk-fatherid.conf`和`sk-domain_id.conf`，自己生成的域为`mpk-id.conf`和`sk_id.conf`。在进行通信加解密及跨域身份验证的时候用的是`mpk-fatherid.conf`和`sk-domain_id.conf`。在子节点申请获取sk的时候用的是`mpk-id.conf`和`sk_id.conf`。

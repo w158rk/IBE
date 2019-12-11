@@ -37,6 +37,7 @@ void Packet::handle_dec() {
     switch (crypto_type)
     {
     case IBE_TYPE:
+    case IBE_DOMAIN_TYPE:
     {
         // get the cipher length and allocate space for decryption
         int c_len = p_sec_packet->get_length();
@@ -45,11 +46,22 @@ void Packet::handle_dec() {
 
         // get the private key from file
         IBEPrivateKey sk = NULL;
+        ID *user_id = user_get_id(user_ptr);
 
-        char *filename = NULL;
-        ibe_gen_sk_filename(&filename, user_get_id(user_ptr));
-        get_sk_fp(filename, &sk);
-        ibe_free_filename(filename);
+        if(crypto_type==IBE_TYPE||user_id->father_node==nullptr)
+        {
+            char *filename = NULL;
+            ibe_gen_sk_filename(&filename, user_get_id(user_ptr));
+            get_sk_fp(filename, &sk);
+            ibe_free_filename(filename);
+        }
+        else
+        {          
+            GENERATE_DOMAIN_SK_FILENAME(user_id)
+            get_sk_fp(domain_filename, &sk);
+            FREE_DOMAIN_SK_FILENAME;   
+        }
+             
 #ifdef DEBUG
         fprintf(stderr, "sk is %s\n", sk);
         fprintf(stderr, "cipher is %s\n", p_sec_packet->get_payload_byte());

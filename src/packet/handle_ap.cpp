@@ -252,19 +252,19 @@ int handle_sk_response(Packet *target) {
     memcpy(sign, p_app_packet->get_payload()+IBE_SK_LEN, sign_len);
     // SignMesg *test = sign_from_bytes(sign, len-IBE_SK_LEN, 0);
 
-    GENERATE_SK_FILENAME(ctx->get_dest_id())        
+    GENERATE_DOMAIN_SK_FILENAME(ctx->get_dest_id())        
 
 #ifdef DEBUG
-    interface::IUI::debug("sk_filename is " + std::string(filename));
+    interface::IUI::debug("sk_filename is " + std::string(domain_filename));
 #endif
     IBEPrivateKey *sk_ibe = &sk;
-    put_sk_fp(filename, sk_ibe, IBE_SK_LEN);
+    put_sk_fp(domain_filename, sk_ibe, IBE_SK_LEN);
 
 #ifdef DEBUG
-    interface::IUI::debug(std::string(filename) + " generated");
+    interface::IUI::debug(std::string(domain_filename) + " generated");
 #endif
 
-    FREE_SK_FILENAME;
+    FREE_DOMAIN_SK_FILENAME;
 
     GENERATE_SIGN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
 

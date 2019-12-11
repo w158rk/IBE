@@ -185,7 +185,7 @@ void User::sys_read()
         IBEPrivateKey global_sk = NULL;
         GENERATE_GLOBAL_SK_FILENAME(get_id())
         get_sk_fp(filename, &global_sk);
-        FREE_GLOBAL_SK_FILENAME    
+        FREE_GLOBAL_SK_FILENAME;   
         if(!(ibe_sign(data, id_len+IBE_MPK_LEN, sign, &s_len, &global_sk, 380)))
         {
             fprintf(stderr, "sign error\n");

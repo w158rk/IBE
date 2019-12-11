@@ -44,6 +44,7 @@
 #define NO_ENC_TYPE                 0
 #define IBE_TYPE                    1 
 #define SM4_TYPE                    2
+#define IBE_DOMAIN_TYPE             3
 
 /* time */
 # define INIT_SEND_INTERVAL                  1u

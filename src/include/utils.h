@@ -71,6 +71,29 @@
     type1, type2 m_##name;          \
     bool m_f##name = false;
 
+#define GENERATE_DOMAIN_SK_FILENAME(client_id) \
+    int domain_filename_len = client_id->length + 16;    \
+    char *domain_filename = (char *)malloc(domain_filename_len);  \
+    domain_filename[0] = 's';      \
+    domain_filename[1] = 'k';\
+    domain_filename[2] = '-';\
+    domain_filename[3] = 'd';\
+    domain_filename[4] = 'o';\
+    domain_filename[5] = 'm';\
+    domain_filename[6] = 'a';\
+    domain_filename[7] = 'i';\
+    domain_filename[8] = 'n';\
+    domain_filename[9] = '_';\
+    memcpy(domain_filename+10, (client_id->id), (client_id->length));\
+    domain_filename[domain_filename_len-6] = '.'; \
+    domain_filename[domain_filename_len-5] = 'c'; \
+    domain_filename[domain_filename_len-4] = 'o'; \
+    domain_filename[domain_filename_len-3] = 'n'; \
+    domain_filename[domain_filename_len-2] = 'f';\
+    domain_filename[domain_filename_len-1] = '\0';
+
+#define FREE_DOMAIN_SK_FILENAME free(domain_filename);
+
 #define GENERATE_SK_FILENAME(client_id) \
     int filename_len = client_id->length + 9;    \
     char *filename = (char *)malloc(filename_len);  \

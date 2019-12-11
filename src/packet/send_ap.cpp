@@ -43,10 +43,13 @@ void Packet::send_ap()
             char *p_sm4key = (char *)std::malloc(SM4_KEY_LEN);
             memcpy(p_sm4key, p_packet->get_payload(), SM4_KEY_LEN);
             user_set_sm4_key(user_ptr, p_sm4key);
+            send_type = IBE_TYPE;
+            break;
         }
+
         case SESSION_KEY_ACK_TYPE:
         case IBE_MES_TYPE:
-            send_type = IBE_TYPE;
+            send_type = IBE_DOMAIN_TYPE;
             break;
 
         default:
