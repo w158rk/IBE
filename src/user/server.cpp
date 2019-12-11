@@ -155,8 +155,9 @@ void User::sys_read()
 }    
 #endif
 
-    if(User::get_id()->father_node==nullptr)
+    if(User::get_id()->father_node==nullptr)        // 如果是顶级节点生成证书
     {
+        /* 生成最里面一层的sign */
         /* 获取顶级域的sP */
         IBEPublicParameters ss_mpk = NULL;
         get_mpk_fp(GLOBAL_MPK_FILENAME, &ss_mpk);
@@ -169,6 +170,7 @@ void User::sys_read()
         *(int *)(server_sig.sign_len) = 0;
         server_sig.front = nullptr;
 
+        /* 生成外面一层的sign */
         server_sig2.ID = User::get_id()->id;
         /* 获取自己域的sP */
         IBEPublicParameters mpk = NULL;

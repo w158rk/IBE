@@ -61,11 +61,7 @@ void Packet::handle_dec() {
             get_sk_fp(domain_filename, &sk);
             FREE_DOMAIN_SK_FILENAME;   
         }
-             
-#ifdef DEBUG
-        fprintf(stderr, "sk is %s\n", sk);
-        fprintf(stderr, "cipher is %s\n", p_sec_packet->get_payload_byte());
-#endif
+
         ibe_decrypt(p_sec_packet->get_payload_byte(), c_len, m, &m_len, 
                             &sk, user_get_sk_len(user_ptr));
 //         size_t m_len;
