@@ -88,6 +88,22 @@ void AppPacket::set_head(char *head)
     m_fhead = true;
 }
 
+char *AppPacket::get_id() 
+{
+    if(!m_fid)
+    {
+        interface::IUI::error("can not get the head of app packet");
+        throw PacketException("can not get the head of app packet");
+    }
+    return m_id;
+}
+
+void AppPacket::set_id(char *id)
+{
+    std::memcpy(m_id, id, ID_LEN_MAX);
+    m_fid = true;
+}
+
 void AppPacket::unset_head()
 {
     m_fhead = false;

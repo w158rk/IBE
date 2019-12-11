@@ -35,6 +35,7 @@ public:
 
     GET_AND_SET(char *, payload);
     GET_AND_SET(char *, head);
+    GET_AND_SET(char *, id);
 
     static AppPacket *from_bytes(char *);
     char *to_bytes();
@@ -45,8 +46,10 @@ public:
     void set_type(int);
 
 private:
-    char m_head[APP_HEAD_LEN];
+    char m_head[APP_HEAD_LEN]; 
+    char m_id[ID_LEN_MAX];
     bool m_fhead;
+    bool m_fid;
     DECLARE_MEMBER(char *, payload);
 
 };

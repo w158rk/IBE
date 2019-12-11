@@ -176,9 +176,9 @@ void User::sys_read()
         get_mpk_fp(mpk_filename, &mpk);
         FREE_MPK_FILENAME;
         server_sig2.PP = mpk;
-        *(int *)(server_sig.id_len) = id_len;
-        char *client_sign = (char *)std::malloc(BUFFER);
-        size_t sign_len = BUFFER;
+        *(int *)(server_sig2.id_len) = id_len;
+        char *sign = (char *)std::malloc(BUFFER);
+        size_t s_len = BUFFER;
         char *data = (char *)malloc(id_len+IBE_MPK_LEN);
         memcpy(data,get_id()->id, id_len);
         memcpy(data+id_len,mpk,IBE_MPK_LEN);
@@ -186,14 +186,16 @@ void User::sys_read()
         GENERATE_GLOBAL_SK_FILENAME(get_id())
         get_sk_fp(filename, &global_sk);
         FREE_GLOBAL_SK_FILENAME    
-        if(!(ibe_sign(data, id_len+IBE_MPK_LEN, client_sign, &sign_len, &global_sk, 380)))
+        if(!(ibe_sign(data, id_len+IBE_MPK_LEN, sign, &s_len, &global_sk, 380)))
         {
             fprintf(stderr, "sign error\n");
         }
+        server_sig2.sign_data = sign;
+        *(int *)server_sig2.sign_len = s_len;
         server_sig2.front = &server_sig;
 
         char *sig = (char *)malloc(BUFFER_LEN);
-        int server_sig_len = sign_to_bytes(&server_sig, sig);
+        int server_sig_len = sign_to_bytes(&server_sig2, sig);
 
         GENERATE_SIGN_FILENAME(User::get_id()->id, strlen(User::get_id()->id)) 
         FILE *fp1;

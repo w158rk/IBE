@@ -157,6 +157,8 @@ void Packet::handle_dec() {
     {/* not encrypted */
         char *data = p_sec_packet->get_payload_byte();
         AppPacket *p_app_packet = AppPacket::from_bytes(data);
+        char *id = p_sec_packet->get_id();
+        p_app_packet->set_id(id);
         p_sec_packet->set_payload_app(p_app_packet);
     } //default
 

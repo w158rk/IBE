@@ -200,8 +200,8 @@
 #define FREE_SIGN_FILENAME free(filename_sign)
 
 #define GENERATE_SIGN_LEN_FILENAME(id, id_len) \
-    int sig_len = id_len + 15;    \
-    char *filename_len_sign = (char *)malloc(sig_len);  \
+    int signlen = id_len + 15;    \
+    char *filename_len_sign = (char *)malloc(signlen);  \
     filename_len_sign[0] = 's';      \
     filename_len_sign[1] = 'i';\
     filename_len_sign[2] = 'g';\
@@ -212,12 +212,12 @@
     filename_len_sign[7] = 'n';\
     filename_len_sign[8] = '_';\
     memcpy(filename_len_sign+9, id, id_len);\
-    filename_len_sign[sig_len-6] = '.'; \
-    filename_len_sign[sig_len-5] = 'c'; \
-    filename_len_sign[sig_len-4] = 'o'; \
-    filename_len_sign[sig_len-3] = 'n'; \
-    filename_len_sign[sig_len-2] = 'f';\
-    filename_len_sign[sig_len-1] = '\0';
+    filename_len_sign[signlen-6] = '.'; \
+    filename_len_sign[signlen-5] = 'c'; \
+    filename_len_sign[signlen-4] = 'o'; \
+    filename_len_sign[signlen-3] = 'n'; \
+    filename_len_sign[signlen-2] = 'f';\
+    filename_len_sign[signlen-1] = '\0';
 
 #define FREE_SIGN_LEN_FILENAME free(filename_len_sign)
 

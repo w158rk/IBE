@@ -113,54 +113,38 @@ int handle_sk_request(Packet *target)
     IBEPublicParameters ss_mpk = NULL;
     get_mpk_fp(GLOBAL_MPK_FILENAME, &ss_mpk);
 
-    if(ctx->get_dest_id()->father_node==nullptr)
+    /* 获取自己保存的sig */
+    GENERATE_SIGN_LEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+
+    FILE *fp1; 
+    if((fp1=fopen(filename_len_sign,"rb"))==NULL)
     {
-
-        server_sig->ID = ctx->get_dest_id()->id;
-        server_sig->PP = ss_mpk;
-        server_sig->sign_data = NULL;
-        int id_len = strlen(ctx->get_dest_id()->id);
-        *(int *)(server_sig->id_len) = id_len;
-        *(int *)(server_sig->sign_len) = 0;
-        server_sig->front = nullptr;
+        interface::IUI::error("file cannot open \n");  
     }
+    int sg_len;
+    std::fread(&sg_len, sizeof(sg_len), 1, fp1);
+    fclose(fp1);
 
-    else
+    FREE_SIGN_LEN_FILENAME;
+
+    GENERATE_SIGN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+
+    FILE *fp;
+    if((fp=fopen(filename_sign,"rb+"))==NULL)
     {
-        /* 获取自己保存的sig */
-        GENERATE_SIGN_LEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
-
-        FILE *fp1; 
-        if((fp1=fopen(filename_len_sign,"rb"))==NULL)
-        {
-            interface::IUI::error("file cannot open \n");  
-        }
-        int sign_len;
-        std::fread(&sign_len, sizeof(sign_len), 1, fp1);
-        fclose(fp1);
-
-        FREE_SIGN_LEN_FILENAME;
-
-        GENERATE_SIGN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
-
-        FILE *fp;
-        if((fp=fopen(filename_sign,"rb+"))==NULL)
-        {
-            interface::IUI::error("file cannot open \n");  
-        }
-        char *sign = (char*)malloc(sign_len);
-        if(!fread(sign, 1, sign_len, fp))
-        {
-            printf("error in read file \n");
-            throw std::exception();
-        }
-        fclose(fp);
-
-        FREE_SIGN_FILENAME;
-
-        server_sig = sign_from_bytes(sign, sign_len, 0);
-
+        interface::IUI::error("file cannot open \n");  
     }
+    char *sign = (char*)malloc(sg_len);
+    if(!fread(sign, 1, sg_len, fp))
+    {
+        printf("error in read file \n");
+        throw std::exception();
+    }
+    fclose(fp);
+
+    FREE_SIGN_FILENAME;
+
+    server_sig = sign_from_bytes(sign, sg_len, 0);
 
     /* 生成sig_data */
     IBEPublicParameters mpk = NULL;
@@ -445,7 +429,6 @@ int handle_try_mes(Packet *target)
     int rnt = 0;
 
     PacketCTX *ctx = target->get_ctx();
-    SecPacket *sec_packet = ctx->get_payload_sec();
     AppPacket *p = ctx->get_payload_app();
     int length = p->get_length();
     int sign_len = length-IBE_MPK_LEN;
@@ -453,7 +436,7 @@ int handle_try_mes(Packet *target)
     char *mpk = (char *)malloc(IBE_MPK_LEN);
     memcpy(mpk, payload, IBE_MPK_LEN);
 
-    char *rec_id = sec_packet->get_id();
+    char *rec_id = p->get_id();
     GENERATE_MPK_FILENAME(rec_id, strlen(rec_id))
     FILE *fp;
     if((fp=fopen(mpk_filename,"wb+"))==NULL)
@@ -523,7 +506,9 @@ int handle_try_mes(Packet *target)
     }
     else
     {
-         get_mpk_fp(GLOBAL_MPK_FILENAME, &send_mpk);
+        GENERATE_MPK2_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id))
+        get_mpk_fp(mpk2_filename, &send_mpk);
+        FREE_MPK2_FILENAME;
     }
 
     char *send_payload = (char *)malloc(send_sign_len+IBE_MPK_LEN);
@@ -558,18 +543,13 @@ int handle_try_res(Packet *target)
     char *payload = p->get_payload();
     char *mpk = (char *)malloc(IBE_MPK_LEN);
     memcpy(mpk, payload, IBE_MPK_LEN);
+    IBEPublicParameters *mpk_sp = &mpk;
 
-    fprintf(stderr, "mpk is %s\n", mpk);
+    char *rec_id = p->get_id();
 
-    user::User *user= target->get_user_ptr();
-    char *mpk_filename = user_get_mpk_filename(user);
-    FILE *fp;
-    if((fp=fopen(mpk_filename,"wb+"))==NULL)
-    {
-        interface::IUI::error("file cannot open \n");  
-    }
-    fprintf(fp,"%s", mpk);
-    fclose(fp);
+    GENERATE_MPK_FILENAME(rec_id, strlen(rec_id))
+    put_mpk_fp(mpk_filename, mpk_sp, IBE_MPK_LEN);
+    FREE_MPK_FILENAME;
 
     /* 获取顶级域的sP */
     IBEPublicParameters ss_mpk = NULL;
