@@ -87,6 +87,29 @@
 
 #define FREE_SK_FILENAME free(filename);
 
+#define GENERATE_GLOBAL_SK_FILENAME(client_id) \
+    int filename_len = client_id->length + 16;    \
+    char *filename = (char *)malloc(filename_len);  \
+    filename[0] = 's';      \
+    filename[1] = 'k';\
+    filename[2] = '-';\
+    filename[3] = 'g';\
+    filename[4] = 'l';\
+    filename[5] = 'o';\
+    filename[6] = 'b';\
+    filename[7] = 'a';\
+    filename[8] = 'l';\
+    filename[9] = '_';\
+    memcpy(filename+10, (client_id->id), (client_id->length));\
+    filename[filename_len-6] = '.'; \
+    filename[filename_len-5] = 'c'; \
+    filename[filename_len-4] = 'o'; \
+    filename[filename_len-3] = 'n'; \
+    filename[filename_len-2] = 'f';\
+    filename[filename_len-1] = '\0';
+
+#define FREE_GLOBAL_SK_FILENAME free(filename);
+
 #define GENERATE_SK_LEN_FILENAME(client_id) \
     int filename_len = client_id->length + 13;    \
     char *filename = (char *)malloc(filename_len);  \

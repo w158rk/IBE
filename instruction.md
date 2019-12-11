@@ -1,0 +1,28 @@
+## 顶级节点ss
+1. 生成顶级域的mpk文件`mpk-global.conf`
+2. 生成自己在顶级域中的私钥文件`sk-global_id.conf`
+
+---
+## 顶级节点生成自己的节点域
+1. 运行`Set up your system`生成节点域的mpk文件`mpk-id.conf`，节点域的msk文件`msk.conf`以及私钥文件`sk_id.conf`
+    > 其中另外还保存了mpk长度文件`mpk-len.conf`，msk长度文件`msk-len.conf`，私钥长度文件`sk-len_id.conf`
+2. 运行`Read your system files`读取自己的参数并生成自己的证书文件`sign_id.conf`和证书长度文件`sign-len_id.conf`
+
+---
+## 节点获取父节点及顶级域的mpk
+1. 父节点默认先运行`Read your system files`读取自己的参数
+2. 子节点运行`Get global and domain mpk`获取父节点的mpk文件`mpk-fatherid.conf`，顶级域的mpk文件`mpk-global.conf`以及mpk的长度文件`mpk-len.conf`
+
+---
+## 节点加入节点域
+默认节点已知父节点的mpk信息，文件保存在`mpk-id.conf`中，mpk的长度保存在
+> 如果父节点是顶级结点，mpk信息为global的
+1. 父节点默认先运行`Read your system files`读取自己的参数
+2. 子节点运行`Extract your Private Key`获取自己的私钥文件`sk_id.conf`，证书文件`sign_id.conf`以及证书的长度文件`sign-len_id.conf`
+
+---
+## 域内节点进行通信
+
+---
+## 域间节点通信前身份验证
+1. 节点A运行`Try to send message cross-domain`，验证成功后，节点A得到节点B的`mpk-B.conf`，节点B得到节点A的`mpk-A.conf`

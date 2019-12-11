@@ -434,6 +434,11 @@ int handle_mpk_response(Packet *target)
     fclose(fp2);
     FREE_MPK_FILENAME;
 
+    long mpk_len = length/2;
+    FILE *mpk_len_fp = fopen(MPK_LEN_FILENAME, "wb");
+    fwrite(&mpk_len, sizeof(mpk_len), 1, mpk_len_fp);
+    fclose(mpk_len_fp);
+
     if(length!=IBE_MPK_LEN+IBE_MPK_LEN)
     {
         Error("handle mpk error");

@@ -80,13 +80,15 @@ void User::sys_setup()
         throw new std::exception;
     }
 
-        /* output the sk file */
-        GENERATE_SK_FILENAME((get_id()))
-        if(!put_sk_fp(filename, &sk, sk_len))
-        {
-            interface::IUI::debug("output sk failed");
-            throw new std::exception;
-        }
+    /* output the sk file */
+    GENERATE_SK_FILENAME((get_id()))
+    if(!put_sk_fp(filename, &sk, sk_len))
+    {
+        interface::IUI::debug("output sk failed");
+        throw new std::exception;
+    }
+    FREE_SK_FILENAME
+       
 
     set_sk_len(sk_len);
 
@@ -158,7 +160,7 @@ void User::sys_read()
         /* 获取顶级域的sP */
         IBEPublicParameters ss_mpk = NULL;
         get_mpk_fp(GLOBAL_MPK_FILENAME, &ss_mpk);
-        SignMesg server_sig;
+        SignMesg server_sig, server_sig2;
         server_sig.ID = User::get_id()->id;
         server_sig.PP = ss_mpk;
         server_sig.sign_data = NULL;
@@ -166,6 +168,30 @@ void User::sys_read()
         *(int *)(server_sig.id_len) = id_len;
         *(int *)(server_sig.sign_len) = 0;
         server_sig.front = nullptr;
+
+        server_sig2.ID = User::get_id()->id;
+        /* 获取自己域的sP */
+        IBEPublicParameters mpk = NULL;
+        GENERATE_MPK_FILENAME(get_id()->id,strlen(get_id()->id))
+        get_mpk_fp(mpk_filename, &mpk);
+        FREE_MPK_FILENAME;
+        server_sig2.PP = mpk;
+        *(int *)(server_sig.id_len) = id_len;
+        char *client_sign = (char *)std::malloc(BUFFER);
+        size_t sign_len = BUFFER;
+        char *data = (char *)malloc(id_len+IBE_MPK_LEN);
+        memcpy(data,get_id()->id, id_len);
+        memcpy(data+id_len,mpk,IBE_MPK_LEN);
+        IBEPrivateKey global_sk = NULL;
+        GENERATE_GLOBAL_SK_FILENAME(get_id())
+        get_sk_fp(filename, &global_sk);
+        FREE_GLOBAL_SK_FILENAME    
+        if(!(ibe_sign(data, id_len+IBE_MPK_LEN, client_sign, &sign_len, &global_sk, 380)))
+        {
+            fprintf(stderr, "sign error\n");
+        }
+        server_sig2.front = &server_sig;
+
         char *sig = (char *)malloc(BUFFER_LEN);
         int server_sig_len = sign_to_bytes(&server_sig, sig);
 
