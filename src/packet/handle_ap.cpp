@@ -397,10 +397,15 @@ int handle_mpk_response(Packet *target)
     put_mpk_fp(GLOBAL_MPK_FILENAME, global_sp, IBE_MPK_LEN);
 
     user::User *user= target->get_user_ptr();
-    ID *user_id = user_get_id(user);
-    GENERATE_MPK_FILENAME(user_id->father_node->id, strlen(user_id->father_node->id));
-    put_mpk_fp(mpk_filename, mpk_sp, IBE_MPK_LEN);
-    FREE_MPK_FILENAME;
+    char *filename = NULL;
+    ibe_gen_mpk_filename(&filename, user_get_id(user));
+    put_mpk_fp(filename, mpk_sp, IBE_MPK_LEN);
+    ibe_free_filename(filename);
+    
+    // ID *user_id = user_get_id(user);
+    // GENERATE_MPK_FILENAME(user_id->father_node->id, strlen(user_id->father_node->id));
+    // put_mpk_fp(mpk_filename, mpk_sp, IBE_MPK_LEN);
+    // FREE_MPK_FILENAME;
 
     long mpk_len = length/2;
     FILE *mpk_len_fp = fopen(MPK_LEN_FILENAME, "wb");

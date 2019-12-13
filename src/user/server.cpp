@@ -81,14 +81,14 @@ void User::sys_setup()
     }
 
     /* output the sk file */
-    GENERATE_SK_FILENAME((get_id()))
+    char *filename = NULL;
+    ibe_gen_sk_filename(&filename, get_id());
     if(!put_sk_fp(filename, &sk, sk_len))
     {
         interface::IUI::debug("output sk failed");
         throw new std::exception;
     }
-    FREE_SK_FILENAME
-       
+    ibe_free_filename(filename);
 
     set_sk_len(sk_len);
 

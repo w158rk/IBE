@@ -93,6 +93,7 @@ int ibe_point_is_on_curve(point_t *point);
 // utils 
 int ibe_gen_sk_filename(char **to, ID *id);
 int ibe_gen_sk_len_filename(char **to, ID *id);
+int ibe_gen_mpk_filename(char **to, ID *id);
 void ibe_free_filename(char *filename);
 
 

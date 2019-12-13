@@ -33,6 +33,7 @@ const static int FILE_PREFIX_LEN_ ## type = len_of_prefix;
 
 DEFINE_FILE_TYPE(SK, "sk_", 3)
 DEFINE_FILE_TYPE(SK_LEN, "sk-len_", 7)
+DEFINE_FILE_TYPE(MPK, "mpk-", 4)
 
 int ibe_gen_filename(char **to, ID *id, const char*prefix, int len_of_prefix)
 {
@@ -73,6 +74,13 @@ int ibe_gen_sk_len_filename(char **to, ID *id)
 {
 
 	return ibe_gen_filename(to, id, FILE_PREFIX_SK_LEN, FILE_PREFIX_LEN_SK_LEN);
+
+}
+
+int ibe_gen_mpk_filename(char **to, ID *id)
+{
+
+	return ibe_gen_filename(to, id, FILE_PREFIX_MPK, FILE_PREFIX_LEN_MPK);
 
 }
 
