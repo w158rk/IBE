@@ -47,32 +47,29 @@ int handle_sk_request(Packet *target)
     PacketCTX *ctx = target->get_ctx();
 
     AppPacket *p = ctx->get_payload_app();
-    char *payload = p->get_payload();        //获取的payload为client的SM4_key加上id
+    char *payload = p->get_payload();        //payload:SM4_key||id
     int payload_len = p->get_length();
 
     /* It may cause some problem for not using the network order */
     char *client_id = payload + SM4_KEY_LEN;
-    int client_id_len = payload_len - SM4_KEY_LEN;       //计算id的长度
+    int client_id_len = payload_len - SM4_KEY_LEN;
 
     IBEMasterSecret msk = NULL;
     IBEPrivateKey sk = NULL;
-    
 
-
+    /* read msk */
     user::User *user= target->get_user_ptr();
     char *msk_filename = user_get_msk_filename(user);
-   
-
     if (get_msk_fp(msk_filename, &msk) == 0) {
         interface::IUI::error(" you don't have the access to msk file");
         throw PacketException(" you don't have the access to msk file");
-    }       //从文件中读取s
+    }
 
     // there is a bug that sucks 
     // it seems that the function get_msk_fp would change the value of p->payload 
     // i don't know why, may be some magic things
 
-    /*生成私钥sk*/
+    /*generate sk*/
     long sk_len;
     if ( 0 == ibe_extract(&sk,
                             &sk_len, 
@@ -109,17 +106,17 @@ int handle_sk_request(Packet *target)
 
     SignMesg *server_sig = new SignMesg();
 
-    /* 获取顶级域的sP */
+    /* get global-sP */
     IBEPublicParameters ss_mpk = NULL;
     get_mpk_fp(GLOBAL_MPK_FILENAME, &ss_mpk);
 
-    /* 获取自己保存的sig */
+    /* get sig */
     GENERATE_SIGN_LEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
 
     FILE *fp1; 
     if((fp1=fopen(filename_len_sign,"rb"))==NULL)
     {
-        interface::IUI::error("file cannot open \n");  
+        interface::IUI::error("sign_len file cannot open \n");  
     }
     int sg_len;
     std::fread(&sg_len, sizeof(sg_len), 1, fp1);
@@ -132,7 +129,7 @@ int handle_sk_request(Packet *target)
     FILE *fp;
     if((fp=fopen(filename_sign,"rb+"))==NULL)
     {
-        interface::IUI::error("file cannot open \n");  
+        interface::IUI::error("sign file cannot open \n");  
     }
     char *sign = (char*)malloc(sg_len);
     if(!fread(sign, 1, sg_len, fp))
@@ -146,7 +143,9 @@ int handle_sk_request(Packet *target)
 
     server_sig = sign_from_bytes(sign, sg_len, 0);
 
-    /* 生成sig_data */
+    /* generate client sig */
+
+    /* get own mpk */
     IBEPublicParameters mpk = NULL;
     ID *user_id = user_get_id(user);
     GENERATE_MPK_FILENAME(user_id->id, strlen(user_id->id));

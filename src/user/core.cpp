@@ -57,7 +57,7 @@ void User::try_send_message(char *dest_ip,
 	FILE *fp1; 
 	if((fp1=fopen(filename_len_sign,"rb"))==NULL)
 	{
-		interface::IUI::error("file cannot open \n");  
+		interface::IUI::error("sign_len file cannot open \n");  
 	}
 	int sign_len;
 	std::fread(&sign_len, sizeof(sign_len), 1, fp1);
@@ -70,7 +70,7 @@ void User::try_send_message(char *dest_ip,
 	FILE *fp;
 	if((fp=fopen(filename_sign,"rb+"))==NULL)
 	{
-		interface::IUI::error("file cannot open \n");  
+		interface::IUI::error("sign file cannot open \n");  
 	}
 	char *sign = (char*)malloc(sign_len);
 	if(!fread(sign, 1, sign_len, fp))
@@ -84,6 +84,7 @@ void User::try_send_message(char *dest_ip,
 
 	IBEPublicParameters mpk = NULL;
 
+	/* if the node isn't top node use the domain mpk, else use its own mpk */
 	if(User::get_id()->father_node!=nullptr)
 	{
 		GENERATE_MPK_FILENAME(User::get_id()->father_node->id,strlen(User::get_id()->father_node->id))

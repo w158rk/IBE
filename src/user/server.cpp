@@ -155,32 +155,41 @@ void User::sys_read()
 }    
 #endif
 
-    if(User::get_id()->father_node==nullptr)        // 如果是顶级节点生成证书
+    /* if the node is top node, it needs to generate its certificate */
+    if(User::get_id()->father_node==nullptr)        
     {
-        /* 生成最里面一层的sign */
-        /* 获取顶级域的sP */
+
+        SignMesg server_sig, server_sig2;
+
+        /* generate inner sign */
+
+        /* get global-sP */
         IBEPublicParameters ss_mpk = NULL;
         get_mpk_fp(GLOBAL_MPK_FILENAME, &ss_mpk);
-        SignMesg server_sig, server_sig2;
-        server_sig.ID = User::get_id()->id;
+
         server_sig.PP = ss_mpk;
-        server_sig.sign_data = NULL;
+        server_sig.ID = User::get_id()->id;
         int id_len = strlen(User::get_id()->id);
         *(int *)(server_sig.id_len) = id_len;
+        server_sig.sign_data = NULL;
         *(int *)(server_sig.sign_len) = 0;
         server_sig.front = nullptr;
 
-        /* 生成外面一层的sign */
-        server_sig2.ID = User::get_id()->id;
-        /* 获取自己域的sP */
+        /* generate final sign */
+        
+        /* get domain sP */
         IBEPublicParameters mpk = NULL;
         GENERATE_MPK_FILENAME(get_id()->id,strlen(get_id()->id))
         get_mpk_fp(mpk_filename, &mpk);
         FREE_MPK_FILENAME;
+
         server_sig2.PP = mpk;
+        server_sig2.ID = User::get_id()->id;
         *(int *)(server_sig2.id_len) = id_len;
-        char *sign = (char *)std::malloc(BUFFER);
-        size_t s_len = BUFFER;
+        char *sign = (char *)std::malloc(BUFFER_LEN);
+        size_t s_len = BUFFER_LEN;
+
+        /* genreate sign */
         char *data = (char *)malloc(id_len+IBE_MPK_LEN);
         memcpy(data,get_id()->id, id_len);
         memcpy(data+id_len,mpk,IBE_MPK_LEN);
@@ -192,6 +201,7 @@ void User::sys_read()
         {
             fprintf(stderr, "sign error\n");
         }
+
         server_sig2.sign_data = sign;
         *(int *)server_sig2.sign_len = s_len;
         server_sig2.front = &server_sig;
