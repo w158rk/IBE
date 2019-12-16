@@ -251,8 +251,8 @@ int handle_sk_response(Packet *target) {
     memcpy(sign, p_app_packet->get_payload()+IBE_SK_LEN, sign_len);
     // SignMesg *test = sign_from_bytes(sign, len-IBE_SK_LEN, 0);
 
+    /* save sk file */
     GENERATE_DOMAIN_SK_FILENAME(ctx->get_dest_id())        
-
 #ifdef DEBUG
     interface::IUI::debug("sk_filename is " + std::string(domain_filename));
 #endif
@@ -262,11 +262,10 @@ int handle_sk_response(Packet *target) {
 #ifdef DEBUG
     interface::IUI::debug(std::string(domain_filename) + " generated");
 #endif
-
     FREE_DOMAIN_SK_FILENAME;
 
+    /* save sign file */
     GENERATE_SIGN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
-
     FILE *fp2;
     if((fp2=fopen(filename_sign,"wb+"))==NULL)
     {
@@ -274,11 +273,10 @@ int handle_sk_response(Packet *target) {
     }
     std::fwrite(sign, 1,  sign_len, fp2);
     fclose(fp2);
-
     FREE_SIGN_FILENAME;
 
+    /* save sign len file */
     GENERATE_SIGN_LEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
-
     FILE *fp3;
     if((fp3=fopen(filename_len_sign,"wb+"))==NULL)
     {
@@ -286,7 +284,6 @@ int handle_sk_response(Packet *target) {
     }
     std::fwrite(&sign_len, sizeof(sign_len), 1, fp3);
     fclose(fp3);
-
     FREE_SIGN_LEN_FILENAME;
 
     rtn = 1;
@@ -393,20 +390,17 @@ int handle_mpk_response(Packet *target)
     IBEPublicParameters *mpk_sp = &mpk;
     IBEPublicParameters *global_sp = &global_mpk;
 
-
+    /* save global PP */
     put_mpk_fp(GLOBAL_MPK_FILENAME, global_sp, IBE_MPK_LEN);
 
+    /* save domain PP */
     user::User *user= target->get_user_ptr();
     char *filename = NULL;
     ibe_gen_mpk_filename(&filename, user_get_id(user));
     put_mpk_fp(filename, mpk_sp, IBE_MPK_LEN);
     ibe_free_filename(filename);
     
-    // ID *user_id = user_get_id(user);
-    // GENERATE_MPK_FILENAME(user_id->father_node->id, strlen(user_id->father_node->id));
-    // put_mpk_fp(mpk_filename, mpk_sp, IBE_MPK_LEN);
-    // FREE_MPK_FILENAME;
-
+    /* save mpk len */
     long mpk_len = length/2;
     FILE *mpk_len_fp = fopen(MPK_LEN_FILENAME, "wb");
     fwrite(&mpk_len, sizeof(mpk_len), 1, mpk_len_fp);
@@ -436,15 +430,17 @@ int handle_try_mes(Packet *target)
     memcpy(mpk, payload, IBE_MPK_LEN);
     IBEPrivateKey *ibe_mpk = &mpk;
 
+    /* save the node's mpk */
     char *rec_id = p->get_id();
     GENERATE_MPK_FILENAME(rec_id, strlen(rec_id))
     put_mpk_fp(mpk_filename, ibe_mpk, IBE_MPK_LEN);
     FREE_MPK_FILENAME;
 
-    /* 获取顶级域的sP */
+    /* get global sP */
     IBEPublicParameters ss_mpk = NULL;
     get_mpk_fp(GLOBAL_MPK_FILENAME, &ss_mpk);
 
+    /* verify */
     char *sign = (char *)malloc(sign_len);
     memcpy(sign, payload+IBE_MPK_LEN, sign_len);
     SignMesg *sig = sign_from_bytes(sign, sign_len, 0);
