@@ -24,6 +24,11 @@ using namespace comm;
 
 void Comm::connect_to_server(char* ip_addr, int port)
 {
+    if(m_fread_file || m_fwrite_file)
+    {
+        Error("the read(write) file has been set");
+    }
+
     if(-1 != connect_socket_server(ip_addr, port, &m_read_file, &m_write_file))
     {
         m_fread_file = true;
@@ -35,6 +40,37 @@ void Comm::connect_to_server(char* ip_addr, int port)
     s << "can not connect to server " << ip_addr 
         << " : " << port << std::endl;
     Error(s.str());
+
+}
+
+void Comm::disconnect_from_server()
+{
+    if(!m_fread_file && !m_fwrite_file)
+        return;
+    
+    if(m_fread_file && m_fwrite_file)
+    {
+        if(m_read_file != m_write_file)
+        {
+            fclose(m_read_file);
+        }
+
+        fclose(m_write_file);
+
+    }
+    else if(m_fread_file)
+    {
+        fclose(m_read_file);
+    }
+    else 
+    {
+        fclose(m_write_file);
+    }
+
+    m_read_file = nullptr;
+    m_write_file = nullptr;
+    m_fread_file = false;
+    m_fwrite_file = false;
 
 }
 

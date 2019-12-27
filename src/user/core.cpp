@@ -238,7 +238,8 @@ void User::run_send_message(char *dest_ip,
 	comm->connect_to_server(dest_ip, dest_port);	\
 	if(0 == get_packet_ptr()->packet_send(ctx)) {	\
 		throw UserException("send the packet error");	\
-	}
+	}\
+	comm->disconnect_from_server();
 
 
 void User::send_init_message_1(char *buff, int length, ID *dest_id)

@@ -71,8 +71,6 @@ void Initializer::run()
     }
 
 }
-    
-
     Print("begin to initialize the system");
 
     /* round one */
@@ -147,11 +145,11 @@ void Initializer::run()
     Debug(s.str());
 }
 #endif
-    
     /* round two */
     /* send F(xi)li(0)P to others and receive F(xj)lj(0)P from others*/
     Print("round two");
     sent_list.clear();
+
     do
     {
 
@@ -184,6 +182,11 @@ void Initializer::run()
         
     }while(get_sp_pub_points()->size() < cnt);
 
+{
+    FILE *debug_file = fopen("mpk-global.conf", "rb");
+    fclose(debug_file);
+}
+
     cal_sP();
 
 // CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT 
@@ -207,7 +210,12 @@ void Initializer::run()
     Debug(s.str());
 }
 #endif
+{
+    FILE *debug_file = fopen("mpk-global.conf", "rb");
+    fclose(debug_file);
+}
 
+    
     store_sP();
 
     /* round three */

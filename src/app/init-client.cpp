@@ -40,6 +40,7 @@ void run(int argc, char *argv[])
                     REINTER(interface::IUI, uinterface), 
                     &err_sig);
     user.set_cfg_filename(argv[1]);
+    user.set_user_mode(user::User::user_mode_t::USER_INIT_CLIENT);
     add_other_cfg(user, doc);
 
     user.run_init_client();

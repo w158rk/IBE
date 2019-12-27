@@ -48,6 +48,7 @@ namespace interface
     public:
         virtual int send(const void *vptr, size_t n) = 0;
         virtual void connect_to_server(char* ip_addr, int port) = 0;
+        virtual void disconnect_from_server() = 0;
         virtual ~IComm() = default;
         
 

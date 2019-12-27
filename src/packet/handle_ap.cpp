@@ -154,12 +154,19 @@ int handle_sk_request(Packet *target)
     char *data = (char *)malloc(client_id_len+IBE_MPK_LEN);
     memcpy(data,client_id, client_id_len);
     memcpy(data+client_id_len,mpk,IBE_MPK_LEN);
-    
-    IBEPrivateKey server_sk = NULL;
-    GENERATE_SK_FILENAME((ctx->get_dest_id()))
-    get_sk_fp(filename, &server_sk);
-    FREE_SK_FILENAME
 
+        
+    // IBEPrivateKey server_sk = NULL;
+    // GENERATE_SK_FILENAME((ctx->get_dest_id()))
+    // get_sk_fp(filename, &server_sk);
+    // FREE_SK_FILENAME
+    IBEPrivateKey server_sk = NULL;
+{
+    char *filename = user_get_sk_filename(user);
+    get_sk_fp(filename, &server_sk);
+    free(filename);
+
+}
     char *client_sign = (char *)std::malloc(BUFFER_SIZE);
     size_t sign_len = BUFFER_SIZE;
 

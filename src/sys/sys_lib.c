@@ -26,7 +26,6 @@ int get_mpk_fp(const char* mpk_filename, IBEPublicParameters* mpk) {
         goto end;
     }
     
-    fclose(mpk_fp);
     
     int rtn = i2d_SMXPublicParameters(smx_mpk, mpk);
 
@@ -34,6 +33,8 @@ int get_mpk_fp(const char* mpk_filename, IBEPublicParameters* mpk) {
         ERROR("i2d public parameters fails (openssl)");
         goto end;
     }
+
+    fclose(mpk_fp);
     
     SMXPublicParameters_free(smx_mpk);
     return 1;
@@ -111,7 +112,7 @@ int put_sk_fp(const char* sk_filename, IBEPrivateKey* sk, long sk_len) {
     SMXPrivateKey *smx_sk = NULL;
     if(!d2i_SMXPrivateKey(&smx_sk, &sk_str, sk_len)) {
         ERROR("convert from bytes to private key fails");
-        goto end;
+        return 0;
     }
 
     FILE *sk_fp = fopen(sk_filename, "wb");

@@ -81,14 +81,13 @@ void User::sys_setup()
     }
 
     /* output the sk file */
-    char *filename = NULL;
-    ibe_gen_sk_filename(&filename, get_id());
+    char *filename = get_sk_filename();
     if(!put_sk_fp(filename, &sk, sk_len))
     {
         interface::IUI::debug("output sk failed");
         throw new std::exception;
     }
-    ibe_free_filename(filename);
+    free(filename);
 
     set_sk_len(sk_len);
 
@@ -101,7 +100,6 @@ void User::sys_setup()
         FREE_SK_LEN_FILENAME
     }
 
-    sys_read();
 }
 
 void User::sys_read()
@@ -156,7 +154,8 @@ void User::sys_read()
 #endif
 
     /* if the node is top node, it needs to generate its certificate */
-    if(User::get_id()->father_node==nullptr)        
+    if(get_user_mode()==USER_INIT_CLIENT
+        || get_user_mode()==USER_INIT_SERVER)        
     {
 
         SignMesg server_sig, server_sig2;
@@ -179,10 +178,9 @@ void User::sys_read()
         
         /* get domain sP */
         IBEPublicParameters mpk = NULL;
-        GENERATE_MPK_FILENAME(get_id()->id,strlen(get_id()->id))
-        get_mpk_fp(mpk_filename, &mpk);
-        FREE_MPK_FILENAME;
-
+        {
+            get_mpk_fp(get_mpk_filename(), &mpk);
+        }
         server_sig2.PP = mpk;
         server_sig2.ID = User::get_id()->id;
         *(int *)(server_sig2.id_len) = id_len;
@@ -194,9 +192,9 @@ void User::sys_read()
         memcpy(data,get_id()->id, id_len);
         memcpy(data+id_len,mpk,IBE_MPK_LEN);
         IBEPrivateKey global_sk = NULL;
-        GENERATE_GLOBAL_SK_FILENAME(get_id())
+        char *filename = get_sk_filename();
         get_sk_fp(filename, &global_sk);
-        FREE_GLOBAL_SK_FILENAME;   
+        free(filename);
         if(!(ibe_sign(data, id_len+IBE_MPK_LEN, sign, &s_len, &global_sk, 380)))
         {
             fprintf(stderr, "sign error\n");

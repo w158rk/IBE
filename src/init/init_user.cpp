@@ -29,6 +29,11 @@ char *init::user_get_cfg_filename(user::User *user)
     return user->get_cfg_filename();
 }
 
+char *init::user_get_sk_filename(user::User *user)
+{
+    return user->get_sk_filename();
+}
+
 void init::user_send_init_message_1(User* user, char *buf, int len, ID *id) 
 {
     user->send_init_message_1(buf, len, id);

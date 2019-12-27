@@ -97,14 +97,15 @@ int ibe_ec_cal_xQ(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, EC_POINT *Q
     // read the mpk from file 
 
     SMXPublicParameters *smx_mpk = NULL;
-
-    FILE *mpk_fp = fopen(mpk_file, "rb");
-    if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
-		ERROR_WITH_STR(MPK_FROM_FILE_ERROR, mpk_file);
-        goto end;
-    }
-    
-    fclose(mpk_fp);
+	
+	{
+		FILE *mpk_fp = fopen(mpk_file, "rb");
+		if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
+			ERROR_WITH_STR(MPK_FROM_FILE_ERROR, mpk_file);
+			goto end;
+		}
+	    fclose(mpk_fp);
+	}    
 
 	EC_GROUP *group = NULL;
 	EC_POINT *C = NULL;
@@ -151,15 +152,21 @@ int ibe_ec_store_Ppub1(EC_POINT *point, char *mpk_file)
 	}
 
     SMXPublicParameters *smx_mpk = NULL;
+	
+	{
+		FILE *mpk_fp = NULL;
+		if ((mpk_fp = fopen(mpk_file, "rb")) != NULL){
 
-    FILE *mpk_fp = NULL;
-	mpk_fp = fopen(mpk_file, "rb");
-	if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
-		ERROR(MPK_FROM_FILE_ERROR);
-        goto end;
-    }
-    fclose(mpk_fp);
+			if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
+				ERROR(MPK_FROM_FILE_ERROR);
+				return 0;
+			}
+			fclose(mpk_fp);
 
+		}
+
+	}
+	
 	char buff[BUFFER_SIZE];
 	int length = BUFFER_SIZE;
 	int point_form = POINT_CONVERSION_UNCOMPRESSED;
@@ -204,13 +211,15 @@ int ibe_ec_store_Ppub1(EC_POINT *point, char *mpk_file)
 }
 #endif
 
-	// output
-    mpk_fp = fopen(mpk_file, "wb");
-	if (!i2d_SMXPublicParameters_fp(mpk_fp, smx_mpk)){
-		ERROR_WITH_STR(MPK_TO_FILE_ERROR, mpk_file);
-        goto end;
-    }
-    fclose(mpk_fp);
+	{	// output
+		FILE *mpk_fp = NULL;
+		mpk_fp = fopen(mpk_file, "wb");
+		if (!i2d_SMXPublicParameters_fp(mpk_fp, smx_mpk)){
+			ERROR_WITH_STR(MPK_TO_FILE_ERROR, mpk_file);
+			goto end;
+		}
+		fclose(mpk_fp);
+	}
 
 	ret = 1;
 
@@ -221,7 +230,7 @@ end:
 
 }
 
-int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file)
+int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file, char *sk_file)
 {
 	/* before this point, the file of the private key is not exist */
 	/* so we generate a new SMXPrivateKey for it */
@@ -242,13 +251,16 @@ int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file)
 	size_t len = sizeof(buf);
 
     SMXPublicParameters *smx_mpk = NULL;
-    FILE *mpk_fp = NULL;
-	mpk_fp = fopen(mpk_file, "rb");
-	if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
-		ERROR_WITH_STR(MPK_FROM_FILE_ERROR, mpk_file);
-        goto end;
-    }
-    fclose(mpk_fp);
+
+	{
+		FILE *mpk_fp = NULL;
+		mpk_fp = fopen(mpk_file, "rb");
+		if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
+			ERROR_WITH_STR(MPK_FROM_FILE_ERROR, mpk_file);
+			goto end;
+		}
+		fclose(mpk_fp);
+	}
 
 	/* check args */
 	if (!id) {
@@ -378,14 +390,14 @@ int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file)
 #endif
 
 	// output
-    char *filename = NULL;
-	ibe_gen_sk_filename(&filename, id);
-    FILE *sk_fp = fopen(filename, "wb");
-	if (!i2d_SMXPrivateKey_fp(sk_fp, sk)){
-		ERROR(SK_TO_FILE_ERROR);
-        goto end;
-    }
-    fclose(sk_fp);
+	{
+		FILE *sk_fp = fopen(sk_file, "wb");
+		if (!i2d_SMXPrivateKey_fp(sk_fp, sk)){
+			ERROR(SK_TO_FILE_ERROR);
+			goto end;
+		}
+		fclose(sk_fp);
+	}
 
 	ret = 1;
 
@@ -423,14 +435,15 @@ int ibe_ec_id2point(
 
     SMXPublicParameters *smx_mpk = NULL;
 
-    FILE *mpk_fp = fopen(mpk_file, "rb");
-    if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
-		ERROR(MPK_FROM_FILE_ERROR);
-		return 0;
-    }
-    
-    fclose(mpk_fp);
-
+	{    
+		FILE *mpk_fp = fopen(mpk_file, "rb");
+		if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
+			ERROR(MPK_FROM_FILE_ERROR);
+			return 0;
+		}
+		fclose(mpk_fp);
+	}
+	
 	EC_GROUP *group = NULL;
 	EC_POINT *C = NULL;
 	BN_CTX *bn_ctx = NULL;

@@ -246,12 +246,14 @@ int ibe_point_store_Ppub2(point_t *point, char *mpk_file)
 	int flag = 0;
 	BN_CTX* ctx = BN_CTX_new();
 
-	mpk_fp = fopen(mpk_file, "rb");
-	if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
-		ERROR(MPK_FROM_FILE_ERROR);
-        goto end;
-    }
-    fclose(mpk_fp);
+	{
+		mpk_fp = fopen(mpk_file, "rb");
+		if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
+			ERROR(MPK_FROM_FILE_ERROR);
+			goto end;
+		}
+		fclose(mpk_fp);
+	}
 
 
 	if(!point_to_octets_smx(point, buff, ctx))
@@ -292,14 +294,15 @@ int ibe_point_store_Ppub2(point_t *point, char *mpk_file)
 }
 #endif
 
-	// output
-    mpk_fp = fopen(mpk_file, "wb");
-	if (!i2d_SMXPublicParameters_fp(mpk_fp, smx_mpk)){
-		ERROR(MPK_TO_FILE_ERROR);
-        goto end;
-    }
-    fclose(mpk_fp);
-
+	{// output
+		mpk_fp = fopen(mpk_file, "wb");
+		if (!i2d_SMXPublicParameters_fp(mpk_fp, smx_mpk)){
+			ERROR(MPK_TO_FILE_ERROR);
+			goto end;
+		}
+		fclose(mpk_fp);
+	}
+	
 	ret = 1;
 
 end:

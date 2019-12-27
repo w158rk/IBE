@@ -15,6 +15,14 @@ namespace user {
     {
 
     public :
+        typedef enum {
+            USER_INIT_SERVER,
+            USER_INIT_CLIENT,
+            USER_SERVER,
+            USER_CLIENT
+        } user_mode_t;
+
+
 
         User(ID* id);
         int run();
@@ -38,7 +46,11 @@ namespace user {
         GET_AND_SET(long, mpk_len)
         GET_AND_SET(long, msk_len)
         GET_AND_SET(long, sk_len)
+        GET_AND_SET(user_mode_t, user_mode)
         GET_AND_SET(init::Initializer*, initializer)
+
+
+        char* get_sk_filename();
 
         void run_get_private_key(char *server_ip, 
 								int server_port,
@@ -90,6 +102,8 @@ namespace user {
         DECLARE_MEMBER(char *, mpk_len_file)
         DECLARE_MEMBER(long, mpk_len)
         DECLARE_MEMBER(long, msk_len)
+        DECLARE_MEMBER(user_mode_t, user_mode)
+        
 
         // with no flag with them as they are only used by the object itself
         std::set<interface::IComm *> client_comms;

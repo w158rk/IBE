@@ -31,5 +31,7 @@ void Initializer::store_sP()
 void Initializer::store_sQ()
 {
     EC_POINT *sQ = get_sP();
-    ibe_ec_store_sk(sQ, user_get_id(get_user()), user_get_mpk_filename(get_user()));
+    user::User *user = get_user();
+    ibe_ec_store_sk(sQ, user_get_id(user), user_get_mpk_filename(user), user_get_sk_filename(user));
+
 }

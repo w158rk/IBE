@@ -19,6 +19,11 @@ char *packet::user_get_msk_filename(user::User *user)
     return user->get_msk_filename();
 }
 
+char *packet::user_get_sk_filename(user::User *user)
+{
+    return user->get_sk_filename();
+}
+
 int packet::user_get_mpk_len(user::User *user)
 {
     return user->get_mpk_len();

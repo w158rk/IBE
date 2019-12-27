@@ -7,6 +7,7 @@ namespace init
 {
     
     char *user_get_mpk_filename(user::User *user);
+    char *user_get_sk_filename(user::User *user);
     char *user_get_cfg_filename(user::User *user);
     ID *user_get_id(user::User *);
 

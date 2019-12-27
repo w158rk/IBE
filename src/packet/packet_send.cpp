@@ -89,6 +89,9 @@ void Packet::packet_send()
     std::free(data);
 
     if (length != len + SEC_HEAD_LEN+IBE_SIGN_LEN) {
+        printf("length: %d\n", length);
+        printf("length2 : %d\n", len + SEC_HEAD_LEN+IBE_SIGN_LEN);
+
         throw PacketException("error in write file");
     }
 

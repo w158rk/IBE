@@ -76,11 +76,6 @@ int connect_socket_server(char* ip_addr, int port, FILE** read_file, FILE** writ
 
 	FILE *tmp = fdopen(socket_fd, "r+");
 
-#ifdef DEBUG
-	FILE *tmp1 = fopen("mpk-Client.conf", "r+");
-	FILE *tmp2 = fopen("mpk-Server.conf", "r+");
-#endif
-
 	if(tmp == NULL)
 	{
 		fprintf(stderr, "convertion from connected socket fd to FILE struct has error\n");

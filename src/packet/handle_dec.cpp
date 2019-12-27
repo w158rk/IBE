@@ -50,10 +50,9 @@ void Packet::handle_dec() {
 
         if(crypto_type==IBE_TYPE||user_id->father_node==nullptr)
         {
-            char *filename = NULL;
-            ibe_gen_sk_filename(&filename, user_get_id(user_ptr));
+            char *filename = user_get_sk_filename(user_ptr);
             get_sk_fp(filename, &sk);
-            ibe_free_filename(filename);
+            free(filename);
         }
         else
         {          

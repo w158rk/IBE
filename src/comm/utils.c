@@ -17,15 +17,3 @@ void sig_chld(int signo)
 	return;
 }
 
-// FILE* open_log_file()
-// {
-// 	FILE* log_file;
-// 	if((log_file = fopen(SYSTEM_LOG, "a")) == NULL)
-// 	{
-// 		fprintf(stderr, "can't open log file: %s\n", strerror(errno));
-// 	}
-	
-// 	return log_file;
-// }
-
-

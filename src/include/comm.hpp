@@ -26,6 +26,7 @@ namespace comm
         ~Comm(); 
         
         void connect_to_server(char* ip_addr, int port);
+        void disconnect_from_server();
         int send(const void *vptr, size_t n);
         
         
