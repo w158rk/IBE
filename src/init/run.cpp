@@ -66,9 +66,13 @@ void Initializer::run()
     {
         user_sys_setup(userptr);
     }
-    fclose(fp);
+    else {
+        fclose(fp);
+    }
 
 }
+    
+
     Print("begin to initialize the system");
 
     /* round one */

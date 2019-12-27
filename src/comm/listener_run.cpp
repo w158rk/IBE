@@ -13,7 +13,17 @@ extern "C" {
 
 using namespace comm;
 
-void Comm::file_listener_run()
+void Comm::file_listener_run(user::User *user, 
+					std::FILE *read_file, 
+					std::FILE *write_file)
+{
+	set_read_file(read_file);
+	set_write_file(write_file);
+	set_user_ptr(user);
+	file_listener_run_helper();
+}
+
+void Comm::file_listener_run_helper()
 {
 	try 
 	{

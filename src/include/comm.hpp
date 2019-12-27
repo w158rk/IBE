@@ -27,10 +27,18 @@ namespace comm
         
         void connect_to_server(char* ip_addr, int port);
         int send(const void *vptr, size_t n);
+        
+        
         void socket_main();
         static void file_main(user::User *user, 
 					std::FILE *read_file, 
 					std::FILE *write_file); 
+
+        // listen just in the main thread
+        virtual void socket_listener_run();
+        virtual void file_listener_run(user::User *user, 
+					std::FILE *read_file, 
+					std::FILE *write_file);
 
 
         GET_AND_SET(FILE *, read_file)
@@ -53,9 +61,8 @@ namespace comm
 
 
         int run_listen_core();
-        void file_listener_run();
+        void file_listener_run_helper();
         void file_listener_run_internal();
-        void socket_listener_run();
 
     };
 

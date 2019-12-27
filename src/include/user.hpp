@@ -52,6 +52,11 @@ namespace user {
         void try_send_message(char *dest_ip, 
             int dest_port,
             ID *dest_id);
+
+        void run_init_server();
+        void run_init_client();
+
+
         void sys_init();
 
         void add_client(interface::IComm *comm);

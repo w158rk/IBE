@@ -25,5 +25,6 @@ endif(CMAKE_BUILD_TYPE MATCHES Debug)
 # add_subdirectory (${CMAKE_SOURCE_DIR}/src/IBE)
 #指明本项目包含的子目录CMakeLists文件其他的位置有/src和/src/test 
 add_subdirectory (${CMAKE_SOURCE_DIR}/src)   
+add_subdirectory (${CMAKE_SOURCE_DIR}/src/app) 
 add_subdirectory (${CMAKE_SOURCE_DIR}/src/test) 
 

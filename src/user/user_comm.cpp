@@ -21,7 +21,12 @@ void user::comm_delete(Comm *comm)
 	delete comm;
 }
 
-void comm_connect_to_server(comm::Comm *comm, char*server_ip, int server_port)
+void user::comm_connect_to_server(comm::Comm *comm, char*server_ip, int server_port)
 {
-	return comm->connect_to_server(server_ip, server_port);
+ 	comm->connect_to_server(server_ip, server_port);
+}
+
+void user::comm_socket_listener_run(interface::IComm *comm)
+{
+	comm->socket_listener_run();
 }

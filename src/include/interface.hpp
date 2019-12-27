@@ -48,14 +48,21 @@ namespace interface
     public:
         virtual int send(const void *vptr, size_t n) = 0;
         virtual void connect_to_server(char* ip_addr, int port) = 0;
-        
-        virtual void socket_main() = 0;
-
         virtual ~IComm() = default;
+        
 
+        // listening in a separate thread
+        virtual void socket_main() = 0;
         static void file_main(user::User *user, 
 					std::FILE *read_file, 
 					std::FILE *write_file); 
+
+        // listen just in the main thread
+        virtual void socket_listener_run() = 0;
+        virtual void file_listener_run(user::User *user, 
+					std::FILE *read_file, 
+					std::FILE *write_file) = 0;
+
 
         VIRTUAL_GET_AND_SET(IPacket *, packet_ptr)
         VIRTUAL_GET_AND_SET(user::User *, user_ptr)

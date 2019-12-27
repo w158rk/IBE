@@ -101,7 +101,7 @@ void User::sys_setup()
         FREE_SK_LEN_FILENAME
     }
 
-
+    sys_read();
 }
 
 void User::sys_read()

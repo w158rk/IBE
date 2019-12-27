@@ -29,7 +29,7 @@ void Comm::file_main(user::User *user,
 	// this must be run before the thread runs
 	user_add_client(comm, user);
 	// get the listening thread run
-	std::thread *listener = new std::thread(&Comm::file_listener_run, comm);
+	std::thread *listener = new std::thread(&Comm::file_listener_run_helper, comm);
 	// add the listener as the member of comm
 	comm->set_thread(listener);
 	// add the thread to the thread pool 

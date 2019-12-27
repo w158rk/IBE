@@ -15,6 +15,7 @@ namespace user
 	comm::Comm *comm_new();
 	void comm_delete(comm::Comm *);
 	void comm_connect_to_server(comm::Comm *, char*server_ip, int server_port);
+	void comm_socket_listener_run(interface::IComm *comm);
 
 }
 
