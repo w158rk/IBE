@@ -4,6 +4,11 @@
 using namespace packet;
 using namespace user;
 
+// const char *packet::user_get_global_filename() 
+// {
+//     return "mpk-global.conf";
+// }
+
 char *packet::user_get_mpk_filename(user::User *user)
 {
     return user->get_mpk_filename();
@@ -30,6 +35,8 @@ int packet::user_get_sk_len(user::User *user)
 {
     return user->get_sk_len();
 }
+
+
 
 void packet::user_set_sm4_key(user::User *user, char *key)
 {

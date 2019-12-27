@@ -27,7 +27,6 @@ if(sent_list.size() == cnt){ break; }
     std::cerr << e.what() << std::endl;     \
     continue; \
 }
-#undef DEBUG
 
 void Initializer::run() 
 {
@@ -145,7 +144,6 @@ void Initializer::run()
 }
 #endif
     
-#define DEBUG
     /* round two */
     /* send F(xi)li(0)P to others and receive F(xj)lj(0)P from others*/
     Print("round two");

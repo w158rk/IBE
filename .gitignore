@@ -31,3 +31,5 @@ __pycache__/
 
 .gmssl/
 src/lib/
+ 
+data/
