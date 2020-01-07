@@ -2,6 +2,7 @@
 
 #include<user.hpp>
 #include<comm.hpp>
+#include<init.hpp>
 #include<ui.hpp>
 #include<packet.hpp>
 #include<config.h>
@@ -38,6 +39,8 @@ void runclient(int argc, char *argv[])
                     REINTER(interface::IPacket, packet), 
                     REINTER(interface::IUI, uinterface), 
                     &err_sig);
+    client.set_cfg_filename(argv[1]);
+    client.set_user_mode(user::User::user_mode_t::USER_CLIENT);
     add_other_cfg(client, doc);
 
     client.run();
@@ -59,6 +62,10 @@ int main(int argc, char *argv[])
         std::cerr << e.what() << std::endl;
     }
     catch(packet::PacketException &e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
+    catch(init::InitException &e)
     {
         std::cerr << e.what() << std::endl;
     }

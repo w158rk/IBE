@@ -1,3 +1,19 @@
+## 1.7
+**问题：**
+1. 运行init-client和init-server会有段错误
+2. init后生成的sP文件的名称应该为`mpk-global.conf`，加id名字的是后来自己生成的域的
+3. 在usertest.cpp中添加了一行[link](../src/test/usertest.cpp#43)只是为了能顺利跑通，但是不知道你加mode的本意是啥，后期若有需要可以再改掉，并加了clienttest用于区分client和server
+4. [link](../src/user/server.cpp#157)改回去了，将mode分开，顶级的采用init，下层的包括顶级结点生成自己的域都不用init的mode
+
+**添加：**
+1. 添加了app中的CMakeLists文件生成init-client和init-server的可执行文件，去掉了gitignore中的.txt
+2. 加入了server.json和client.json配置文件
+
+**解决的bug：**
+1. 在client申请获取server的sP是得到的文件名应为server的id而不是client的id
+2. 在verify的时候id固定为了client，会导致server发给client的验证不通过
+3. 将申请获取mpk后得到的mpk文件的名字改为了`mpklen.conf`
+
 ## 12.1
 
 - 顶级域的mpk文件`mpk-global.conf`

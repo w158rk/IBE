@@ -51,7 +51,7 @@ typedef struct point_t point_t;
 #define ENC_PARAMETER       1
 #define DEC_PARAMETER       0
 #define GLOBAL_MPK_FILENAME "mpk-global.conf"
-#define MPK_LEN_FILENAME    "mpk-len.conf"
+#define MPK_LEN_FILENAME    "mpklen.conf"
 
 typedef struct ID_STR{
     char *id;

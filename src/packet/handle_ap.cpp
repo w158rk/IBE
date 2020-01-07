@@ -154,8 +154,7 @@ int handle_sk_request(Packet *target)
     char *data = (char *)malloc(client_id_len+IBE_MPK_LEN);
     memcpy(data,client_id, client_id_len);
     memcpy(data+client_id_len,mpk,IBE_MPK_LEN);
-
-        
+     
     // IBEPrivateKey server_sk = NULL;
     // GENERATE_SK_FILENAME((ctx->get_dest_id()))
     // get_sk_fp(filename, &server_sk);
@@ -402,10 +401,10 @@ int handle_mpk_response(Packet *target)
 
     /* save domain PP */
     user::User *user= target->get_user_ptr();
-    char *filename = NULL;
-    ibe_gen_mpk_filename(&filename, user_get_id(user));
-    put_mpk_fp(filename, mpk_sp, IBE_MPK_LEN);
-    ibe_free_filename(filename);
+    char *server_id = user_get_id(user)->father_node->id;
+    GENERATE_MPK_FILENAME(server_id,strlen(server_id))
+    put_mpk_fp(mpk_filename, mpk_sp, IBE_MPK_LEN);
+    FREE_MPK_FILENAME;
     
     /* save mpk len */
     long mpk_len = length/2;

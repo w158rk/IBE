@@ -154,10 +154,9 @@ void User::sys_read()
 #endif
 
     /* if the node is top node, it needs to generate its certificate */
-    if(get_user_mode()==USER_INIT_CLIENT
-        || get_user_mode()==USER_INIT_SERVER)        
+    if(get_id()->father_node==nullptr)        
     {
-
+        
         SignMesg server_sig, server_sig2;
 
         /* generate inner sign */

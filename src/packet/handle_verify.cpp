@@ -41,7 +41,7 @@ void Packet::handle_verify() {
 
         char *message = p->get_payload();
 
-        if(!ibe_verify(message, length, sign, IBE_SIGN_LEN, &mpk, 239, "Client", 6))
+        if(!ibe_verify(message, length, sign, IBE_SIGN_LEN, &mpk, 239, id, strlen(id)))
         {
             fprintf(stderr, "verify error\n");
         }
