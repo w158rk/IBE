@@ -46,9 +46,18 @@ void Packet::send_sign()
         user::User *user_ptr = get_user_ptr();
         ID *user_id = user_get_id(user_ptr);
 
-        filename = user_get_sk_filename(user_ptr);
-        get_sk_fp(filename, &sk);
-        free(filename);
+        if(user_id->father_node==nullptr)
+        {
+            filename = user_get_sk_filename(user_ptr);
+            get_sk_fp(filename, &sk);
+            free(filename);
+        }
+        else
+        {
+            GENERATE_DOMAIN_SK_FILENAME(user_id)
+            get_sk_fp(domain_filename, &sk);
+            FREE_DOMAIN_SK_FILENAME;
+        }
         
         if(!(ibe_sign(data, len, sign_data, &sign_len, &sk, 380)))
         {

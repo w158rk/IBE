@@ -62,7 +62,7 @@ void Packet::handle_dec() {
         }
 
         ibe_decrypt(p_sec_packet->get_payload_byte(), c_len, m, &m_len, 
-                            &sk, user_get_sk_len(user_ptr));
+                            &sk, IBE_SK_LEN);
 //         size_t m_len;
 
 //         // get the private key from file

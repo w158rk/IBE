@@ -270,6 +270,13 @@ int handle_sk_response(Packet *target) {
 #endif
     FREE_DOMAIN_SK_FILENAME;
 
+    int sk_len = IBE_SK_LEN;
+    GENERATE_SKLEN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
+    FILE *fp = std::fopen(filename, "wb");
+    std::fwrite(&sk_len, sizeof(sk_len), 1, fp);
+    std::fclose(fp);
+    FREE_SK_LEN_FILENAME;
+
     /* save sign file */
     GENERATE_SIGN_FILENAME(ctx->get_dest_id()->id, strlen(ctx->get_dest_id()->id)) 
     FILE *fp2;

@@ -25,10 +25,11 @@ void Packet::handle_verify() {
 
     AppPacket *p = ctx->get_payload_app();
     int type = p->get_type();
+    char *id = packet->get_id();
+    p->set_id(id);
     if(type==IBE_MES_TYPE)
     {
         char *sign = packet->get_signature();
-        char *id = packet->get_id();
 #ifdef DEBUG
         fprintf(stderr, "id is %s\n", id);
 #endif
@@ -45,8 +46,10 @@ void Packet::handle_verify() {
         {
             fprintf(stderr, "verify error\n");
         }
-
-        fprintf(stderr, "verify done\n");
+        else
+        {
+            fprintf(stderr, "verify done\n");
+        }
 
     }
     ctx->set_phase(RECV_APP_PACKET);

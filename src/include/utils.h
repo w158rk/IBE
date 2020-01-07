@@ -130,6 +130,25 @@
     filename[filename_len-1] = '\0';
 #define FREE_SK_LEN_FILENAME free(filename);
 
+#define GENERATE_SKLEN_FILENAME(id, id_len) \
+    int filename_len = id_len + 13;    \
+    char *filename = (char *)malloc(filename_len);  \
+    filename[0] = 's';      \
+    filename[1] = 'k';\
+    filename[2] = '-';\
+    filename[3] = 'l';\
+    filename[4] = 'e';\
+    filename[5] = 'n';\
+    filename[6] = '_';\
+    memcpy(filename+7, id, id_len);\
+    filename[filename_len-6] = '.'; \
+    filename[filename_len-5] = 'c'; \
+    filename[filename_len-4] = 'o'; \
+    filename[filename_len-3] = 'n'; \
+    filename[filename_len-2] = 'f';\
+    filename[filename_len-1] = '\0';
+#define FREE_SKLEN_FILENAME free(filename);
+
 
 #define GENERATE_SM4_FILENAME(id, id_len) \
     int filename_len = id_len + 10;    \
@@ -149,13 +168,12 @@
 #define FREE_SM4_FILENAME free(filename)
 
 #define GENERATE_MPK_FILENAME(id, id_len) \
-    int mpk_filename_len = id_len + 10;    \
+    int mpk_filename_len = id_len + 9;    \
     char *mpk_filename = (char *)malloc(mpk_filename_len);  \
     mpk_filename[0] = 'm';      \
     mpk_filename[1] = 'p';\
     mpk_filename[2] = 'k';\
-    mpk_filename[3] = '-';\
-    memcpy(mpk_filename+4, id, id_len);\
+    memcpy(mpk_filename+3, id, id_len);\
     mpk_filename[mpk_filename_len-6] = '.'; \
     mpk_filename[mpk_filename_len-5] = 'c'; \
     mpk_filename[mpk_filename_len-4] = 'o'; \
@@ -166,13 +184,12 @@
 #define FREE_MPK_FILENAME free(mpk_filename)
 
 #define GENERATE_MPK2_FILENAME(id, id_len) \
-    int mpk2_filename_len = id_len + 10;    \
+    int mpk2_filename_len = id_len + 9;    \
     char *mpk2_filename = (char *)malloc(mpk2_filename_len);  \
     mpk2_filename[0] = 'm';      \
     mpk2_filename[1] = 'p';\
     mpk2_filename[2] = 'k';\
-    mpk2_filename[3] = '-';\
-    memcpy(mpk2_filename+4, id, id_len);\
+    memcpy(mpk2_filename+3, id, id_len);\
     mpk2_filename[mpk2_filename_len-6] = '.'; \
     mpk2_filename[mpk2_filename_len-5] = 'c'; \
     mpk2_filename[mpk2_filename_len-4] = 'o'; \
