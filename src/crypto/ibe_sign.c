@@ -10,7 +10,7 @@
 int ibe_sign(const char* data, size_t data_len,  char* sign_buf, size_t *sign_len, 
     IBEPrivateKey *sk, long sk_len)
 {
-    if(sk_len != SK_LEN)
+    if(sk_len != SK_LEN&&sk_len != SK_LEN-1)
     {
         ERROR_WITH_LONG(SK_LEN_ERROR, sk_len);
         return 0;
