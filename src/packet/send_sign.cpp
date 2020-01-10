@@ -30,7 +30,7 @@ void Packet::send_sign()
     AppPacket *p_packet = p_sec_packet->get_payload_app();
     int type = p_packet->get_type();
 
-    if(type==IBE_MES_TYPE)
+    if(type==IBE_MES_TYPE||type==INT_KEY_TYPE)
     {
         char data[BUFFER_SIZE];
         int app_length = p_packet->get_length();

@@ -239,6 +239,27 @@
 
 #define FREE_SIGN_LEN_FILENAME free(filename_len_sign)
 
+#define GENERATE_INTKEY_FILENAME(client_id) \
+    int intkeylen = client_id->length + 13;    \
+    char *filename_key = (char *)malloc(intkeylen);  \
+    filename_key[0] = 'i';      \
+    filename_key[1] = 'n';\
+    filename_key[2] = 't';\
+    filename_key[3] = 'k';\
+    filename_key[4] = 'e';\
+    filename_key[5] = 'y';\
+    filename_key[6] = '-';\
+    memcpy(filename_key+7, (client_id->id), (client_id->length));\
+    filename_key[intkeylen-6] = '.'; \
+    filename_key[intkeylen-5] = 'c'; \
+    filename_key[intkeylen-4] = 'o'; \
+    filename_key[intkeylen-3] = 'n'; \
+    filename_key[intkeylen-2] = 'f';\
+    filename_key[intkeylen-1] = '\0';
+
+#define FREE_INTKEY_FILENAME free(filename_key)
+
+
 #ifdef __cplusplus 
 extern "C" {
 #endif

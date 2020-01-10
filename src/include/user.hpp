@@ -64,6 +64,9 @@ namespace user {
         void try_send_message(char *dest_ip, 
             int dest_port,
             ID *dest_id);
+        void run_get_Intkey(char *dest_ip, 
+                        int dest_port,
+                        ID *dest_id);
 
         void run_init_server();
         void run_init_client();

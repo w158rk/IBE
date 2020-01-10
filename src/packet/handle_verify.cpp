@@ -27,11 +27,11 @@ void Packet::handle_verify() {
     int type = p->get_type();
     char *id = packet->get_id();
     p->set_id(id);
-    if(type==IBE_MES_TYPE)
+    if(type==IBE_MES_TYPE||type==INT_KEY_TYPE)
     {
         char *sign = packet->get_signature();
 #ifdef DEBUG
-        fprintf(stderr, "id is %s\n", id);
+        std::cerr << " id: " << id << std::endl;
 #endif
         IBEPublicParameters mpk = NULL;
         GENERATE_MPK_FILENAME(id,strlen(id))

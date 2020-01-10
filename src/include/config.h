@@ -28,6 +28,7 @@
 #define MPK_RESPONSE_TYPE           11
 #define TRY_MES_TYPE                12
 #define TRY_HANDLE_TYPE             13
+#define INT_KEY_TYPE                14
 
 // initialization phase 
 # define INIT_MESSAGE_1             7

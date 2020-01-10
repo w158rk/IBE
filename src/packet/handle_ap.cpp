@@ -581,6 +581,34 @@ end:
     return rnt;
 }
 
+int handle_get_Intkey(Packet *target)
+{
+    int rnt = 0;
+
+    PacketCTX *ctx = target->get_ctx();
+    AppPacket *p = ctx->get_payload_app();
+    int length = p->get_length();
+    char *message = p->get_payload();
+
+    user::User *user= target->get_user_ptr();
+    ID *user_id = user_get_id(user);
+    GENERATE_INTKEY_FILENAME(user_id)
+    FILE *fp;
+    if((fp=fopen(filename_key,"wb+"))==NULL)
+    {
+        interface::IUI::error("file cannot open \n");  
+    }
+    std::fwrite(message, 1,  length, fp);
+    fclose(fp);
+
+#ifdef DEBUG
+    interface::IUI::print("get Intkey done");
+#endif
+
+    rnt=1;
+    return rnt;
+}
+
 int handle_init_message_1(Packet *target)
 {
     int rnt = 0;
@@ -929,6 +957,10 @@ void Packet::handle_ap()
         
         case TRY_HANDLE_TYPE:
             res = handle_try_res(this);
+            break;
+
+        case INT_KEY_TYPE:
+            res = handle_get_Intkey(this);
             break;
 
         case INIT_MESSAGE_1:

@@ -48,6 +48,7 @@ void Packet::send_ap()
         }
 
         case SESSION_KEY_ACK_TYPE:
+        case INT_KEY_TYPE:
         case IBE_MES_TYPE:
             send_type = IBE_DOMAIN_TYPE;
             break;
