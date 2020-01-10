@@ -264,6 +264,53 @@ void User::run_get_Intkey(char *dest_ip,
 
 }
 
+void User::run_get_IOTkey(char *dest_ip, 
+					int dest_port,
+					ID *dest_id)
+{
+
+
+	char *key = (char *)std::malloc(SM4_KEY_LEN);
+	gen_random_sm4((unsigned char *)key);
+
+	IOTKey *iot_key;
+	time_t t = time(0);
+	std::cout<<t<<std::endl;
+	memcpy(iot_key->sm4key, key, SM4_KEY_LEN);
+
+	/* 组织包 */
+
+	AppPacket *p_app_packet = new AppPacket ; 
+	
+	/* set the head */
+	/**
+	 * the format is : 
+	 * --------------------------------------
+	 * |	type	|	length of payload	|
+	 * --------------------------------------
+	 */
+	p_app_packet->set_type(INT_KEY_TYPE);
+	p_app_packet->set_length(SM4_KEY_LEN);
+	p_app_packet->set_payload(key);
+
+	PacketCTX *ctx = new PacketCTX;
+
+	ctx->set_phase(SEND_APP_PACKET);
+	ctx->set_payload_app (p_app_packet);
+	ctx->set_dest_id(dest_id);
+
+	interface::IComm *comm = get_comm_ptr();
+	comm->connect_to_server(dest_ip, dest_port);
+
+
+
+	// must connect to the server before this point
+	if(0 == get_packet_ptr()->packet_send(ctx)) {
+		throw UserException("wrong when make the packet to send");
+	}
+
+}
+
 # define MAKE_APP_PACKET(type) \
 	AppPacket *p_app_packet = new AppPacket ; \
 	int id_length = get_id()->length;	\

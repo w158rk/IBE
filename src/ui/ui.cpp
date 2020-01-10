@@ -49,6 +49,7 @@ int UInterface::socket_interface_run()
 		printf("\t6. Init the whole system\n");
 		printf("\t7. Get global and domain mpk\n");
 		printf("\t8. Get the gateway and internet session keys\n");
+		printf("\t9. Get the IOT session keys\n");
 		
 		int choise;
 		scanf("%d", &choise);
@@ -158,6 +159,28 @@ int UInterface::socket_interface_run()
 				try 
 				{
 					user->run_get_Intkey(ip_ad, port, &dest_id);
+				}
+				catch(user::UserException& e)
+				{
+					std::cerr << e.what() << std::endl;
+					return -1;
+				}			
+				break;
+			}
+			case 9:
+			{
+				printf("Please input whom you want to send to(IP_ADDRESS LISTEN_PORT ID)\n");
+				char ip_ad[20], id_cstr[20];
+				int port;
+				scanf("%s %d %s",&ip_ad, &port, &id_cstr);
+				ID dest_id;
+				dest_id.id = id_cstr;
+				int len = strlen(id_cstr);
+				dest_id.length = len;
+				fprintf(stderr, "ip is: %s  port is: %d  id is: %s\n", ip_ad, port, id_cstr);
+				try 
+				{
+					user->run_get_IOTkey(ip_ad, port, &dest_id);
 				}
 				catch(user::UserException& e)
 				{

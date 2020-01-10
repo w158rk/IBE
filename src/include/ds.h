@@ -50,6 +50,7 @@ typedef struct point_t point_t;
 #define MES_LEN         10000
 #define ENC_PARAMETER       1
 #define DEC_PARAMETER       0
+#define SM4_KEY_LEN         16
 #define GLOBAL_MPK_FILENAME "mpk-global.conf"
 #define MPK_LEN_FILENAME    "mpklen.conf"
 
@@ -69,6 +70,13 @@ struct SignMesg
     IBEPublicParameters PP;
     char *sign_data;
     struct SignMesg *front;
+};
+
+struct IOTKey
+{
+    long time;
+    long duration;
+    char sm4key[SM4_KEY_LEN];
 };
 
 int ID_equal(ID *a, ID *b);
