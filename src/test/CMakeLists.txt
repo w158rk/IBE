@@ -25,5 +25,7 @@ target_link_libraries (usertest ibe ssl crypto pthread)   #与库文件链接
 
 # add_executable (cryptotest crypto.c)    #添加可执行文件crypto.c生成cryptotest
 # target_link_libraries (cryptotest ibe ssl crypto pthread)   #与库文件链接
+add_executable(sm2test sm2test.c)
+target_link_libraries(sm2test ssl crypto pthread)
 add_executable(sm4test sm4test.c)
 target_link_libraries(sm4test ibe ssl crypto pthread)
