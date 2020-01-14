@@ -1,0 +1,34 @@
+{
+    "system" : {
+        "log" : "client.log"
+    },
+    "crypto" : {
+        "mpk_file" : "mpk-global.conf",
+        "msk_file" : "msk-global_Client.conf",
+        "msk_len_file" : "msk-global_Client-len.conf",
+        "mpk_len_file" : "mpk-global-len.conf"
+    },
+    "id" : {
+        "id" : "Client", 
+        "ip_address" : "127.0.0.1",
+        "port" : 16001,
+        "parent" : null
+    },
+    "init": {
+        "user_ids": [
+            {
+                "id" : "Server", 
+                "ip_address" : "127.0.0.1",
+                "port" : 5003,
+                "parent" : null
+            },
+            {
+                "id" : "Client", 
+                "ip_address" : "127.0.0.1",
+                "port" : 16001,
+                "parent" : null
+            }
+        ]
+    }
+}
+    
