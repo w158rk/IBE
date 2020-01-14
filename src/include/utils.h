@@ -239,8 +239,8 @@
 
 #define FREE_SIGN_LEN_FILENAME free(filename_len_sign)
 
-#define GENERATE_INTKEY_FILENAME(client_id) \
-    int intkeylen = client_id->length + 13;    \
+#define GENERATE_INTKEY_FILENAME(id, id_len) \
+    int intkeylen = id_len + 13;    \
     char *filename_key = (char *)malloc(intkeylen);  \
     filename_key[0] = 'i';      \
     filename_key[1] = 'n';\
@@ -249,7 +249,7 @@
     filename_key[4] = 'e';\
     filename_key[5] = 'y';\
     filename_key[6] = '-';\
-    memcpy(filename_key+7, (client_id->id), (client_id->length));\
+    memcpy(filename_key+7, id, id_len);\
     filename_key[intkeylen-6] = '.'; \
     filename_key[intkeylen-5] = 'c'; \
     filename_key[intkeylen-4] = 'o'; \
@@ -258,6 +258,26 @@
     filename_key[intkeylen-1] = '\0';
 
 #define FREE_INTKEY_FILENAME free(filename_key)
+
+#define GENERATE_IOTKEY_FILENAME(id, id_len) \
+    int iotkeylen = id_len + 13;    \
+    char *filename_key = (char *)malloc(iotkeylen);  \
+    filename_key[0] = 'i';      \
+    filename_key[1] = 'o';\
+    filename_key[2] = 't';\
+    filename_key[3] = 'k';\
+    filename_key[4] = 'e';\
+    filename_key[5] = 'y';\
+    filename_key[6] = '-';\
+    memcpy(filename_key+7, id, id_len);\
+    filename_key[iotkeylen-6] = '.'; \
+    filename_key[iotkeylen-5] = 'c'; \
+    filename_key[iotkeylen-4] = 'o'; \
+    filename_key[iotkeylen-3] = 'n'; \
+    filename_key[iotkeylen-2] = 'f';\
+    filename_key[iotkeylen-1] = '\0';
+
+#define FREE_IOTKEY_FILENAME free(filename_key)
 
 
 #ifdef __cplusplus 

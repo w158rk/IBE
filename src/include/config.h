@@ -29,6 +29,7 @@
 #define TRY_MES_TYPE                12
 #define TRY_HANDLE_TYPE             13
 #define INT_KEY_TYPE                14
+#define IOT_KEY_TYPE                15
 
 // initialization phase 
 # define INIT_MESSAGE_1             7

@@ -9,6 +9,7 @@ History: ...
 *****************************************************************************/
 #include "user_lcl.hpp"
 #include <user.hpp>
+#include <byte.hpp>
 #include <iostream>
 #include <config.h>
 
@@ -273,11 +274,14 @@ void User::run_get_IOTkey(char *dest_ip,
 	char *key = (char *)std::malloc(SM4_KEY_LEN);
 	gen_random_sm4((unsigned char *)key);
 
-	IOTKey *iot_key;
+	IOTKey *iot_key = new IOTKey();
 	time_t t = time(0);
-	std::cout<<t<<std::endl;
+	long time = (long)t;
 	memcpy(iot_key->sm4key, key, SM4_KEY_LEN);
-
+	*(long *)iot_key->time = time;
+	*(long *)iot_key->duration = IOT_KEY_TIME;
+	char *key_byte = (char *)malloc(IOT_TIME_LEN+IOT_DUR_LEN+SM4_KEY_LEN);
+	key_byte = key_to_bytes(iot_key);
 	/* 组织包 */
 
 	AppPacket *p_app_packet = new AppPacket ; 
@@ -289,9 +293,9 @@ void User::run_get_IOTkey(char *dest_ip,
 	 * |	type	|	length of payload	|
 	 * --------------------------------------
 	 */
-	p_app_packet->set_type(INT_KEY_TYPE);
-	p_app_packet->set_length(SM4_KEY_LEN);
-	p_app_packet->set_payload(key);
+	p_app_packet->set_type(IOT_KEY_TYPE);
+	p_app_packet->set_length(IOT_TIME_LEN+IOT_DUR_LEN+SM4_KEY_LEN);
+	p_app_packet->set_payload(key_byte);
 
 	PacketCTX *ctx = new PacketCTX;
 

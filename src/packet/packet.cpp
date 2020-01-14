@@ -1,4 +1,5 @@
 #include<packet.hpp>
+#include<byte.hpp>
 #include<cstring>
 
 #ifdef DEBUG 
@@ -538,4 +539,22 @@ int sig_verify(SignMesg *sig, IBEPublicParameters ss_mpk)
     rnt = 1;
 end:
     return rnt;
+}
+
+char *key_to_bytes(IOTKey *key)
+{
+    char *buf = (char *)malloc(IOT_TIME_LEN+IOT_DUR_LEN+SM4_KEY_LEN);
+    memcpy(buf, key->time, IOT_TIME_LEN);
+    memcpy(buf+IOT_TIME_LEN, key->duration, IOT_DUR_LEN);
+    memcpy(buf+IOT_TIME_LEN+IOT_DUR_LEN, key->sm4key, SM4_KEY_LEN);
+    return buf;
+}
+
+IOTKey *key_from_bytes(char *buf)
+{
+    IOTKey *key = new IOTKey();
+    memcpy(key->time, buf, IOT_TIME_LEN);
+    memcpy(key->duration, buf+IOT_TIME_LEN, IOT_DUR_LEN);
+    memcpy(key->sm4key, buf+IOT_TIME_LEN+IOT_DUR_LEN, SM4_KEY_LEN);
+    return key;
 }

@@ -51,6 +51,9 @@ typedef struct point_t point_t;
 #define ENC_PARAMETER       1
 #define DEC_PARAMETER       0
 #define SM4_KEY_LEN         16
+#define IOT_KEY_TIME        100000
+#define IOT_TIME_LEN        32
+#define IOT_DUR_LEN         32
 #define GLOBAL_MPK_FILENAME "mpk-global.conf"
 #define MPK_LEN_FILENAME    "mpklen.conf"
 
@@ -74,8 +77,8 @@ struct SignMesg
 
 struct IOTKey
 {
-    long time;
-    long duration;
+    char time[IOT_TIME_LEN];
+    char duration[IOT_DUR_LEN];
     char sm4key[SM4_KEY_LEN];
 };
 
