@@ -21,6 +21,8 @@ include_directories(${CMAKE_SOURCE_DIR}/src/include)    #添加需要的头文�
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     add_compile_options(-g)
+else(CMAKE_BUILD_TYPE MATCHES Debug)
+    add_compile_options(-O3)
 endif(CMAKE_BUILD_TYPE MATCHES Debug)
 # add_subdirectory (${CMAKE_SOURCE_DIR}/src/IBE)
 #指明本项目包含的子目录CMakeLists文件其他的位置有/src和/src/test 
