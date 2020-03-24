@@ -20,7 +20,10 @@ link_directories(${PROJECT_LIB_DIR})    #连接库PROJECT_LIB_DIR，即/src/lib
 include_directories(${CMAKE_SOURCE_DIR}/src/include)    #添加需要的头文件/src/include
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-    add_compile_options(-g)
+    SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} )
+    SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} )
+    SET(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} )
+    add_compile_options(${CMAKE_CXX_FLAGS})
 else(CMAKE_BUILD_TYPE MATCHES Debug)
     add_compile_options(-O3)
 endif(CMAKE_BUILD_TYPE MATCHES Debug)
