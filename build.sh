@@ -5,7 +5,7 @@ cd .gmssl
 if [ -d ".git" ]; then
     git pull origin master 
 else 
-    git clone git@github.com:w158rk/GmSSL.git ./ 
+    git clone https://github.com/w158rk/GmSSL.git ./ 
 fi
 echo "clone the repository finished ... "
 
