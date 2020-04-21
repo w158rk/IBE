@@ -288,6 +288,7 @@ char *SecPacket::get_id()
     char *head = get_head();
     char *id = (char *)malloc(ID_LEN_MAX);
     memcpy(id, head+TYPE_LEN, ID_LEN_MAX);
+    return id;
 }
 void SecPacket::set_length(int length)
 {

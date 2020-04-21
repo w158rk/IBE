@@ -148,7 +148,7 @@ void Initializer::run()
 
     cal_share_with_lp();
     end = clock();
-    printf("time of calculate the share: %f msec", (double)(end-start)/CLOCKS_PER_SEC*1000);
+    printf("time of calculate the share: %f msec\n", (double)(end-start)/CLOCKS_PER_SEC*1000);
 
 #ifdef DEBUG
 {
@@ -166,13 +166,13 @@ void Initializer::run()
     {
 
         len = BUFFER_SIZE;
-        len2 = BUFFER_SIZE - len;
 
         start = clock();
         cal_shareP1(buff, &len);
+        len2 = BUFFER_SIZE - len;
         cal_shareP2(buff+len, &len2);
         end = clock();
-        printf("time of calculate the shareP: %f msec", (double)(end-start)/CLOCKS_PER_SEC*1000);
+        printf("time of calculate the shareP: %f msec\n", (double)(end-start)/CLOCKS_PER_SEC*1000);
 #ifdef DEBUG 
 {
         std::ostringstream s;
@@ -201,7 +201,7 @@ void Initializer::run()
     start = clock();
     cal_sP();
     end = clock();
-    printf("time of calculate the sP: %f msec", (double)(end-start)/CLOCKS_PER_SEC*1000);
+    printf("time of calculate the sP: %f msec\n", (double)(end-start)/CLOCKS_PER_SEC*1000);
 
 #ifdef DEBUG
 {
@@ -225,7 +225,7 @@ void Initializer::run()
     start = clock();
     store_sP();
     end = clock();
-    printf("time of store the sP: %f msec", (double)(end-start)/CLOCKS_PER_SEC*1000);
+    printf("time of store the sP: %f msec\n", (double)(end-start)/CLOCKS_PER_SEC*1000);
 
     /* round three */
     /* send F(xi)li(0)Q to others and receive F(xj)lj(0)Q from others*/
@@ -240,7 +240,10 @@ void Initializer::run()
             FOR_BLOCK_CHECK
 
             len = BUFFER_SIZE;
+            start = clock();
             cal_shareQ(buff, &len, id);
+            end = clock();
+            printf("time of calculate the shareQ: %f msec\n", (double)(end-start)/CLOCKS_PER_SEC*1000);
 #ifdef DEBUG 
 {
             std::ostringstream s;
@@ -269,7 +272,9 @@ void Initializer::run()
      */
     start = clock();
     cal_sQ();
-
+    end = clock();
+    printf("time of calculate the sQ: %f msec\n", (double)(end-start)/CLOCKS_PER_SEC*1000);
+#
 #ifdef DEBUG
 {
     BN_CTX *ctx = BN_CTX_new();
@@ -281,6 +286,9 @@ void Initializer::run()
 }
 #endif
 
+    start = clock();
     store_sQ();
+    end = clock();
+    printf("time of store the sQ: %f msec\n", (double)(end-start)/CLOCKS_PER_SEC*1000);
 
 }

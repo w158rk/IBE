@@ -200,6 +200,7 @@ void Initializer::cal_shareP2(char *out, int *outlen)
 	}
 	if(length<129)
 	{
+        fprintf(stderr, "length: %d\n", length);
 		Error("the out buffer is not big enough");
 	}
 	length = 129;
