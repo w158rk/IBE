@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/wxy/work/IBE/src/test/sm4test.c
+openssl/sm4.h
+-
+string.h
+-
+stdio.h
+-
+stdlib.h
+-
+time.h
+-
+
+include/openssl/sm4.h
+stdio.h
+-
+

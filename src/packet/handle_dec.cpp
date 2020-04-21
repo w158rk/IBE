@@ -5,6 +5,7 @@ extern "C" {
 #include <utils.h>
 #include <string.h>
 #include <config.h>
+#include <time.h>
 }
 
 #include "packet_lcl.hpp"
@@ -134,6 +135,8 @@ void Packet::handle_dec() {
 
     case SM4_TYPE:
     {
+        double start,end,cost;
+        start=clock();
         sm4_context sm4ctx;
 
         // get the key from the packet object
@@ -149,6 +152,9 @@ void Packet::handle_dec() {
                         (unsigned char*)(p_sec_packet->get_payload_byte()),
                         (unsigned char*)sm4_msg,
                         &out_len);
+        end=clock();
+        cost=(end-start)/CLOCKS_PER_SEC*1000;
+        printf("sm4dec time is: %f ms\n",cost);
         
         // create a new app packet 
         // AppPacket *p_app_packet = new AppPacket;

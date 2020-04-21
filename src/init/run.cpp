@@ -2,6 +2,7 @@
 #include <set>
 #include <iostream>
 #include <ui.hpp>
+#include <time.h>
 
 #include <config.h>
 #include "init_lcl.hpp"
@@ -37,7 +38,12 @@ void Initializer::run()
 
     if(!m_fpoly)
     {
+        double start,end,cost;
+        start=clock();
         gen_poly();
+        end=clock();
+        cost=(end-start)/CLOCKS_PER_SEC*1000;
+        printf("poly time is: %f ms\n",cost);
     }
     
 #ifdef DEBUG
