@@ -86,13 +86,13 @@ void Initializer::run()
 
     
     do {
-#ifdef DEBUG
-{        
-        std::ostringstream s;
-        s << "the size of the numbers: " <<  get_numbers()->size() << std::endl;
-        Debug(s.str());
-}
-#endif
+        #ifdef DEBUG
+        {        
+                std::ostringstream s;
+                s << "the size of the numbers: " <<  get_numbers()->size() << std::endl;
+                Debug(s.str());
+        }
+        #endif
         /* as the handle of the received packet will be in packet module 
             what we do here is just send the N packet to other users */
         
@@ -107,13 +107,13 @@ void Initializer::run()
                 it is not, just skip this round and wait for the next send behavior */
             len = BUFFER_SIZE;
             cal_fx(buff, &len, id);
-#ifdef DEBUG
-{
-    std::ostringstream s;
-    s << "f(x) for " << id->id << ": " << buff << std::endl;
-    Debug(s.str());
-}
-#endif
+        #ifdef DEBUG
+        {
+            std::ostringstream s;
+            s << "f(x) for " << id->id << ": " << buff << std::endl;
+            Debug(s.str());
+        }
+        #endif
 
             TRY_BEGIN
                 user_send_init_message_1(get_user(), buff, len, id);
@@ -127,6 +127,9 @@ void Initializer::run()
     } while(get_numbers()->size() < cnt);
 
     /* get all the numbers needed to calculate the share */
+    long start, end;
+
+    start = clock();
     cal_share();
 
 #ifdef DEBUG
@@ -138,6 +141,9 @@ void Initializer::run()
 #endif
 
     cal_share_with_lp();
+    end = clock();
+    printf("time of calculate the share: %f msec", (double)(end-start)/CLOCKS_PER_SEC*1000);
+
 #ifdef DEBUG
 {
     std::ostringstream s;
@@ -154,10 +160,13 @@ void Initializer::run()
     {
 
         len = BUFFER_SIZE;
-        cal_shareP1(buff, &len);
         len2 = BUFFER_SIZE - len;
-        cal_shareP2(buff+len, &len2);
 
+        start = clock();
+        cal_shareP1(buff, &len);
+        cal_shareP2(buff+len, &len2);
+        end = clock();
+        printf("time of calculate the shareP: %f msec", (double)(end-start)/CLOCKS_PER_SEC*1000);
 #ifdef DEBUG 
 {
         std::ostringstream s;
@@ -182,16 +191,12 @@ void Initializer::run()
         
     }while(get_sp_pub_points()->size() < cnt);
 
-{
-    FILE *debug_file = fopen("mpk-global.conf", "rb");
-    fclose(debug_file);
-}
 
+    start = clock();
     cal_sP();
+    end = clock();
+    printf("time of calculate the sP: %f msec", (double)(end-start)/CLOCKS_PER_SEC*1000);
 
-// CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT 
-// CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT 
-// CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT CURRENT 
 #ifdef DEBUG
 {
     BN_CTX *ctx = BN_CTX_new();
@@ -210,13 +215,11 @@ void Initializer::run()
     Debug(s.str());
 }
 #endif
-{
-    FILE *debug_file = fopen("mpk-global.conf", "rb");
-    fclose(debug_file);
-}
 
-    
+    start = clock();
     store_sP();
+    end = clock();
+    printf("time of store the sP: %f msec", (double)(end-start)/CLOCKS_PER_SEC*1000);
 
     /* round three */
     /* send F(xi)li(0)Q to others and receive F(xj)lj(0)Q from others*/
@@ -258,6 +261,7 @@ void Initializer::run()
      * so in cal_SQ, instead of using set_SQ, 
      * we use EC_POINT_copy when necessary 
      */
+    start = clock();
     cal_sQ();
 
 #ifdef DEBUG
