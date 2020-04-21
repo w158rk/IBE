@@ -1,1 +1,0 @@
-/usr/bin/g++    -rdynamic CMakeFiles/sm4test.dir/sm4test.c.o  -o ../../bin/sm4test  -L/home/wxy/work/IBE/src/lib  -L/home/wxy/work/IBE/src/IBE  -L/home/wxy/work/IBE/src/Library/UNIX -Wl,-rpath,/home/wxy/work/IBE/src/lib:/home/wxy/work/IBE/src/IBE:/home/wxy/work/IBE/src/Library/UNIX ../libibe.a -lssl -lcrypto -lpthread 
