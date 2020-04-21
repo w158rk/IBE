@@ -11,6 +11,7 @@
 #include <config.h>
 #include <utils.h>
 #include <ss.h>
+#include <time.h>
 
 #include <iostream>
 #include <sstream>
@@ -72,6 +73,8 @@ int handle_sk_request(Packet *target)
 
     /*generate sk*/
     long sk_len;
+    double start,end,cost;
+    start=clock();
     if ( 0 == ibe_extract(&sk,
                             &sk_len, 
                             &msk, 
@@ -80,7 +83,10 @@ int handle_sk_request(Packet *target)
                             (size_t)client_id_len)) {
         interface::IUI::error(" cannot extract the private key");
         throw PacketException(" cannot extract the private key");
-    }       
+    }
+    end=clock();
+    cost=(end-start)/CLOCKS_PER_SEC*1000;
+    printf("sk gen time is: %f ms\n",cost);       
 
     {   /* test the validation of the private key*/
         // char data[] = "This is a test text";

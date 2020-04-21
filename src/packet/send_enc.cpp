@@ -9,6 +9,7 @@ extern "C" {
     #include <crypto.h>
     #include <string.h>
     #include <sys.h>
+    #include <time.h>
 }
 
 #include <ui.hpp>
@@ -149,12 +150,17 @@ void Packet::send_enc()
 
             int len = app_length + APP_HEAD_LEN;
             int c_len;
+            double start,end,cost;
+            start=clock();
             sm4_context *sm4ctx = new sm4_context;
 
             // get sm4 key from users directly
             sm4_setkey_enc(sm4ctx,(unsigned char*)(user_get_sm4_key(user_ptr)));
             sm4_crypt_ecb(sm4ctx, ENC_PARAMETER, app_length + APP_HEAD_LEN, 
                             (unsigned char*)data, (unsigned char*)cipher, &c_len);
+            end=clock();
+            cost=(end-start)/CLOCKS_PER_SEC*1000;
+            printf("sm4enc time is: %f ms\n",cost);
                  
 #ifdef DEBUG
 {

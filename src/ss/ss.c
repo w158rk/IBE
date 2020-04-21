@@ -6,7 +6,6 @@
 
 int SS_poly_rand_smx(SS_POLY *poly, unsigned int length)
 {
-
     const BIGNUM *n = IBE_get0_order();
     SS_poly_rand(poly, length, n);
 

@@ -1,4 +1,19 @@
 ## 顶级节点ss
+在build文件夹下
+
+server：
+```
+mkdir server
+cd server
+../bin/init-server ../../init_server.json 
+```
+client:
+```
+mkdir client
+cd client
+../bin/init-client ../../init_client.json 
+```
+
 1. 生成顶级域的mpk文件`mpk-global.conf`
 2. 生成自己在顶级域中的私钥文件`sk-global_id.conf`
 
@@ -46,6 +61,7 @@
 1. 顶级节点拥有2个mpk文件和2个sk文件，顶级域的为`mpk-global.conf`和`sk-global_id.conf`，自己生成的域的为`mpk-id.conf`和`sk_id.conf`。在进行通信加解密及跨域身份验证的时候使用的是`mpk-id.conf`和`sk_id.conf`。
 2. 除顶级节点外的管理节点也拥有2个mpk文件和2个sk文件，父节点域的为`mpk-fatherid.conf`和`sk-domain_id.conf`，自己生成的域为`mpk-id.conf`和`sk_id.conf`。在进行通信加解密及跨域身份验证的时候用的是`mpk-fatherid.conf`和`sk-domain_id.conf`。在子节点申请获取sk的时候用的是`mpk-id.conf`和`sk_id.conf`。
 3. 除了顶级节点证书是到自己生成域的其他节点证书均到自己父节点的域，因此，顶级节点通信过程中解密用的是非domain的sk参数。
+4. 通信前一定要先运行`Read your system files`！！！
 
 ---
 ## 证书的结构说明

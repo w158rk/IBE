@@ -2,6 +2,7 @@
 #include<user.hpp>
 #include<config.h>
 #include<string.h>
+#include <time.h>
 
 #include <iostream>
 
@@ -119,7 +120,12 @@ int UInterface::socket_interface_run()
 			}
 			case 4:
 			{
+				double start,end,cost;
+        		start=clock();
 				user->sys_setup();
+				end=clock();
+        		cost=(end-start)/CLOCKS_PER_SEC*1000;
+        		printf("sys setup time is: %f ms\n",cost);
 				break;
 			}
 			case 5:
@@ -129,7 +135,12 @@ int UInterface::socket_interface_run()
 			}
 			case 6:
 			{
+				double start,end,cost;
+        		start=clock();
 				user->sys_init();
+				end=clock();
+        		cost=(end-start)/CLOCKS_PER_SEC*1000;
+        		printf("whole init time is: %f ms\n",cost);
 				break;
 			}
 			case 7:
