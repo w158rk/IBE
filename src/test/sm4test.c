@@ -1,11 +1,11 @@
-#include <openssl/sm4.h>
+#include <crypto.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
 // 
-
+/*
 int main()
 {
 	//char x;
@@ -66,4 +66,23 @@ int main()
 	printf("\n");
 
     return 0;
+}
+*/
+
+int main() 
+{
+	unsigned char *key 	= "1234567812345678";
+	char *m 		= "hello";
+	char c[50];
+	char dec_m[50];
+	int c_len = 50;
+	int dec_m_len = 50;
+
+	sym_crypt_ecb(key, 1, 5, m, c, &c_len);
+	printf("clen: %d\n", c_len);
+	sym_crypt_ecb(key, 0, c_len, c, dec_m, &dec_m_len);
+	printf("dec_len: %d\n", dec_m_len);
+	dec_m[dec_m_len] = '\0';
+	printf("dec_len: %s\n", dec_m);
+
 }

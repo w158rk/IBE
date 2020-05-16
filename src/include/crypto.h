@@ -14,7 +14,6 @@
 extern "C" {
 #endif
 
-#include <openssl/sm4.h>
 
 #include <ibe.h>
 #include <ds.h>
@@ -48,14 +47,13 @@ int run_ibe_verify(struct SignMesg *sig, IBEPublicParameters *mpk, const char *i
 void gen_random_sm4(unsigned char *key);
 void set_key(unsigned char *key, FILE* filename);
 void get_key(unsigned char *key, FILE* filename);
-void sm4_setkey_enc( sm4_context *ctx, unsigned char key[16] );
-void sm4_setkey_dec( sm4_context *ctx, unsigned char key[16] );
-void sm4_crypt_ecb( sm4_context *ctx,
-				     int mode,
+
+int sym_crypt_ecb(unsigned char key[16], int mode,
 					 int length,
                      unsigned char *input,
                      unsigned char *output,
-                     int *output_lenth);
+                     int *output_length);
+
 #ifdef __cplusplus
 }
 #endif
