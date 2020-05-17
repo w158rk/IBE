@@ -54,9 +54,9 @@ int test_extract_private_key() {
     printf("[test] extract private key\n");
     if (0 == ibe_extract(&sk, &sk_len, &msk, msk_len, SERVER_ID, SERVER_ID_LEN))  //生成私钥存放在sk中
         return -1;
-#ifdef DEBUG 
+// #ifdef DEBUG 
     fprintf(stderr, "len of sk: %ld\n", sk_len);
-#endif
+// #endif
     return 0;
 }
 
@@ -125,6 +125,8 @@ int test_smx_sign()
 
     sign_len = BUFFER_SIZE;
 
+    // the length of a private key is related to the length of the ID
+    
     if(!(ibe_sign(data2, data_len, sign_data, &sign_len, &sk_read, 381)))
     {
         fprintf(stderr, "sign error\n");

@@ -20,11 +20,6 @@
 int ibe_encrypt(const  char* data, size_t data_len,  char* c_buf, size_t *c_len, 
     IBEPublicParameters *mpk, long mpk_len, const char *id, size_t id_len) 
 {
-    if (mpk_len > MPK_LEN)
-    {
-        ERROR_WITH_LONG(MPK_LEN_ERROR, mpk_len);
-        return 0;
-    }
 
     char *mpk_str = ibe_malloc_char(MPK_LEN);
     char *to_be_freed = mpk_str;

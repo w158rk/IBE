@@ -23,6 +23,11 @@ int ibe_extract(IBEPrivateKey *sk,
                 const char* id,
                 size_t id_len)
 {
+
+    // printf("%llx, %llx, %s\n", sk, msk, id);
+    // printf("%llx, %llx\n", *sk, *msk);
+    // printf("%d\n", id_len);
+
     int ret = 0;
     SMXMasterSecret *sm9_ms = NULL;
 
