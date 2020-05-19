@@ -271,6 +271,47 @@ def ibe_sign(m, sk):
     return None
 
 
+def ibe_verify(m, sm, mpk, user_id):
+    """verify the signed-message with public master key and id
+
+    Args:
+        m: message
+        sm: signed-message
+        mpk: public master key
+        user_id
+
+        ATTENTION: all arguments should be in bytes type
+
+    Return:
+        1 for pass, -1 for fail
+    """
+
+    c_m = c_char_p()
+    c_m.value = m
+    m_len = len(m)
+    c_m_len = c_ulong(m_len)
+
+    c_sm = c_char_p()
+    c_sm.value = sm
+    sm_len = len(sm)
+    c_sm_len = c_ulong(sm_len)
+
+    c_mpk = c_char_p()
+    c_mpk.value = mpk
+    p_mpk = pointer(c_mpk)
+    c_mpk_len = len(mpk)
+
+    c_id = c_char_p()
+    c_id.value = user_id
+    c_id_len = len(user_id)
+    c_id_len = c_ulong(c_id_len)
+
+    lib_ibe = CDLL(LIBIBE_PATH)
+    res = lib_ibe.ibe_verify(c_m, c_m_len, c_sm, c_sm_len, p_mpk, c_mpk_len, c_id, c_id_len)
+
+    return res
+
+
 class CryptoTest(object):
     """class for testing the cryptographic algorithms
 
@@ -372,6 +413,19 @@ class CryptoTest(object):
             print("sign test failed!")
             return False
 
+    def test_ibe_verify(self):
+        if not self.mpk:
+            print("read mpk failed!")
+            return False
+        res = ibe_verify(self.m, self.sm, self.mpk, self.user_id)
+
+        if res == 1:
+            print("verify test passed!")
+            return True
+        else:
+            print("verify test failed!")
+            return False
+
     def remove_auxiliary_files(self):
         for filename in [self.mpk_file, self.mpk_len_file,
                          self.msk_file, self.msk_len_file]:
@@ -384,6 +438,8 @@ class CryptoTest(object):
         res = res and self.test_ibe_extract()
         res = res and self.test_ibe_encrypt()
         res = res and self.test_ibe_decrypt()
+        res = res and self.test_ibe_sign()
+        res = res and self.test_ibe_verify()
 
         if res:
             print("test all passed!")
