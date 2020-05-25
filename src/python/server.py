@@ -4,15 +4,15 @@
 '''
 @File    :   server.py
 @Time    :   2020/05/17 15:55:01
-@Author  :   Ruikai Wang 
+@Author  :   Ruikai Wang
 @Version :   1.0
 @Contact :   wrk15835@gmail.com
 @License :   Copyright (c) 2020 Ruikai Wang
-@Desc    :   classes and functions for a server. 
+@Desc    :   classes and functions for a server.
 
 Literally, a server listens on a port, receives packets and makes replies.
-The logic about handling the packets is not defined in this file, only 
-basic send/recv functions are defined here. A interface for the handling 
+The logic about handling the packets is not defined in this file, only
+basic send/recv functions are defined here. A interface for the handling
 function exists.
 '''
 
@@ -25,14 +25,15 @@ import threading
 
 BUFFER_SIZE = 1024
 
+
 def handle_bytes_interface(data):
-    """this is an interface for handling the protocol packets. 
+    """this is an interface for handling the protocol packets.
 
     Args:
         data: the received byte stream
     """
-    
-    #TODO(wrk)
+
+    # TODO(wrk)
     action = Action()
     if data == b"sk":
         action.type = Action.ActionType.SEND_AND_EXIT
@@ -40,10 +41,11 @@ def handle_bytes_interface(data):
 
     return action
 
+
 def handle_thread(server, sock, addr):
     """the main function of handle thread
 
-    Here we get byte stream from network, makes corresponding replies, 
+    Here we get byte stream from network, makes corresponding replies,
     sometimes maintains a "session"
     """
 
@@ -53,14 +55,14 @@ def handle_thread(server, sock, addr):
             if data:
 
                 # TODO(wrk): maybe generate some log information
-                
+
                 print("received: ", data)
-                action = handle_bytes_interface(data) 
+                action = handle_bytes_interface(data)
                 if action:
                     if action.type == Action.ActionType.EXIT:
                         break
                     if action.type == Action.ActionType.ABORT:
-                        #TODO(wrk): log some error infomation
+                        # TODO(wrk): log some error infomation
                         break
                     if action.type == Action.ActionType.SEND:
                         print("send: ", action.payload)
@@ -69,13 +71,14 @@ def handle_thread(server, sock, addr):
                         print("send: ", action.payload)
                         sock.send(action.payload)
                         break
-        
+
         sock.close()
 
     except socket.error as e:
         print("Socket error: %s" % str(e))
     except Exception as e:
         print("Other exception: %s" % str(e))
+
 
 class Server(User):
     """class representing a server
@@ -85,11 +88,11 @@ class Server(User):
         num_clients: the current number of clients
 
     Functions:
-        run(): the main function of the server 
+        run(): the main function of the server
     """
 
     def __init__(self, user_id, addr, port):
-        super(Server, self).__init__(user_id, addr, port) 
+        super(Server, self).__init__(user_id, addr, port)
         self.MAX_NUM_CLIENTS = 10
         self.num_clients = 0
 
@@ -98,17 +101,18 @@ class Server(User):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        # bind the address and port 
+        # bind the address and port
         srv_addr = (self.addr, self.port)
         sock.bind(srv_addr)
 
-        sock.listen(self.MAX_NUM_CLIENTS) 
+        sock.listen(self.MAX_NUM_CLIENTS)
 
         print("server is running")
         while True:
-            conn, addr = sock.accept() 
+            conn, addr = sock.accept()
             t = threading.Thread(target=handle_thread, args=(self, conn, addr))
             t.start()
+
 
 class ServerTest(object):
     """the class for testing the functionality of Server
@@ -125,13 +129,15 @@ class ServerTest(object):
 
     def test_server_run(self):
         self.server.run()
-    
+
     def test_all(self):
         self.test_server_run()
+
 
 def main():
     server_test = ServerTest()
     server_test.test_all()
+
 
 if __name__ == "__main__":
     main()
