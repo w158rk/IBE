@@ -26,7 +26,7 @@ import threading
 BUFFER_SIZE = 1024
 
 
-def handle_bytes_interface(data):
+def gen_action_from_data(data, user=None):
     """this is an interface for handling the protocol packets.
 
     Args:
@@ -42,7 +42,7 @@ def handle_bytes_interface(data):
     return action
 
 
-def handle_thread(server, sock, addr):
+def handle_thread(server, sock, addr, user=None):
     """the main function of handle thread
 
     Here we get byte stream from network, makes corresponding replies,
@@ -57,7 +57,7 @@ def handle_thread(server, sock, addr):
                 # TODO(wrk): maybe generate some log information
 
                 print("received: ", data)
-                action = handle_bytes_interface(data)
+                action = gen_action_from_data(data, user)
                 if action:
                     if action.type == Action.ActionType.EXIT:
                         break

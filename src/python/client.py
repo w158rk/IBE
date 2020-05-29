@@ -95,7 +95,7 @@ class ClientTest:
         self.test_client_run()
 
 
-def gen_action_from_args(args):
+def gen_action_from_args(args, user=None):
     """generate Action object from the args the user give when using
         this file
 
@@ -106,10 +106,13 @@ def gen_action_from_args(args):
         the Action object
     """
     ret = Action()
-
+    
+    # TODO(wrk): complete the logic of init
     if args.action == "init":
         pass
 
+    # TODO(wxy): complete the logic of sk request 
+    # and secure channel construction
     if args.action == "sk":
         ret.type = Action.ActionType.SEND
         ret.payload = "sk"

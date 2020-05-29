@@ -1,3 +1,23 @@
+# 2020-05-29
+
+- [ ] 私钥请求
+- [ ] 安全信道建立的逻辑
+
+完善指南：
+
+完善[client.py](../src/python/client.py)里的`gen_action_from_args`里sk和comm两种业务逻辑。这里只是通过用户终端命令产生`Action`对象，即只是通信初始化的一个包。
+
+主要的包在`gen_action_from_data`里，这里根据client收到的数据进行分析，产生相应动作。这里就是实现原来的packet模块handle的功能，可以先实现看看是否需要定义packet结构。主要是返回一个`Action`对象，这个类在[action.py](../src/python/action.py)中，也可以按需修改。
+
+然后在`Client::run`的while循环里，会不停地根据接受的包执行相应的动作，其实就是原来的packet模块里send的功能。如果`Action`的相关结构发生变化，记得修改这个位置。
+
+然后服务器端[server.py](../src/python/server.py)也是类似的。`handle_thread`类似于client的`run`，里面有while循环。`gen_action_from_data`也就基本一样了。
+
+所以这块主要就是把原来packet模块里的那些逻辑挪进来，过程里可能会有参数的增加、结构的增加或者封装，可以按自己的想法来做。
+
+
+----------------------------------------------
+
 # 目录结构 
 
 * `docs` : 文档 (doxygen)， 可以基于注释生成， 命令：`doxygen Doxyfile`
