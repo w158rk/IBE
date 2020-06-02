@@ -81,7 +81,8 @@ int SS_id2num_init(BIGNUM *x, ID *id, char *filename);
  */
 int SS_poly_rand_smx(SS_POLY *poly, unsigned int length);
 
-int SS_poly2str(char *res, int *len, SS_POLY *poly);
+int SS_poly2str(char *res, SS_POLY *poly);
+SS_POLY *SS_str2poly(char *in, unsigned int co_cnt);
 
 /**
  * @brief add two big numbers, res = a+b (mod p(smx))

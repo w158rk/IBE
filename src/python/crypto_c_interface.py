@@ -312,6 +312,11 @@ def ibe_verify(m, sm, mpk, user_id):
     return res
 
 
+def SS_gen_poly():
+    """
+    return a byte string representing a polynomial
+    """
+
 class CryptoTest(object):
     """class for testing the cryptographic algorithms
 

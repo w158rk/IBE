@@ -26,7 +26,8 @@ from user import User
 import sys
 import socket
 import argparse
-
+import threading
+import time
 
 class Client(User):
 
@@ -34,93 +35,135 @@ class Client(User):
         # TODO(wrk)
         return Action()
 
-    def run(self, srv_host, srv_port, action=None):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        srv_addr = (srv_host, srv_port)
-        sock.connect(srv_addr)
+    def run_run(self, action):
+        if action.payload == b"run_init":
+            self.run_init()
 
-        try:
-            while True:
-                if not action:
-                    break
-                if action.type == Action.ActionType.ABORT:
-                    # TODO(wrk): log some error information
-                    break
-                if action.type == Action.ActionType.EXIT:
-                    break
-                if action.type == Action.ActionType.SEND:
-                    print("send: ", action.payload)
-                    sock.sendall(action.payload)
+    def run(self, srv_host=None, srv_port=None, action=None, args=None):
+        """
+        do the actual behavior as the action or args identified
 
-                data = sock.recv(BUFFER_SIZE)
-                print("received: ", data)
-                action = self.gen_action_from_data(data)
-
-        except socket.error as e:
-            print("Socket Error: %s" % str(e))
-        except Exception as e:
-            print("Other exception: %s" % str(e))
-        finally:
-            sock.close()
+        neither srv_host nor sev_port should be None if action.type = SEND 
+        """
 
 
-class ClientTest:
+        if args:
+            action = self.gen_action_from_args(args)
+
+        if action.type == Action.ActionType.SEND:
+            self.run_send(srv_host, srv_port, action)
+        if action.type == Action.ActionType.RUN:
+            self.run_run(action)
+
+
+    def run_init(self):
+        """
+        setup the HIBE system with secret sharing
+        """
+
+        init_user_list = self.init_user_list
+        if not init_user_list:
+            raise ClientError("The init cannot be invoked without the top users")
+
+        # round one
+        # generate a polynomial at first
+        # TODO(wrk): gen the polynomial
+        poly = None
+
+        # send the values while receiving 
+        sz = len(init_user_list)
+        self.recv_list = []
+        self.sent_ack_cnt = 0
+
+        while len(self.recv_list) < sz or self.sent_ack_cnt < sz:
+            for user in init_user_list:
+                addr = user.addr 
+                port = user.port 
+                # TODO(wrk): arrange the data to be sent
+                data = b"test"
+                action = Action()
+                action.type = Action.ActionType.SEND
+                action.payload = data
+                t = threading.Thread(target=self.run_send, args=(addr, port, action))
+                t.start()
+
+            time.sleep(10)
+
+
+    def gen_action_from_args(self, args):
+        """generate Action object from the args the user give when using
+            this file
+
+        Args:
+            args: arguments given by shell instruction
+
+        Returns:
+            the Action object
+        """
+        ret = Action()
+        
+        # TODO(wrk): complete the logic of init
+        if args.action == "init":
+            ret.type = Action.ActionType.RUN
+            ret.payload = "run_init"
+
+        # TODO(wxy): complete the logic of sk request 
+        # and secure channel construction
+        if args.action == "sk":
+            ret.type = Action.ActionType.SEND
+            ret.payload = "sk"
+
+        if args.action == "comm":
+            pass
+
+        return ret
+
+
+class ClientTest(object):
     """class for client tests
 
     Attributes:
         client: the Client object
         srv_addr: the address of server host
         srv_port: the port of server
-        action: the action used for test
+        args: the arguments given by the user
 
     Tests:
         Client.run
     """
 
     def __init__(self, user_id="Client", addr="0.0.0.0", port=10011,
-                 srv_addr="localhost", srv_port=10010, action=None):
-        self.client = Client(user_id, addr, port)
+                 srv_addr="localhost", srv_port=10010, args=None):
+        self.user_id = user_id
+        self.addr = addr 
+        self.port = port
         self.srv_addr = srv_addr
         self.srv_port = srv_port
-        if not action:
-            action = Action()
-        self.action = action
+        self.args = args
 
     def test_client_run(self):
-        print(self.action.type, ", ", self.action.payload)
-        self.client.run(self.srv_addr, self.srv_port, self.action)
+        client = Client(self.user_id, self.addr, self.port)
+        args = self.args 
+        args.action = "sk"
+        client.run(self.srv_addr, self.srv_port, args=args)
+
+    def test_client_init(self):
+        server = User("Server", self.srv_addr, self.srv_port)
+        client = Client(self.user_id, self.addr, self.port, init_user_list=[server])
+        args = self.args 
+        args.action = "init"
+        client.run(args=args)
 
     def test_all(self):
         self.test_client_run()
+        self.test_client_init()
 
 
-def gen_action_from_args(args, user=None):
-    """generate Action object from the args the user give when using
-        this file
 
-    Args:
-        args: arguments given by shell instruction
-
-    Returns:
-        the Action object
-    """
-    ret = Action()
-    
-    # TODO(wrk): complete the logic of init
-    if args.action == "init":
-        pass
-
-    # TODO(wxy): complete the logic of sk request 
-    # and secure channel construction
-    if args.action == "sk":
-        ret.type = Action.ActionType.SEND
-        ret.payload = "sk"
-
-    if args.action == "comm":
-        pass
-
-    return ret
+class ClientError(Exception):
+    def __init__(self, err='Error in Client Module'):
+        Exception.__init__(self, err)
 
 
 def main():
@@ -140,9 +183,8 @@ def main():
                         help="the valid actions are: %s" % str(valid_actions))
 
     args = parser.parse_args()
-    action = gen_action_from_args(args)
     client_test = ClientTest(srv_addr=args.srv_addr, srv_port=args.srv_port,
-                             action=action)
+                             args=args)
     client_test.test_all()
 
 

@@ -42,43 +42,6 @@ def gen_action_from_data(data, user=None):
     return action
 
 
-def handle_thread(server, sock, addr, user=None):
-    """the main function of handle thread
-
-    Here we get byte stream from network, makes corresponding replies,
-    sometimes maintains a "session"
-    """
-
-    try:
-        while True:
-            data = sock.recv(BUFFER_SIZE)
-            if data:
-
-                # TODO(wrk): maybe generate some log information
-
-                print("received: ", data)
-                action = gen_action_from_data(data, user)
-                if action:
-                    if action.type == Action.ActionType.EXIT:
-                        break
-                    if action.type == Action.ActionType.ABORT:
-                        # TODO(wrk): log some error infomation
-                        break
-                    if action.type == Action.ActionType.SEND:
-                        print("send: ", action.payload)
-                        sock.send(action.payload)
-                    if action.type == Action.ActionType.SEND_AND_EXIT:
-                        print("send: ", action.payload)
-                        sock.send(action.payload)
-                        break
-
-        sock.close()
-
-    except socket.error as e:
-        print("Socket error: %s" % str(e))
-    except Exception as e:
-        print("Other exception: %s" % str(e))
-
 
 class Server(User):
     """class representing a server
@@ -110,8 +73,47 @@ class Server(User):
         print("server is running")
         while True:
             conn, addr = sock.accept()
-            t = threading.Thread(target=handle_thread, args=(self, conn, addr))
+            t = threading.Thread(target=self.handle_thread, args=(conn, addr))
             t.start()
+
+    def handle_thread(self, sock, addr, user=None):
+        """the main function of handle thread
+
+        Here we get byte stream from network, makes corresponding replies,
+        sometimes maintains a "session"
+        """
+
+        try:
+            while True:
+                data = sock.recv(BUFFER_SIZE)
+                if data:
+
+                    # TODO(wrk): maybe generate some log information
+
+                    print("received: ", data)
+                    action = gen_action_from_data(data, user)
+                    if action:
+                        if action.type == Action.ActionType.EXIT:
+                            break
+                        if action.type == Action.ActionType.ABORT:
+                            # TODO(wrk): log some error infomation
+                            break
+                        if action.type == Action.ActionType.SEND:
+                            print("send: ", action.payload)
+                            sock.send(action.payload)
+                        if action.type == Action.ActionType.SEND_AND_EXIT:
+                            print("send: ", action.payload)
+                            sock.send(action.payload)
+                            break
+
+            sock.close()
+
+        except socket.error as e:
+            print("Socket error: %s" % str(e))
+        except Exception as e:
+            print("Other exception: %s" % str(e))
+
+
 
 
 class ServerTest(object):

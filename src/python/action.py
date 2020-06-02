@@ -20,7 +20,8 @@ class Action(object):
     Attributes:
         type: the type of the action, should be one of SEND, ABORT, EXIT, SEND_AND_EXIT
         payload: the data to be sent, exists only when type==SEND
-
+        addr: for SEND
+        port: for SEND
     """
 
     class ActionType(Enum):
@@ -28,8 +29,10 @@ class Action(object):
         ABORT = 2       # abort the session
         EXIT = 3        # exit normally
         SEND_AND_EXIT = 4
+        RUN = 5
 
-    def __init__(self, action_type=ActionType.ABORT, payload=None):
+    def __init__(self, action_type=ActionType.ABORT, payload=None, 
+                    addr=None, port=None):
         self.type = action_type
         self.payload = payload
 

@@ -2,6 +2,8 @@
 
 aux_source_directory(./crypto TEMP_SRC) #添加./crypto目录下的源文件
 SET (MY_SRC ${TEMP_SRC})
+aux_source_directory(./ss TEMP_SRC) #添加./crypto目录下的源文件
+SET (MY_SRC ${TEMP_SRC})
 aux_source_directory(./sys TEMP_SRC) #添加./crypto目录下的源文件
 SET (MY_SRC ${TEMP_SRC})
 
