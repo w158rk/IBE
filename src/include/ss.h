@@ -31,8 +31,8 @@ extern "C" {
 /* parameters */ 
 #define SS_MAX_ID_LENGTH        256
 #define SS_P_BITS               256
+#define SS_BN_HEX_LEN            (SS_P_BITS/4 + 1)
 #define SS_P_LENGTH             (SS_P_BITS/8)
-
 
 
 /* TODO this should be defined in the configure file */
@@ -139,6 +139,26 @@ int SS_lagrange_value_smx(BIGNUM *value, BIGNUM **num_list, unsigned int length,
  * @param[in]   left 
  * @param[in]   right   
  */ 
+
+
+/****************************************************
+ * for python use 
+ ***************************************/
+
+char *SS_new_rand_poly_py(UINT length);
+
+/**
+ * @brief apply
+ * 
+ * @return the BN value if success, NULL else
+ *  
+ * @param[in]   poly_str 
+ * @param[in]   len: the number of coefficients   
+ * @param[in]   bn_str   
+ */ 
+char *SS_poly_apply_py(char *poly_str, UINT len, char *bn_str);
+
+char *SS_id2num_py(char *id, UINT len, char *);
 
 
 #ifdef __cplusplus

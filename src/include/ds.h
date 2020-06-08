@@ -10,6 +10,8 @@ extern "C" {
 #include<openssl/ec.h>
 #include<openssl/bn.h>
 
+typedef unsigned int UINT;
+
 /* wrap some library functions */
 
 #define BN_bn2str(x) BN_bn2hex(x)

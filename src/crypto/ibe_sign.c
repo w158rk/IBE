@@ -45,11 +45,6 @@ end:
 int ibe_verify(const  char* data, size_t data_len,  char* sign_buf, size_t sign_len, 
     IBEPublicParameters *mpk, long mpk_len, const char *id, size_t id_len)
 {
-    if(mpk_len != MPK_LEN)
-    {
-        ERROR_WITH_LONG(MPK_LEN_ERROR, mpk_len);
-        return 0;
-    }
 
     int ret = 0;
     SMXPublicParameters *smx_mpk = NULL;

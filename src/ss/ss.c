@@ -4,14 +4,53 @@
 #include<openssl/smx.h>
 #include "ss_lcl.h"
 
-
-char *SS_poly_rand_smx(unsigned int length)
+char *SS_new_rand_poly_py(UINT length)
 {
+    printf("mark\n");
     SS_POLY *poly = SS_POLY_new();
+    SS_poly_rand_smx(poly, length);
+    char *buf = malloc(length * SS_BN_HEX_LEN);
+    if(SS_poly2str(buf, poly))
+    {
+        return buf;
+    } 
+    return NULL;
+}
+
+
+char *SS_poly_apply_py(char *poly_str, UINT len, char *bn_str)
+{
+    char *ret = NULL;
+    SS_POLY *poly = SS_str2poly(poly_str, len);
+    BIGNUM *res = BN_new();
+    BIGNUM *bn = NULL;
+
+    if(!BN_str2bn(&bn, bn_str))
+    {
+        goto end_2;
+    }
+    
+    if(!SS_poly_apply_smx(res, poly, bn))
+    {
+        goto end_1;
+    }
+
+    ret = BN_bn2str(res);
+
+end_1:
+    BN_free(bn);
+end_2:
+    BN_free(res);
+    free(poly);
+    return ret;
+}
+
+int SS_poly_rand_smx(SS_POLY *poly, unsigned int length)
+{
     poly->length = length;
     
     const BIGNUM *n = IBE_get0_order();
-    SS_poly_rand(poly, length, n);
+    return SS_poly_rand(poly, length, n);
 
     // the n cannot be free by BN_free 
     // SIGSEGV when executing  a->flags |= BN_FLG_FREE in BN_free 
@@ -44,7 +83,7 @@ int BN_mod_add_smx(BIGNUM *res, BIGNUM* a, BIGNUM* b)
 int SS_id2num_init(BIGNUM *res, ID *id, char *filename)
 {
     EC_POINT *point = NULL;
-    ibe_ec_id2point(&point, id->id, id->length, filename);
+    ibe_ec_id2point_common(&point, id->id, id->length, filename);
 
     // get the x and z of the point 
     BIGNUM *X = point->X;
@@ -61,6 +100,27 @@ int SS_id2num_init(BIGNUM *res, ID *id, char *filename)
     }
 
 }
+
+char *SS_id2num_py(char *id_str, UINT len, char *mpk_file)
+{
+    char *ret = NULL;
+    ID id;
+    id.id = id_str;
+    id.length = len;
+
+    BIGNUM *bn = BN_new();
+    if(!SS_id2num_init(bn, &id, mpk_file))
+    {
+        goto end;
+    }
+
+    ret = BN_bn2str(bn);
+
+end:
+    BN_free(bn);
+    return ret;
+}
+
 
 int SS_lagrange_value_smx(BIGNUM *value, BIGNUM **num_list, unsigned int length, 
                         unsigned int i, BIGNUM* x)

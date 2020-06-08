@@ -19,7 +19,7 @@ int ibe_ec_id2point(
     long id_len,
     char *mpk_file
 ); 
-
+int ibe_ec_id2point_common(EC_POINT **point, char *id, long id_len, char *mpk_file);
 
 int ibe_setup(
     char *mpk_file,

@@ -1,6 +1,6 @@
 #include <ss.h>
 
-int main()
+int test_1()
 {
     SS_POLY *poly = SS_POLY_new();
     int len = 3;
@@ -33,4 +33,28 @@ int main()
         printf("return NULL\n");
     }
 
+}
+
+int test_2()
+{
+    int len = 3;
+    char *poly_str = SS_new_rand_poly_py(len);
+    
+    char bn[65] = "1";
+    char *val = SS_poly_apply_py(poly_str, len, bn);
+
+    int i;
+    char *p;
+    for(i=0, p=poly_str; i<len; i++)
+    {
+        printf("%s\n", p);
+        p += 65;
+    }
+
+    printf("%s\n", val);
+}
+
+int main()
+{
+    test_2();
 }

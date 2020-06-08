@@ -1,1 +1,10 @@
 BUFFER_SIZE = 1024
+BN_BIT_SIZE = 256
+BN_HEX_SIZE = BN_BIT_SIZE//4 + 1
+BN_BYTE_SIZE = BN_BIT_SIZE//8
+
+"variables for c_interface"
+ROOT_DIR = "../.."
+ARTIFACT_DIR = ROOT_DIR + "/build-r"
+LIBRARY_DIR = ARTIFACT_DIR + "/lib"
+LIBIBE_PATH = LIBRARY_DIR + "/libibe.so"

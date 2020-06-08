@@ -13,16 +13,12 @@
 
 from ctypes import c_char, c_char_p,  c_int, c_ulong, c_long, create_string_buffer, POINTER, CDLL, pointer, cast
 import os
+from constant import *
 
 """
 global variables
 """
-ROOT_DIR = "../.."
-ARTIFACT_DIR = ROOT_DIR + "/build-r"
-LIBRARY_DIR = ARTIFACT_DIR + "/lib"
-LIBIBE_PATH = LIBRARY_DIR + "/libibe.so"
 
-BUFFER_SIZE = 10000
 
 PCHAR = POINTER(c_char)
 PPCHAR = POINTER(c_char_p)

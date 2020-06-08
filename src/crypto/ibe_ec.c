@@ -507,3 +507,90 @@ end:
 	return ret;
     
 }
+
+/*  the caller should ensure that mpk_file end with '\0' */
+/* parse Q_B = H1(ID_B||hid) * P1*/
+int ibe_ec_id2point_common(
+    EC_POINT **point,    
+    char *id, 
+    long id_len,
+	char *mpk_file
+) 
+{
+
+	int ret = 0;
+	if(*point != NULL)
+	{
+		ERROR(MEM_POINTER_NOT_NULL_ERROR);
+		return 0;
+	}
+
+    // read the mpk from file 
+
+    SMXPublicParameters *smx_mpk = NULL;
+
+	{    
+		FILE *mpk_fp = fopen(mpk_file, "rb");
+		if (!d2i_SMXPublicParameters_fp(mpk_fp, &smx_mpk)){
+			ERROR(MPK_FROM_FILE_ERROR);
+			return 0;
+		}
+		fclose(mpk_fp);
+	}
+	
+	EC_GROUP *group = NULL;
+	EC_POINT *C = NULL;
+	BN_CTX *bn_ctx = NULL;
+	BIGNUM *h = NULL;
+	const EVP_MD *hash1_md;
+	const BIGNUM *n = SMX_get0_order();
+
+    /** use sha-256 as default hash function */
+	/** allocate the spaces */
+	if (!(group = EC_GROUP_new_by_curve_name(NID_sm9bn256v1))
+		|| !(C = EC_POINT_new(group))
+		|| !(bn_ctx = BN_CTX_new())) {
+		
+		ERROR(MEM_ALLOC_ERROR);
+		goto end;
+	}
+
+
+
+	BN_CTX_start(bn_ctx);
+
+	switch (OBJ_obj2nid(smx_mpk->hash1)) {
+	case NID_sm9hash1_with_sm3:
+		hash1_md = EVP_sm3();
+		break;
+	case NID_sm9hash1_with_sha256:
+		hash1_md = EVP_sha256();
+		break;
+	default:
+		ERROR(OPENSSL_HASH_ERROR);
+		goto end;
+	}
+
+
+	/* parse Q_B = H1(ID_B||hid) * P1 */
+	// we should check mpk->hash1
+	if (!SMX_hash1(hash1_md, &h, id, id_len, SMX_HID_ENC, n, bn_ctx)
+		|| !EC_POINT_mul(group, C, h, NULL, NULL, bn_ctx))
+	{
+		ERROR(EC_CAL_ERROR);
+		goto end;
+	}
+
+	*point = C;
+	ret = 1;
+
+end:
+	if (bn_ctx) {
+		BN_CTX_end(bn_ctx);
+	}
+	BN_free(h);
+	BN_CTX_free(bn_ctx);
+	return ret;
+    
+}
+

@@ -20,8 +20,10 @@ Functions:
 '''
 
 from constant import *
+from init import SS_new_rand_poly
 from action import Action
 from user import User
+from packet import Packet
 
 import sys
 import socket
@@ -67,21 +69,25 @@ class Client(User):
             raise ClientError("The init cannot be invoked without the top users")
 
         # round one
-        # generate a polynomial at first
-        # TODO(wrk): gen the polynomial
-        poly = None
 
-        # send the values while receiving 
-        sz = len(init_user_list)
+        # sz + 1 == the number of top users
+        sz = len(init_user_list)  
+        co_cnt = sz + 1          
+        # generate a polynomial at first
+        poly = SS_new_rand_poly(co_cnt)
+
         self.recv_list = []
         self.sent_ack_cnt = 0
 
+        # send the values while receiving 
         while len(self.recv_list) < sz or self.sent_ack_cnt < sz:
             for user in init_user_list:
                 addr = user.addr 
                 port = user.port 
-                # TODO(wrk): arrange the data to be sent
-                data = b"test"
+
+                packet = Packet.make_init_one(poly, co_cnt, user.id)
+                data = packet.to_bytes()
+
                 action = Action()
                 action.type = Action.ActionType.SEND
                 action.payload = data
