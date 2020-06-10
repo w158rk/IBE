@@ -24,9 +24,10 @@ class Packet(object):
     """
 
     class PacketType(Enum):
-        PLAIN = 1       # plain message
+        INIT_R1 = 1       # for the first round of initialization
+        INIT_R1_ACK = 2
 
-    def __init__(self, pack_type=PacketType.PLAIN, lens=[], vals=[]):
+    def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type 
         self.lens = lens 
         self.vals = vals 
@@ -67,7 +68,7 @@ class Packet(object):
         index += 2
         lens = []
         for i in range(sz):
-            lens.append(int.from_bytes(bstr[index: index+2]))
+            lens.append(int.from_bytes(bstr[index: index+2], "little"))
             index += 2
         ret.lens = lens
         
@@ -76,14 +77,15 @@ class Packet(object):
         for l in lens:
             vals.append(bstr[index: index+l])
             index += l
-        
+        ret.vals = vals
+
         return ret
 
     @classmethod
     def make_init_one(cls, poly, co_cnt, user_id):
         # send the f(h(ID))
         packet = Packet()
-        packet.type = cls.PacketType.PLAIN
+        packet.type = cls.PacketType.INIT_R1
 
         if type(user_id) == str:
             user_id = bytes(user_id, encoding='utf8')

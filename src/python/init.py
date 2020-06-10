@@ -78,7 +78,7 @@ def SS_poly_apply(poly, co_cnt, bn):
     res = apply(poly, co_cnt, bn)
     return res
 
-def SS_id2num(user_id, mpk_file=b"./mpk.bak"):
+def SS_id2num(user_id, mpk_file=b"./mpk"):
     """generate a bignum from the user_id 
 
     Args:

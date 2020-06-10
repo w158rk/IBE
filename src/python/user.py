@@ -13,8 +13,14 @@
 
 from action import Action
 from constant import *
+from init import SS_new_rand_poly
+from packet import Packet
+from client import Client 
+from server import Server
 
 import socket 
+import threading
+import time
 
 
 class User(object):
@@ -34,49 +40,76 @@ class User(object):
         self.init_user_list = init_user_list
         self.recv_list = recv_list
         self.sent_ack_cnt = sent_ack_cnt
+        self.server = None 
+        self.client = None
 
-    def run_run(self):
-        pass 
+        # init 
+        self.is_in_init = False
 
-    def gen_action_from_data(self):
-        pass
+    def run_init(self, with_val=None, is_listening=False):
+        """
+        setup the HIBE system with secret sharing
+        """
+        if with_val:
+            self.recv_list.append(with_val)
+            print(self.recv_list)
 
-    def run_send(self, addr, port, action):
-        if not addr or not port:
-            raise UserError("Unknown target for SEND")
+        if self.is_in_init:
+            # if is in init, just add the val into the list
+            return 
+        
+        print("begin running initialization")
+        self.is_in_init = True 
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # at the beginning, we should set up a server for
+        # receiving the desired packets
+        if not is_listening:
+            self.server = Server(self)
+            
+            t = threading.Thread(target=self.server.run)
+            t.start()
 
-        srv_addr = (addr, port)
-        sock.connect(srv_addr)
+        # setup the client 
+        self.client = Client(self)
 
-        try:
-            while True:
-                if not action:
-                    break
-                print(action.type, ", ", action.payload)
-                if action.type == Action.ActionType.ABORT:
-                    # TODO(wrk): log some error information
-                    break
-                if action.type == Action.ActionType.EXIT:
-                    break
-                if action.type == Action.ActionType.SEND:
-                    print("send: ", action.payload)
-                    sock.sendall(action.payload)
-                if action.type == Action.ActionType.RUN:
-                    # TODO(wrk): Is this line possible?
-                    self.run_run(action)
+        init_user_list = self.init_user_list
+        if not init_user_list:
+            raise UserError("The init cannot be invoked without the top users")
 
-                data = sock.recv(BUFFER_SIZE)
-                print("received: ", data)
-                action = self.gen_action_from_data(data)
+        # round one
 
-        except socket.error as e:
-            print("Socket Error: %s" % str(e))
-        except Exception as e:
-            print("Other exception: %s" % str(e))
-        finally:
-            sock.close()
+        # sz + 1 == the number of top users
+        sz = len(init_user_list)  
+        co_cnt = sz + 1          
+        # generate a polynomial at first
+        poly = SS_new_rand_poly(co_cnt)
+
+
+        # send the values while receiving 
+        while len(self.recv_list) < sz or self.sent_ack_cnt < sz:
+            for user in init_user_list:
+                addr = user.addr 
+                port = user.port 
+
+                packet = Packet.make_init_one(poly, co_cnt, user.id)
+                data = packet.to_bytes()
+
+                action = Action()
+                action.type = Action.ActionType.SEND
+                action.payload = [data]
+
+                t = threading.Thread(target=self.client.run_send, args=(addr, port, action))
+                t.start()
+
+            time.sleep(10)
+
+        # round 1 finished, in round 2, shares will be sent among users
+        print("round 2")
+
+        # clear the related data
+        self.is_in_init = False
+        self.sent_ack_cnt = 0
+        self.recv_list = []
 
 class UserError(Exception):
     def __init__(self, err='Error in Client Module'):

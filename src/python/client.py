@@ -11,7 +11,7 @@
 @Desc    :   functions and classes for clients
 
 Classes:
-    Client: present clients
+    Client: present a client
     ClientTest: test for client
 
 Functions:
@@ -20,9 +20,7 @@ Functions:
 '''
 
 from constant import *
-from init import SS_new_rand_poly
 from action import Action
-from user import User
 from packet import Packet
 
 import sys
@@ -31,16 +29,103 @@ import argparse
 import threading
 import time
 
-class Client(User):
+class Client(object):
+    """
+    Attributes:
+        user:   The user on which this client is attached
+    """
+
+    def __init__(self, user):
+        self.user = user
+        user.client = self
 
     def gen_action_from_data(self, data):
         # TODO(wrk)
-        return Action()
+        action = Action()
+        packet = Packet.from_bytes(data)
+        if packet.type == Packet.PacketType.INIT_R1_ACK:
+            print("receive ACK")
+            self.user.sent_ack_cnt += 1
+        return action
 
+    def gen_action_from_args(self, args):
+        """generate Action object from the args the user give when using
+            this file
+
+        Args:
+            args: arguments given by shell instruction
+
+        Returns:
+            the Action object
+        """
+        ret = Action()
+        
+        # TODO(wrk): complete the logic of init
+        if args.action == "init":
+            ret.type = Action.ActionType.RUN
+            ret.payload = [b"run_init"]
+
+        # TODO(wxy): complete the logic of sk request 
+        # and secure channel construction
+        if args.action == "sk":
+            ret.type = Action.ActionType.SEND
+            ret.payload = [b"sk"]
+
+        if args.action == "comm":
+            pass
+
+        return ret
 
     def run_run(self, action):
-        if action.payload == b"run_init":
-            self.run_init()
+        if action.payload[0] == b"run_init":
+            self.user.run_init()
+
+    def run_send(self, addr, port, action):
+        """
+        send data to addr:port 
+
+        Ensure:
+            the list action.payload only contain the data to be sent
+        """
+
+        if not addr or not port:
+            raise ClientError("Unknown target for SEND")
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        srv_addr = (addr, port)
+        sock.connect(srv_addr)
+
+        try:
+            while True:
+                if not action:
+                    break
+                if action.type == Action.ActionType.ABORT:
+                    # TODO(wrk): log some error information
+                    break
+                if action.type == Action.ActionType.EXIT:
+                    break
+                if action.type == Action.ActionType.SEND:
+                    assert (len(action.payload) == 1)
+                    print("send: ", action.payload[0])
+                    sock.sendall(action.payload[0])
+                if action.type == Action.ActionType.RUN:
+                    # TODO(wrk): Is this line possible?
+                    self.run_run(action)
+
+                data = sock.recv(BUFFER_SIZE)
+                print("received: ", data)
+                action = self.gen_action_from_data(data)
+
+        except socket.error as e:
+            print("Socket Error: %s" % str(e))
+        except AssertionError as e:
+            print("Assertion Error: %s" % str(e))
+        except Exception as e:
+            print("Other exception: %s" % str(e))
+        finally:
+            sock.close()
+
 
     def run(self, srv_host=None, srv_port=None, action=None, args=None):
         """
@@ -59,71 +144,7 @@ class Client(User):
             self.run_run(action)
 
 
-    def run_init(self):
-        """
-        setup the HIBE system with secret sharing
-        """
 
-        init_user_list = self.init_user_list
-        if not init_user_list:
-            raise ClientError("The init cannot be invoked without the top users")
-
-        # round one
-
-        # sz + 1 == the number of top users
-        sz = len(init_user_list)  
-        co_cnt = sz + 1          
-        # generate a polynomial at first
-        poly = SS_new_rand_poly(co_cnt)
-
-        self.recv_list = []
-        self.sent_ack_cnt = 0
-
-        # send the values while receiving 
-        while len(self.recv_list) < sz or self.sent_ack_cnt < sz:
-            for user in init_user_list:
-                addr = user.addr 
-                port = user.port 
-
-                packet = Packet.make_init_one(poly, co_cnt, user.id)
-                data = packet.to_bytes()
-
-                action = Action()
-                action.type = Action.ActionType.SEND
-                action.payload = data
-                t = threading.Thread(target=self.run_send, args=(addr, port, action))
-                t.start()
-
-            time.sleep(10)
-
-
-    def gen_action_from_args(self, args):
-        """generate Action object from the args the user give when using
-            this file
-
-        Args:
-            args: arguments given by shell instruction
-
-        Returns:
-            the Action object
-        """
-        ret = Action()
-        
-        # TODO(wrk): complete the logic of init
-        if args.action == "init":
-            ret.type = Action.ActionType.RUN
-            ret.payload = "run_init"
-
-        # TODO(wxy): complete the logic of sk request 
-        # and secure channel construction
-        if args.action == "sk":
-            ret.type = Action.ActionType.SEND
-            ret.payload = "sk"
-
-        if args.action == "comm":
-            pass
-
-        return ret
 
 
 class ClientTest(object):
@@ -149,14 +170,18 @@ class ClientTest(object):
         self.args = args
 
     def test_client_run(self):
-        client = Client(self.user_id, self.addr, self.port)
+        from user import User
+        user = User(self.user_id, self.addr, self.port)
+        client = Client(user)
         args = self.args 
         args.action = "sk"
         client.run(self.srv_addr, self.srv_port, args=args)
 
     def test_client_init(self):
+        from user import User
         server = User("Server", self.srv_addr, self.srv_port)
-        client = Client(self.user_id, self.addr, self.port, init_user_list=[server])
+        user = User(self.user_id, self.addr, self.port, init_user_list=[server])
+        client = Client(user)
         args = self.args 
         args.action = "init"
         client.run(args=args)

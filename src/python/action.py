@@ -19,7 +19,7 @@ class Action(object):
 
     Attributes:
         type: the type of the action, should be one of SEND, ABORT, EXIT, SEND_AND_EXIT
-        payload: the data to be sent, exists only when type==SEND
+        payload: the data to be sent, array
         addr: for SEND
         port: for SEND
     """
@@ -30,23 +30,10 @@ class Action(object):
         EXIT = 3        # exit normally
         SEND_AND_EXIT = 4
         RUN = 5
+        SEND_AND_RUN = 6
 
-    def __init__(self, action_type=ActionType.ABORT, payload=None, 
+    def __init__(self, action_type=ActionType.ABORT, payload=[], 
                     addr=None, port=None):
         self.type = action_type
         self.payload = payload
 
-    @property
-    def payload(self):
-        return self._payload
-
-    @payload.setter
-    def payload(self, payload):
-        if not payload:
-            self._payload = None
-        elif isinstance(payload, str):
-            self._payload = bytes(payload, encoding="utf8")
-        elif isinstance(payload, bytes):
-            self._payload = payload
-        else:
-            raise TypeError("please give a str or bytes object")
