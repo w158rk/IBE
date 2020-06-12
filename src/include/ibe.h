@@ -90,6 +90,9 @@ int ibe_point_add(point_t *res, point_t *a, point_t *b);
 int ibe_point_is_on_curve(point_t *point);
 
 
+char *ibe_point_cal_xP2_py(char *x_str, char *mpk_file);
+char *ibe_ec_cal_xP1_py(char *x_str, char *mpk_file);
+
 // utils 
 int ibe_gen_sk_filename(char **to, ID *id);
 int ibe_gen_sk_len_filename(char **to, ID *id);

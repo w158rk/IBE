@@ -84,6 +84,30 @@ end:
 
 }
 
+
+char *ibe_ec_cal_xP1_py(char *x_str, char *mpk_file)
+{
+	BIGNUM *x = NULL;
+	BN_str2bn(&x, x_str);
+	BN_CTX *ctx = BN_CTX_new();
+	EC_GROUP *group = NULL;
+	EC_POINT *point = NULL;
+	char *ret = NULL;
+
+	if (!ibe_ec_cal_xP1(&group, &point, x, mpk_file))
+	{
+		goto end;
+	}
+
+	ret = ibe_ec2str(point, ctx);
+
+end:
+	BN_free(x);
+	BN_CTX_free(ctx);
+	return ret;
+	
+}
+
 int ibe_ec_cal_xQ(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, EC_POINT *Q, char *mpk_file)
 {
 

@@ -40,12 +40,16 @@ class Client(object):
         user.client = self
 
     def gen_action_from_data(self, data):
-        # TODO(wrk)
         action = Action()
         packet = Packet.from_bytes(data)
         if packet.type == Packet.PacketType.INIT_R1_ACK:
             print("receive ACK")
-            self.user.sent_ack_cnt += 1
+            self.user.sent_ack_cnts[0] += 1
+
+        if packet.type == Packet.PacketType.INIT_R2_ACK:
+            print("receive ACK")
+            self.user.sent_ack_cnts[1] += 1
+
         return action
 
     def gen_action_from_args(self, args):
@@ -122,7 +126,7 @@ class Client(object):
         except AssertionError as e:
             print("Assertion Error: %s" % str(e))
         except Exception as e:
-            print("Other exception: %s" % str(e))
+            print("%s: %s" % (type(e), str(e)))
         finally:
             sock.close()
 

@@ -60,8 +60,14 @@ class Server(object):
             action.type = Action.ActionType.SEND_AND_EXIT
             action.payload = b"sk received"
             return action
-
-        packet = Packet.from_bytes(data)
+        try:
+            packet = Packet.from_bytes(data)
+        except Exception:
+            packet = None
+        
+        if not packet:
+            return action
+        
         if packet.type == Packet.PacketType.INIT_R1:
             # add the payload into the recv_list
 
@@ -78,7 +84,18 @@ class Server(object):
 
         if packet.type == Packet.PacketType.INIT_R1_ACK:
             print("receive ACK")
-            self.user.sent_ack_cnt += 1
+
+        if packet.type == Packet.PacketType.INIT_R2:
+            # add the payload into the recv_list
+
+            action.type = Action.ActionType.SEND 
+            action.payload = Packet(Packet.PacketType.INIT_R2_ACK).to_bytes()
+            self.user.recv_lists[1].add(packet.vals[0])
+
+        if packet.type == Packet.PacketType.INIT_R2_ACK:
+            print("receive ACK")
+            self.user.sent_ack_cnts[1] += 1
+
 
         return action
 
@@ -147,7 +164,7 @@ class Server(object):
         except socket.error as e:
             print("Socket error: %s" % str(e))
         except Exception as e:
-            print("Other exception: %s" % str(e))
+            print("%s: %s" % (type(e), str(e)))
 
 
 

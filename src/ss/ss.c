@@ -182,6 +182,32 @@ end_free_val:
     return ret;
 }
 
+/**
+ *  @brief calculate xP1 and xP2, separated with '\n'
+ * 
+ *  @param[in]  x_str         
+ *  @param[in]  mpk_file     
+ * 
+ * @return the value
+ */
+char *SS_cal_xP_py(char *x_str, char *mpk_file)
+{
+    char *xP1 = ibe_ec_cal_xP1_py(x_str, mpk_file);
+    char *xP2 = ibe_point_cal_xP2_py(x_str, mpk_file);
+    char *ret = malloc(64 + 1 + 129 + 1);
+    char *p = ret;
+    
+    memcpy(p, xP1, 64);
+    p += 64;
+    *p = '|';
+    p ++;
+    memcpy(p, xP2, 129);
+    p += 129;
+    *p = '\0';
+	
+    return ret;
+}
+
 int BN_mod_add_smx(BIGNUM *res, BIGNUM* a, BIGNUM* b)
 {
     const BIGNUM *n = IBE_get0_order();

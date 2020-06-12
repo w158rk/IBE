@@ -26,6 +26,8 @@ class Packet(object):
     class PacketType(Enum):
         INIT_R1 = 1       # for the first round of initialization
         INIT_R1_ACK = 2
+        INIT_R2 = 3       # for the second round of initialization
+        INIT_R2_ACK = 4
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type 
@@ -99,6 +101,23 @@ class Packet(object):
 
         return packet
 
+    @classmethod
+    def make_init_2(cls, point):
+        """
+        As the point is calculated in the user module, here we just arrange the 
+        packet without calculate anything
+        """
+
+        packet = Packet()
+        packet.type = cls.PacketType.INIT_R2
+
+        lens = [len(point)]
+        vals = [point]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
 
 class PacketTest(object):
     def __init__(self):

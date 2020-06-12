@@ -173,6 +173,39 @@ end:
 	return ret;
 }
 
+char *ibe_point_cal_xP2_py(char *x_str, char *mpk_file)
+{
+	char *ret = NULL;
+	BIGNUM *x = NULL;
+	BN_CTX *ctx = BN_CTX_new();
+	point_t point;
+
+	if(!point_init_smx(&point, ctx))
+	{
+		return NULL;
+	}
+
+	BN_str2bn(&x, x_str);
+	
+	if(!ibe_point_cal_xP2(&point, x, mpk_file))
+	{
+		goto end;
+	}
+
+	ret = (char *)malloc(129);
+	if(!ibe_point_to_octets(&point, ret)) {
+		free(ret);
+		ret = NULL;
+		goto end;
+	}
+
+
+end:
+	BN_CTX_free(ctx);
+	BN_free(x);
+	return ret;
+}
+
 int ibe_point_cal_xP2(point_t *res, BIGNUM *x, char *mpk_file)
 {
 

@@ -49,7 +49,7 @@ def SS_cal_share(val_list, id_list, mpk_file=b"./mpk"):
     cal.restype = (c_char_p)    
 
     res = cal(c_len, c_val_list, c_id_list, c_id_len_list, c_mpk_file)
-    print(res)
+    return res
 
 def SS_new_rand_poly(co_cnt):
     """generate a new polynomial
@@ -136,6 +136,46 @@ def SS_id2num(user_id, mpk_file=b"./mpk"):
     for i in range(BN_HEX_SIZE):
         ret.append(res[i])
     return b''.join(ret)
+
+def SS_cal_xP(x, mpk_file=b"./mpk"):
+    """calculate x * P1 and x * P2 
+
+    Args:
+        x: BIGNUM byte string
+
+    Raise:
+        OSError
+    """
+    if not os.path.exists(mpk_file):
+        raise OSError("%s not exists" % mpk_file)
+
+    lib_ibe = CDLL(LIBIBE_PATH)
+    cal = lib_ibe.SS_cal_xP_py
+    cal.argtypes = [c_char_p, c_char_p]
+    cal.restype = c_char_p
+
+    res = cal(x, mpk_file)
+    res = cast(res, PCHAR)
+    ret = []
+    for i in range(64+1+129):
+        ret.append(res[i])
+
+    return b''.join(ret)
+
+def SS_cal_sP(l1, l2, mpk_file=b"./mpk"):
+    """calculate s * P1 and s * P2 
+
+        sP1 = \sum l1 
+        sP2 = \sum l2
+
+    Raise:
+        OSError
+    """
+    if not os.path.exists(mpk_file):
+        raise OSError("%s not exists" % mpk_file)
+    
+    #TODO(wrk): calculate sP
+    return (None, None)
 
 class InitTest(object):
 
