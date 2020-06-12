@@ -13,7 +13,7 @@
 
 from action import Action
 from constant import *
-from init import SS_new_rand_poly
+from init import *
 from packet import Packet
 from client import Client 
 from server import Server
@@ -33,12 +33,13 @@ class User(object):
     """
 
     def __init__(self, user_id, addr, port,
-                   init_user_list=[], recv_list=[], sent_ack_cnt=0):
+                   init_user_list=[], recv_list=None, sent_ack_cnt=0):
         self.id = user_id
         self.addr = addr
         self.port = port
         self.init_user_list = init_user_list
-        self.recv_list = recv_list
+        if not recv_list:
+            self.recv_list = set()
         self.sent_ack_cnt = sent_ack_cnt
         self.server = None 
         self.client = None
@@ -46,13 +47,25 @@ class User(object):
         # init 
         self.is_in_init = False
 
+    def cal_share(self):
+        """
+        calculate the share with formula:
+        
+                share = (\sum f(x)) * l_x(0)
+        """
+        id_list = []
+        id_list.append(self.id)
+        for user in self.init_user_list:
+            id_list.append(user.id)
+        SS_cal_share(self.recv_list, id_list)
+
+
     def run_init(self, with_val=None, is_listening=False):
         """
         setup the HIBE system with secret sharing
         """
         if with_val:
-            self.recv_list.append(with_val)
-            print(self.recv_list)
+            self.recv_list.add(with_val)
 
         if self.is_in_init:
             # if is in init, just add the val into the list
@@ -76,17 +89,22 @@ class User(object):
         if not init_user_list:
             raise UserError("The init cannot be invoked without the top users")
 
-        # round one
 
         # sz + 1 == the number of top users
         sz = len(init_user_list)  
         co_cnt = sz + 1          
+
         # generate a polynomial at first
         poly = SS_new_rand_poly(co_cnt)
 
+        ## add f_i(x_i) into the list
+        bn = SS_id2num(self.id)
+        bn = SS_poly_apply(poly, co_cnt, bn) 
+        self.recv_list.add(bn)
 
+        # round one
         # send the values while receiving 
-        while len(self.recv_list) < sz or self.sent_ack_cnt < sz:
+        while len(self.recv_list) < co_cnt or self.sent_ack_cnt < sz:
             for user in init_user_list:
                 addr = user.addr 
                 port = user.port 
@@ -101,10 +119,20 @@ class User(object):
                 t = threading.Thread(target=self.client.run_send, args=(addr, port, action))
                 t.start()
 
-            time.sleep(10)
+            time.sleep(2)
+
+        # now we have all the parts for our share
+        # it's time to calculate the share with formula:
+        # 
+        # share = (\sum f(x)) * l_x(0)
+        #
+
+        print("cal share")
+        self.cal_share()
 
         # round 1 finished, in round 2, shares will be sent among users
         print("round 2")
+        #TODO(wrk): round 2
 
         # clear the related data
         self.is_in_init = False

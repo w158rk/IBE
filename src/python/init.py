@@ -19,6 +19,38 @@ import os
 PCHAR = POINTER(c_char)
 PPCHAR = POINTER(c_char_p)
 
+def SS_cal_share(val_list, id_list, mpk_file=b"./mpk"):
+    assert(len(val_list) == len(id_list))
+    print(id_list)
+
+    length = len(val_list)
+    c_len = c_int(length)
+
+    str_val_list = b''.join(val_list)
+    c_val_list = c_char_p()
+    c_val_list.value = str_val_list
+    c_val_list = cast(c_val_list, PCHAR)
+
+    str_id_list = b'\0'.join(id_list)
+    c_id_list = c_char_p()
+    c_id_list.value = str_id_list
+    c_id_list = cast(c_id_list, PCHAR)
+
+    c_id_len_list = (c_int * length)()
+    for i in range(length):
+        c_id_len_list[i] = c_int(len(id_list[i]))
+
+    c_mpk_file = c_char_p()
+    c_mpk_file.value = mpk_file
+
+    lib_ibe = CDLL(LIBIBE_PATH)
+    cal = lib_ibe.SS_cal_share_py
+    cal.argtypes = ([c_int, PCHAR, PCHAR, c_int * length, c_char_p])
+    cal.restype = (c_char_p)    
+
+    res = cal(c_len, c_val_list, c_id_list, c_id_len_list, c_mpk_file)
+    print(res)
+
 def SS_new_rand_poly(co_cnt):
     """generate a new polynomial
 

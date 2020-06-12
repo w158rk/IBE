@@ -69,6 +69,119 @@ int SS_poly_apply_smx(BIGNUM *value, SS_POLY *poly, BIGNUM *x)
 
 }
 
+/**
+ *  @brief calculate the share with formula
+ *              share = \sum f_j(x_i) l_i(0)
+ * 
+ *  @param[in]  len             the number of users N
+ *  @param[in]  val_list        values f_j(x_0) for j in [0, N-1]
+ *                              with fixed length 65
+ *  @param[in]  id_list         strings for the IDs
+ *  @param[in]  id_len_list     lengths of ID strings
+ * 
+ * @return the value
+ */
+char *SS_cal_share_py(int len, char *val_list, char *id_list, int *id_len_list, char *mpk_file)
+{
+    char *ret = NULL;
+    
+    // allocate space
+    BIGNUM **bn_val_list = (BIGNUM **)malloc(len * sizeof(BIGNUM *));
+    BIGNUM **bn_id_list = (BIGNUM **)malloc(len * sizeof(BIGNUM *));
+    BIGNUM *bn = NULL;
+    BIGNUM *zero = NULL;
+    BIGNUM *l = NULL;   // for lagrange value
+    const BIGNUM *n = IBE_get0_order();
+    BN_CTX *ctx = BN_CTX_new();
+    ID id;          // temp use
+    int i;
+    char *p;
+    int *plen;
+
+    l = BN_new();
+    zero = BN_new();
+    BN_zero(zero);
+
+    for (i=0; i<len; i++)
+    {
+        bn_val_list[i] = NULL;
+    }
+    for (i=0, p=val_list; i<len; i++, p+=SS_BN_HEX_LEN)
+    {
+        if(!BN_hex2bn(&bn_val_list[i], p))
+        {
+            goto end_free_val;
+        }
+    }
+
+    for (i=0; i<len; i++)
+    {
+        bn_id_list[i] = NULL;
+    }
+    for (i=0, plen=id_len_list, p=id_list; i<len; i++)
+    {
+        bn = BN_new();
+        id.id = p;
+        id.length = *plen;
+
+        if(!SS_id2num_init(bn, &id, mpk_file))
+        {
+            BN_free(bn);
+            goto end_free_all;
+        }
+
+        bn_id_list[i] = bn;
+        p += id.length+1;
+        plen ++;
+    }
+
+    // summarize the bn_val_list
+    bn = BN_new();
+    BN_zero(bn);
+    for (i=0; i<len; i++)
+    {
+        BN_mod_add_smx(bn, bn, bn_val_list[i]);
+    }   
+
+    // calculate the lagrange value
+    if(!SS_lagrange_value_smx(l, bn_id_list, len, 0, zero))
+    {
+        goto end_free_all;
+    }
+
+    // multiply l with bn 
+    BN_mod_mul(bn, bn, l, n, ctx);
+    ret = BN_bn2str(bn);
+
+end_free_all:
+    for (i=0; i<len; i++)
+    {
+        if(bn_id_list[i]) {
+            BN_free(bn_id_list[i]);
+        }
+        else {
+            break;
+        }        
+    }
+end_free_val:
+    for (i=0; i<len; i++)
+    {
+        if(bn_val_list[i]) {
+            BN_free(bn_val_list[i]);
+        }
+        else {
+            break;
+        }
+    }
+
+    BN_free(bn);
+    BN_free(l);
+    BN_free(zero);
+    BN_CTX_free(ctx);
+
+    return ret;
+}
+
 int BN_mod_add_smx(BIGNUM *res, BIGNUM* a, BIGNUM* b)
 {
     const BIGNUM *n = IBE_get0_order();

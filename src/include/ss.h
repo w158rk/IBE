@@ -160,6 +160,8 @@ char *SS_poly_apply_py(char *poly_str, UINT len, char *bn_str);
 
 char *SS_id2num_py(char *id, UINT len, char *);
 
+char *SS_cal_share_py(int len, char *val_list, char *id_list, int *id_len_list, char *mpk_file);
+
 
 #ifdef __cplusplus
 }

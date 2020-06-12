@@ -160,7 +160,7 @@ class ClientTest(object):
         Client.run
     """
 
-    def __init__(self, user_id="Client", addr="0.0.0.0", port=10011,
+    def __init__(self, user_id=b"Client", addr="0.0.0.0", port=10011,
                  srv_addr="localhost", srv_port=10010, args=None):
         self.user_id = user_id
         self.addr = addr 
@@ -179,7 +179,7 @@ class ClientTest(object):
 
     def test_client_init(self):
         from user import User
-        server = User("Server", self.srv_addr, self.srv_port)
+        server = User(b"Server", self.srv_addr, self.srv_port)
         user = User(self.user_id, self.addr, self.port, init_user_list=[server])
         client = Client(user)
         args = self.args 

@@ -162,9 +162,9 @@ class ServerTest(object):
         Server.run
     """
 
-    def __init__(self, user_id="Server", addr="0.0.0.0", port=10010):
+    def __init__(self, user_id=b"Server", addr="0.0.0.0", port=10010):
         from user import User
-        server2 = User("Server", "127.0.0.1", 10011)
+        server2 = User(b"Client", "127.0.0.1", 10011)
         self.user = User(user_id, addr, port, init_user_list=[server2])
         self.server = Server(self.user)
 
