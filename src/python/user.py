@@ -61,21 +61,23 @@ class User(object):
         return SS_cal_share(self.recv_lists[0], id_list)
 
     def cal_sP(self):
-        """calculate sP = \sum share * P
+        """
+        
+        calculate sP1 = \sum share * P1
+        calculate sP2 = \sum share * P2
         """
         
         # l1 and l2 for list of sP1 and sP2
         l1 = []
         l2 = []
         for s in self.recv_lists[1]:
-            assert(s[64] == 124)
-            print(len(s))
-            assert(len(s) == 64 + 1 + 129)
-            l1.append(s[:64])
-            l2.append(s[65:])
+            assert(s[EC_POINT_LEN] == 124)
+            assert(len(s) == EC_POINT_LEN + 1 + 129)
+            l1.append(s[:EC_POINT_LEN])
+            l2.append(s[EC_POINT_LEN+1:])
 
-        sP1, sP2 = SS_cal_sP()
-
+        sP1, sP2 = SS_cal_sP(l1, l2)
+        return (sP1, sP2)
 
 
     def run_init(self, with_val=None, is_listening=False):
@@ -157,7 +159,6 @@ class User(object):
         self.recv_lists[1].add(point)
 
         while len(self.recv_lists[1]) < co_cnt or self.sent_ack_cnts[1] < sz:
-            print(self.recv_lists[1])
             for user in init_user_list:
                 addr = user.addr 
                 port = user.port 

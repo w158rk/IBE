@@ -55,16 +55,15 @@ int ibe_extract(IBEPrivateKey *sk,
 
 void ibe_sk_copy(IBEPrivateKey *dest, IBEPrivateKey *src, long);
 
+// EC
+EC_GROUP *ibe_get_ec_group();
+
 /**
  * @brief calculate res = xP where x in a number and P is the generator of the group 
  */
 int ibe_ec_cal_xP1(EC_GROUP **group, EC_POINT **res, BIGNUM *x, char *mpk_file);
 
 
-/**
- * @brief calculate res = xP2 where x in a number and P2 is the generator of the group G2
- */
-int ibe_point_cal_xP2(point_t *res, BIGNUM *x, char *mpk_file);
 
 /**
  * @brief calculate res = xQ where x in a number and Q is an arbitrary point in the group 
@@ -81,6 +80,10 @@ int ibe_point_store_Ppub2(point_t *point, char *mpk_file);
 int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file, char *sk_file);
 
 // wrap for point_t
+/**
+ * @brief calculate res = xP2 where x in a number and P2 is the generator of the group G2
+ */
+int ibe_point_cal_xP2(point_t *res, BIGNUM *x, char *mpk_file);
 int ibe_point_from_octets(point_t **point, char *buf);
 int ibe_point_to_octets(point_t *point, char *buf);
 int ibe_point_copy(point_t *to, point_t *from);

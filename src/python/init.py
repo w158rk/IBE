@@ -152,12 +152,11 @@ def SS_cal_xP(x, mpk_file=b"./mpk"):
     lib_ibe = CDLL(LIBIBE_PATH)
     cal = lib_ibe.SS_cal_xP_py
     cal.argtypes = [c_char_p, c_char_p]
-    cal.restype = c_char_p
+    cal.restype = PCHAR
 
     res = cal(x, mpk_file)
-    res = cast(res, PCHAR)
     ret = []
-    for i in range(64+1+129):
+    for i in range(EC_POINT_LEN+1+129):
         ret.append(res[i])
 
     return b''.join(ret)
@@ -174,8 +173,39 @@ def SS_cal_sP(l1, l2, mpk_file=b"./mpk"):
     if not os.path.exists(mpk_file):
         raise OSError("%s not exists" % mpk_file)
     
+    assert(len(l1)==len(l2))
+    cnt = len(l1)
+    c_cnt = c_int(cnt)
+
+    s1 = b'\x00'.join(l1)
+    s2 = b'\x00'.join(l2)
+    c_in = b'\x00'.join([s1, s2])
+
+    lib_ibe = CDLL(LIBIBE_PATH)
+    cal = lib_ibe.SS_cal_sP_py
+    cal.argtypes = [PCHAR, c_int, c_char_p]
+    cal.restype = PCHAR
+
+    res = cal(c_in, c_cnt, mpk_file)
+
+    o1 = []
+    o2 = []
+
+    for i in range(EC_POINT_LEN):
+        o1.append(res[i])
+
+    for i in range(POINT_LEN):
+        o2.append(res[EC_POINT_LEN+i+1])
+
+    o1 = b'\x00'.join(o1)    
+    o2 = b'\x00'.join(o2)    
+
+    print("generated sP1:")
+    print(o1)
+    print("generated sP2:")
+    print(o2)
     #TODO(wrk): calculate sP
-    return (None, None)
+    return (o1, o2)
 
 class InitTest(object):
 

@@ -194,11 +194,12 @@ char *SS_cal_xP_py(char *x_str, char *mpk_file)
 {
     char *xP1 = ibe_ec_cal_xP1_py(x_str, mpk_file);
     char *xP2 = ibe_point_cal_xP2_py(x_str, mpk_file);
-    char *ret = malloc(64 + 1 + 129 + 1);
+
+    char *ret = malloc(66 + 1 + 129 + 1);
     char *p = ret;
     
-    memcpy(p, xP1, 64);
-    p += 64;
+    memcpy(p, xP1, 66);
+    p += 66;
     *p = '|';
     p ++;
     memcpy(p, xP2, 129);
@@ -350,5 +351,116 @@ SS_POLY *SS_str2poly(char *in, unsigned int co_cnt)
 fail:
     free(ret);
     return NULL;
+
+}
+
+char *SS_cal_sP_py(char *in, UINT user_cnt, const char *mpk_file)
+{
+
+    EC_POINT *ec_point = NULL;
+    EC_POINT *ec_res = NULL;
+    EC_POINT *ec_tmp = NULL;
+
+    EC_GROUP *group = ibe_get_ec_group();
+    BN_CTX *ctx = BN_CTX_new();
+
+    point_t *point = NULL;
+    point_t *res = NULL;
+    point_t *tmp = NULL;
+
+    int i = 0;
+    const EC_POINT_LEN = 66;
+    const POINT_LEN = 129;
+    char *p = in;
+    char *ret = NULL;
+    char *out = (char *)malloc(EC_POINT_LEN+POINT_LEN+2);
+    memset(out, 0, EC_POINT_LEN+POINT_LEN+2);
+
+    // ec
+    if(!(ec_point = EC_POINT_new(group))
+        || !(ec_res = EC_POINT_new(group))
+        || !(ec_tmp = EC_POINT_new(group)))
+    {
+        return;    
+    }
+
+    // parse the first point into point
+    if(!ibe_str2ec(p, ec_point, ctx))
+    {
+        goto ec_end;
+    }
+
+    for(i=0; i<user_cnt-1; i++)
+    {
+        p += EC_POINT_LEN+1;
+        if(!ibe_str2ec(p, ec_tmp, ctx)
+            || !EC_POINT_add(group, ec_res, ec_point, ec_tmp, ctx)
+            || !EC_POINT_copy(ec_point, ec_res))
+        {
+            goto ec_end;
+        }
+    }
+    p += EC_POINT_LEN+1;
+    
+    char *buf = ibe_ec2str(ec_res, ctx);
+    memcpy(out, buf, EC_POINT_LEN);
+    free(buf);
+
+
+    res = ibe_point_new();
+    // the first point 
+
+    if(!ibe_point_from_octets(&point, p))
+    {
+        goto point_end;
+    }
+
+    for(i=0; i<user_cnt-1; i++)
+    {
+        p += POINT_LEN + 1;
+    
+        if(!ibe_point_from_octets(&tmp, p)
+            ||!ibe_point_add(res, point, tmp)
+            ||!ibe_point_copy(point, res))
+        {
+            goto point_end;
+        }
+
+        // clear the temp space
+        ibe_point_free(tmp);
+        tmp = NULL;
+    }
+    p += POINT_LEN + 1;
+
+    ibe_point_to_octets(res, out+EC_POINT_LEN+1);
+    ret = out;
+
+point_end:
+    if(point){
+        ibe_point_free(point);
+    }
+    if(res){
+        ibe_point_free(res);
+    }
+    if(tmp){
+        ibe_point_free(tmp);
+    }
+
+ec_end:
+    if(ec_point){
+        EC_POINT_free(ec_point);
+    }
+    if(ec_res){
+        EC_POINT_free(ec_res);
+    }
+    if(ec_tmp){
+        EC_POINT_free(ec_tmp);
+    }
+    BN_CTX_free(ctx);
+    if(!ret){
+        free(out);
+    }
+
+    return ret;
 
 }

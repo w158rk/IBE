@@ -8,3 +8,6 @@ ROOT_DIR = "../.."
 ARTIFACT_DIR = ROOT_DIR + "/build-r"
 LIBRARY_DIR = ARTIFACT_DIR + "/lib"
 LIBIBE_PATH = LIBRARY_DIR + "/libibe.so"
+
+EC_POINT_LEN = 66
+POINT_LEN = 129

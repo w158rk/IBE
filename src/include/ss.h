@@ -162,6 +162,7 @@ char *SS_id2num_py(char *id, UINT len, char *);
 
 char *SS_cal_share_py(int len, char *val_list, char *id_list, int *id_len_list, char *mpk_file);
 
+char *SS_cal_xP_py(char *x_str, char *mpk_file);
 
 #ifdef __cplusplus
 }
