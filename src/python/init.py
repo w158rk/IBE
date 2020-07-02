@@ -197,8 +197,8 @@ def SS_cal_sP(l1, l2, mpk_file=b"./mpk"):
     for i in range(POINT_LEN):
         o2.append(res[EC_POINT_LEN+i+1])
 
-    o1 = b'\x00'.join(o1)    
-    o2 = b'\x00'.join(o2)    
+    o1 = b''.join(o1)    
+    o2 = b''.join(o2)    
 
     print("generated sP1:")
     print(o1)
@@ -206,6 +206,23 @@ def SS_cal_sP(l1, l2, mpk_file=b"./mpk"):
     print(o2)
     #TODO(wrk): calculate sP
     return (o1, o2)
+
+def SS_output_sP(sP, mpk_file=b"./mpk"):
+    sP1, sP2 = sP 
+    lib_ibe = CDLL(LIBIBE_PATH)
+    store = lib_ibe.SS_output_sP_py
+
+    # param1: in sP1 + '\x00' + sP2 + '\x00'
+    # param2: mpk_file
+    store.argtypes = [PCHAR, c_char_p]
+    store.restype = c_int
+    # the third item can be any non-empty byte string
+    # it is used to assure the input string is passed 
+    # to the function exactly
+    c_in = b"\x00".join([sP1, sP2, b"end"])     
+    print(c_in)
+    res = store(c_in, mpk_file)
+    print(res)
 
 class InitTest(object):
 

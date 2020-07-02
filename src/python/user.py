@@ -47,6 +47,7 @@ class User(object):
         # init 
         self.is_in_init = False
         self.share = None
+        self.sP = (None, None)
 
     def cal_share(self):
         """
@@ -79,6 +80,8 @@ class User(object):
         sP1, sP2 = SS_cal_sP(l1, l2)
         return (sP1, sP2)
 
+    def output_sP(self, sP, mpk_file=b"./mpk"):
+        SS_output_sP(sP)
 
     def run_init(self, with_val=None, is_listening=False):
         """
@@ -175,7 +178,10 @@ class User(object):
 
             time.sleep(2)
 
-        self.cal_sP()
+        sP = self.cal_sP()              # a tuple
+        self.sP = sP
+        self.output_sP(sP)
+        
 
         # clear the related data
         self.is_in_init = False

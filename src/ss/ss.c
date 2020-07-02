@@ -464,3 +464,54 @@ ec_end:
     return ret;
 
 }
+
+
+int SS_output_sP_py(char *in, const char *mpk_file) {
+    EC_POINT *ec_point = NULL;
+    EC_GROUP *group = ibe_get_ec_group();
+    BN_CTX *ctx = BN_CTX_new();
+    point_t *point = NULL;
+
+    int ret = 0;
+    const EC_POINT_LEN = 66;
+    const POINT_LEN = 129;
+    char *p = in;
+
+
+    // ec
+    if(!(ec_point = EC_POINT_new(group)))
+    {
+        return ret;    
+    }
+
+    // parse the first point into point
+    if(!ibe_str2ec(p, ec_point, ctx))
+    {
+        goto ec_end;
+    }
+    p += EC_POINT_LEN+1;
+
+    ibe_ec_store_Ppub1(ec_point, mpk_file);
+    
+    int i;
+    if(!ibe_point_from_octets(&point, p))
+    {
+        goto point_end;
+    }
+    p += POINT_LEN;
+
+    ibe_point_store_Ppub2(point, mpk_file);
+    ret = 1;
+
+point_end:
+    if(point){
+        ibe_point_free(point);
+    }
+
+ec_end:
+    if(ec_point){
+        EC_POINT_free(ec_point);
+    }
+    BN_CTX_free(ctx);
+    return ret;
+}

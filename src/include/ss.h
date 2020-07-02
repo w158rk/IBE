@@ -164,6 +164,16 @@ char *SS_cal_share_py(int len, char *val_list, char *id_list, int *id_len_list, 
 
 char *SS_cal_xP_py(char *x_str, char *mpk_file);
 
+/**
+ * @brief output Ppub1 and Ppub2 to the mpk_file
+ * 
+ * @return 1 if success, 0 otherwise
+ *  
+ * @param[in]   in: the string of Ppub1 + '\0' + Ppub2
+ * @param[in]   mpk_file   
+ */ 
+int SS_output_sP_py(char *in, const char *mpk_file);
+
 #ifdef __cplusplus
 }
 #endif
