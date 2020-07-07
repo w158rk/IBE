@@ -1,3 +1,94 @@
+# 2020-07-07
+
+## 1 Packet 模块开发指南
+
+目前的Packet类结构如下
+
+![image](./image/packet-200707.png)
+
+两个跟通信模块交互的接口：to_bytes和from_bytes，分别实现从包到字节流和从字节流到包的转换。
+
+```python
+data = packet.to_bytes()
+client.send(data, ...)
+```
+
+```python
+# server received some data
+packet = Packet.from_bytes(data)
+```
+
+三个属性：type, lens和vals。比如秘密共享第二阶段的包，需要发送两个点$share \times P_1$和$share \times P_2$
+
+```python
+packet = Packet()
+packet.type = Packet.PacketType.INIT_R2
+packet.lens = [65, 129]
+packet.vals = [shareP1, shareP2]
+client.send(packet.tp_bytes(), ...)
+```
+
+然后对于常用的包结构，可以用类函数`make_xxx`把它包起来，然后在外部使用`Packet.make_xxx`做包。
+
+## 2 运行指南
+
+1. 配置C库位置
+```python
+# constant.py
+ROOT_DIR = "/home/{path-to-find-IBE}/IBE"
+```
+
+2. 配置用户json文件，例如[init_server.json](../example/init/server1/init_server.json)
+
+3. 如果要运行顶级功能，配置顶级用户目录，如[top_user_list.json](../example/init/top_user_list.json)并在用户配置文件中加入 
+
+```json 
+"top_user_list": "../top_user_list.json"
+```
+
+4. 链接python目录
+```sh
+ln -s {path-to-IBE}/src/python .
+```
+
+5. 运行server。运行server不需要指定功能，直接 
+```sh 
+python3 python/server.py -c {config-file}
+```
+
+6. 运行client，需要指定运行的功能
+```sh 
+python3 client.py -h
+usage: client.py [-h] [--server-ip SRV_ADDR] [--server-port SRV_PORT]
+                 [--action {init,sk,comm}] [-c [CONFIG_FILE]]
+
+IBE Client
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --server-ip SRV_ADDR
+  --server-port SRV_PORT
+  --action {init,sk,comm}
+                        the valid actions are: {'init': 'invoke an
+                        initialization', 'sk': 'request for the private key',
+                        'comm': 'initialize a secret session'}
+  -c [CONFIG_FILE]      configuration file
+```
+
+推荐使用配置文件，不要使用前两个选项（我没测过）。例如，运行初始化init，可以使用
+```sh 
+python3 client.py -c {config-file} --action init
+```
+如果其他顶级节点都在线，可以生成顶级的mpk和sk文件。
+
+## 3 Crypto测试
+
+增加了私钥测试，运行指令
+
+```sh
+python3 python/crypto_c_interface.py -e -id {user-id} -sk {sk-file} -mpk {mpk-file}
+```
+
 # 2020-05-29
 
 - [ ] 私钥请求

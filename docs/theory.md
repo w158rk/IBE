@@ -7,7 +7,7 @@
 
 ## 证书结构的对比
 
-![image](figures/certificate.png)
+![image](image/certificate.png)
 
 最底层的证书都是不包含签名的，也就是最底层的信息都是默认信任的。所以对于PKI系统，系统参数是
 $N$个$(ID_i, pk_i)$对。对IBE系统来说，系统参数只是$P_{pub}$，甚至都不需要存储顶级节点的ID。
