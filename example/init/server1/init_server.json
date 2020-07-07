@@ -6,7 +6,7 @@
     "global_sk_file" : "sk-global.conf",
     "local_mpk_file" : "mpk-local.conf",
     "local_msk_file" : "msk-local.conf",
-    "local_sk_file" : "msk-sk.conf",
+    "local_sk_file" : "sk-local.conf",
 
     "id" : "Server1", 
     "addr" : "127.0.0.1",
