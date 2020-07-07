@@ -14,14 +14,23 @@
 from action import Action
 from constant import *
 from init import *
+from crypto_c_interface import ibe_setup
 from packet import Packet
 from client import Client 
 from server import Server
+from utils import str2bytes
 
 import socket 
 import threading
 import time
+import json
 
+_bytes_attributes = ["id", "addr",
+                        "global_mpk_file",
+                        "global_sk_file",
+                        "local_mpk_file",
+                        "local_msk_file",
+                        "local_sk_file"]
 
 class User(object):
     """class presenting users in the network
@@ -30,24 +39,66 @@ class User(object):
         id: the identification
         addr: the IP address
         port: the port on which the user is running
+
     """
 
-    def __init__(self, user_id, addr, port,
-                   init_user_list=[], recv_lists=None, sent_ack_cnts=[0,0,0]):
+    def __init__(self, user_id="", addr="", port=0,
+                   top_user_list=[], config_file=None):
+        """
+        Args: 
+            - top_user_list: 
+                a list of dicts which represent a user with keyset: (id, addr, port)
+            - recv_list:
+                only used when a server is invoked by the init process 
+        """
+        # declare all the members
+        # all the variables used should be declared 
+        # here for maintaining convenience
+        self.top_user_list = top_user_list 
+        self.config_file = config_file
         self.id = user_id
         self.addr = addr
         self.port = port
-        self.init_user_list = init_user_list
-        if not recv_lists:
-            self.recv_lists = [set() for i in range(3)] 
-        self.sent_ack_cnts = sent_ack_cnts
-        self.server = None 
-        self.client = None
 
-        # init 
+        # from configuration
+        self.log = b""
+        self.global_mpk_file = b""
+        self.global_sk_file = b""
+        self.local_mpk_file = b""
+        self.local_msk_file = b""
+        self.local_msk_file = b""
+        self.parent = None
+
+        # inner variables
+        self.recv_lists = [set() for i in range(3)] 
+        self.sent_ack_cnts = [0,0,0]
+        self.client = None
+        self.server = None 
+
+        ## for init use
         self.is_in_init = False
         self.share = None
         self.sP = (None, None)
+
+        if config_file:
+            self.load_config_file() 
+        
+        if hasattr(self, "top_user_list"):
+            top_user_list = []
+            for user in self.top_user_list:
+                if str2bytes(user["id"]) != self.id:
+                    top_user_list.append(self.from_dict(user))
+            self.top_user_list = top_user_list
+
+    @classmethod
+    def from_dict(cls, user_dict):
+        user = cls()
+        for attr in user_dict:
+            if attr in _bytes_attributes:
+                user.__setattr__(attr, str2bytes(user_dict[attr]))
+            else:
+                user.__setattr__(attr, user_dict[attr])
+        return user
 
     def cal_share(self):
         """
@@ -57,13 +108,13 @@ class User(object):
         """
         id_list = []
         id_list.append(self.id)
-        for user in self.init_user_list:
+        for user in self.top_user_list:
             id_list.append(user.id)
-        return SS_cal_share(self.recv_lists[0], id_list)
+        return SS_cal_share(self.recv_lists[0], id_list, mpk_file=self.global_mpk_file)
+
 
     def cal_sP(self):
         """
-        
         calculate sP1 = \sum share * P1
         calculate sP2 = \sum share * P2
         """
@@ -73,20 +124,80 @@ class User(object):
         l2 = []
         for s in self.recv_lists[1]:
             assert(s[EC_POINT_LEN] == 124)
-            assert(len(s) == EC_POINT_LEN + 1 + 129)
+            assert(len(s) == EC_POINT_LEN + 1 + POINT_LEN)
             l1.append(s[:EC_POINT_LEN])
             l2.append(s[EC_POINT_LEN+1:])
 
-        sP1, sP2 = SS_cal_sP(l1, l2)
+        sP1, sP2 = SS_cal_sP(l1, l2, mpk_file=self.global_mpk_file)
         return (sP1, sP2)
 
-    def output_sP(self, sP, mpk_file=b"./mpk"):
-        SS_output_sP(sP)
+    def cal_sQ(self):
+        """
+        calculate sQ = \sum share * Q
+        """
+        l = []
+        for s in self.recv_lists[2]:
+            assert(len(s) == EC_POINT_LEN)
+            l.append(s)
+        return SS_cal_sQ(l, mpk_file=self.global_mpk_file)
 
-    def run_init(self, with_val=None, is_listening=False):
+    def cal_shareP(self):
+        return SS_cal_xP(self.share, mpk_file=self.global_mpk_file)
+
+    def cal_shareQ(self, user=None):
+        if not user:
+            user = self
+        return SS_cal_xQ(self.share, user_id=user.id, mpk_file=self.global_mpk_file)
+
+    def ibe_setup(self, mode="global"):
+        """
+        Args:
+            mode: choose in ["local", "global"] 
+        """
+        mpk_file = self.global_mpk_file
+        nouse_suffix = b".nouse"
+        len_suffix = b".len"
+        if mode=="global":
+            ibe_setup(mpk_file, mpk_file+nouse_suffix, mpk_file+len_suffix, mpk_file+nouse_suffix+len_suffix)
+        if mode=="local":
+            mpk_file = self.local_mpk_file
+            msk_file = self.local_msk_file
+            ibe_setup(mpk_file, msk_file, mpk_file+len_suffix, msk_file+len_suffix)
+
+
+    def load_config_file(self):
+        config = None 
+        with open(self.config_file, "r", encoding="utf-8") as f:
+            config = json.load(f)
+
+        for attr in config:
+            if not config[attr]:
+                continue
+            if attr in _bytes_attributes:
+                self.__setattr__(attr, str2bytes(config[attr]))
+            else:
+                self.__setattr__(attr, config[attr])
+
+        try:
+            top_user_list = self.top_user_list
+            with open(top_user_list, "r", encoding="utf-8") as f:
+                top_user_list = json.load(f)
+            self.top_user_list = top_user_list
+        except AttributeError:
+            pass
+
+
+    def output_sP(self, sP, mpk_file=b"./mpk"):
+        SS_output_sP(sP, mpk_file=mpk_file)
+
+    def output_sQ(self, sQ):
+        SS_output_sQ(sQ, user=self)
+
+    def run_init(self, with_val=None, is_listening=False):  
         """
         setup the HIBE system with secret sharing
         """
+        # TODO(wrk): this function is too long
         if with_val:
             self.recv_lists[0].add(with_val)
 
@@ -94,53 +205,48 @@ class User(object):
             # if is in init, just add the val into the list
             return 
         
+        if not os.path.exists(self.global_mpk_file):
+            self.ibe_setup("global")
+
         print("begin running initialization")
         self.is_in_init = True 
 
         # at the beginning, we should set up a server for
         # receiving the desired packets
         if not is_listening:
-            self.server = Server(self)
+            if not self.server:
+                self.server = Server(self)
             
             t = threading.Thread(target=self.server.run)
             t.start()
 
         # setup the client 
-        self.client = Client(self)
+        if not self.client:
+            self.client = Client(self)
 
-        init_user_list = self.init_user_list
-        if not init_user_list:
+        top_user_list = self.top_user_list
+        if not top_user_list:
             raise UserError("The init cannot be invoked without the top users")
 
-
         # sz + 1 == the number of top users
-        sz = len(init_user_list)  
+        sz = len(self.top_user_list)  
         co_cnt = sz + 1          
 
         # generate a polynomial at first
         poly = SS_new_rand_poly(co_cnt)
 
         ## add f_i(x_i) into the list
-        bn = SS_id2num(self.id)
+        bn = SS_id2num(self.id, mpk_file=self.global_mpk_file)
         bn = SS_poly_apply(poly, co_cnt, bn) 
         self.recv_lists[0].add(bn)
 
         # round one
         # send the values while receiving 
         while len(self.recv_lists[0]) < co_cnt or self.sent_ack_cnts[0] < sz:
-            for user in init_user_list:
-                addr = user.addr 
-                port = user.port 
-
-                packet = Packet.make_init_one(poly, co_cnt, user.id)
+            for user in top_user_list:
+                packet = Packet.make_init_1(poly, co_cnt, user.id, mpk_file=self.global_mpk_file)
                 data = packet.to_bytes()
-
-                action = Action()
-                action.type = Action.ActionType.SEND
-                action.payload = [data]
-
-                t = threading.Thread(target=self.client.run_send, args=(addr, port, action))
-                t.start()
+                self.send(user, data)
 
             time.sleep(2)
 
@@ -148,40 +254,46 @@ class User(object):
         # it's time to calculate the share with formula:
         # 
         # share = (\sum f(x)) * l_x(0)
-        #
-
-        print("cal share")
         share = self.cal_share()
         self.share = share
 
         # round 1 finished, in round 2, shares will be sent among users
-        print("round 2")
-
         # first, add the share_i * P1 & share_i * P2 in the list
-        point = SS_cal_xP(share)
+        point = self.cal_shareP()
         self.recv_lists[1].add(point)
 
         while len(self.recv_lists[1]) < co_cnt or self.sent_ack_cnts[1] < sz:
-            for user in init_user_list:
-                addr = user.addr 
-                port = user.port 
-
+            for user in top_user_list:
                 packet = Packet.make_init_2(point)
                 data = packet.to_bytes()
-
-                action = Action()
-                action.type = Action.ActionType.SEND
-                action.payload = [data]
-
-                t = threading.Thread(target=self.client.run_send, args=(addr, port, action))
-                t.start()
+                self.send(user, data)
 
             time.sleep(2)
 
         sP = self.cal_sP()              # a tuple
         self.sP = sP
-        self.output_sP(sP)
-        
+        self.output_sP(sP, mpk_file=self.global_mpk_file)
+
+        # the public master key is stored in global_mpk_file 
+        # now it's time to calculate the private key for 
+        # the top users 
+        round_index = 2
+        point = self.cal_shareQ()
+        self.recv_lists[round_index].add(point)
+
+        while len(self.recv_lists[round_index]) < co_cnt or self.sent_ack_cnts[round_index] < sz:
+            for user in top_user_list:
+                point = self.cal_shareQ(user=user)
+                packet = Packet.make_init_3(point, mpk_file=self.global_mpk_file)
+                data = packet.to_bytes()
+                self.send(user, data)
+
+            time.sleep(2)
+
+        # calculate sQ
+        sQ = self.cal_sQ()
+        self.sQ = sQ 
+        self.output_sQ(sQ)
 
         # clear the related data
         self.is_in_init = False
@@ -189,6 +301,16 @@ class User(object):
         for s in self.recv_lists:
             s.clear()
 
+    def send(self, user, data):
+        addr = user.addr 
+        port = user.port 
+
+        action = Action()
+        action.type = Action.ActionType.SEND
+        action.payload = [data]
+
+        t = threading.Thread(target=self.client.run_send, args=(addr, port, action))
+        t.start()
 
 class UserError(Exception):
     def __init__(self, err='Error in Client Module'):

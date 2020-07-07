@@ -28,7 +28,8 @@ char *ibe_ec2str(EC_POINT *point, BN_CTX* ctx)
 
 EC_POINT *ibe_str2ec(char *str, EC_POINT *point, BN_CTX *ctx)
 {
-	return EC_POINT_hex2point(ibe_get_ec_group(), str, point, ctx);
+	EC_POINT *ret = EC_POINT_hex2point(ibe_get_ec_group(), str, point, ctx);
+	return ret;
 }
 
 EC_POINT *ibe_EC_POINT_new()
@@ -254,7 +255,7 @@ end:
 
 }
 
-int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file, char *sk_file)
+int ibe_ec_store_sk(EC_POINT *sQ, char *id, UINT id_len, char *mpk_file, char *sk_file)
 {
 	/* before this point, the file of the private key is not exist */
 	/* so we generate a new SMXPrivateKey for it */
@@ -337,7 +338,7 @@ int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file, char *sk_file)
 		|| !(sk->pointPpub1 = ASN1_OCTET_STRING_dup(smx_mpk->pointPpub1))
 		|| !(sk->pointPpub2 = ASN1_OCTET_STRING_dup(smx_mpk->pointPpub2))
 		|| !(sk->identity = ASN1_OCTET_STRING_new())
-		|| !ASN1_OCTET_STRING_set(sk->identity, (unsigned char *)id->id, id->length)
+		|| !ASN1_OCTET_STRING_set(sk->identity, (unsigned char *)id, id_len)
 		|| !(sk->publicPoint = ASN1_OCTET_STRING_new())
 		|| !(sk->privatePoint = ASN1_OCTET_STRING_new())) {
 		ERROR(SK_SET_MEMBER_ERROR);
@@ -345,7 +346,7 @@ int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file, char *sk_file)
 	}
 
 	/* h1 = H1(id||HID) */
-	if (!SMX_hash1(md, &t, id->id, id->length, hid, n, ctx)) {
+	if (!SMX_hash1(md, &t, id, id_len, hid, n, ctx)) {
 		ERROR(OPENSSL_HASH_ERROR);
 		goto end;
 	}
@@ -377,7 +378,6 @@ int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file, char *sk_file)
 	{
 		/* instead to use the s/(h+s)P, we use the s(h+s)P as the private key */
 		
-		/* de = t2 * P2 */
 		char buffer[BUFFER_SIZE];
 		int length = BUFFER_SIZE;
 		length = EC_POINT_point2oct(group, sQ, point_form, buffer, length, ctx);
@@ -397,7 +397,6 @@ int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file, char *sk_file)
 	}
 
 		// try encrypt and decrypt with the given keys 
-#ifdef DEBUG
 {
 	char data[10] = "1234567890";
 	char cipher[BUFFER_SIZE] = {0};
@@ -405,13 +404,17 @@ int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file, char *sk_file)
 	int datalen = 10;
 	int cipherlen = BUFFER_SIZE;
 	int ddata_len = BUFFER_SIZE;
-	fprintf(stderr, "encrypt: %d\n", SMX_encrypt(NID_sm9encrypt_with_sm3_xor, data, datalen, cipher, &cipherlen, smx_mpk, "Client", 6));
+	printf("%s:%s\n", mpk_file, sk_file);
+	printf("%s:%d\n", id, id_len);
+	fprintf(stderr, "encrypt: %d\n", SMX_encrypt(NID_sm9encrypt_with_sm3_xor, data, datalen, cipher, &cipherlen, smx_mpk, id, id_len));
+	int i;
+	for(i=0; i<cipherlen; i++)
+	{
+		printf("%02x", cipher[i] & 0xff);
+	}
+	printf("\n");
 	fprintf(stderr, "decrypt: %d\n", SMX_decrypt(NID_sm9encrypt_with_sm3_xor, cipher, cipherlen, ddata, &ddata_len, sk));
-	fprintf(stderr, "encrypt: %d\n", SMX_encrypt(NID_sm9encrypt_with_sm3_xor, data, datalen, cipher, &cipherlen, smx_mpk, "Server", 6));
-	fprintf(stderr, "decrypt: %d\n", SMX_decrypt(NID_sm9encrypt_with_sm3_xor, cipher, cipherlen, ddata, &ddata_len, sk));
-
 }
-#endif
 
 	// output
 	{
@@ -422,20 +425,16 @@ int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file, char *sk_file)
 		}
 		fclose(sk_fp);
 	}
-
 	ret = 1;
 
 end:
 	SMXPrivateKey_free(sk);
-	EC_GROUP_clear_free(group);
 	if (ctx) {
 		BN_CTX_end(ctx);
+		BN_CTX_free(ctx);
 	}
-	BN_CTX_free(ctx);
-	BN_clear_free(t);
 	OPENSSL_cleanse(buf, sizeof(buf));
 	return ret;
-
 
 }
 

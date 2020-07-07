@@ -22,11 +22,16 @@ from packet import Packet
 import sys
 import socket
 import threading
+import argparse
+import traceback
 
 BUFFER_SIZE = 1024
 
-
-
+parser = argparse.ArgumentParser(description='run an IBE server')
+parser.add_argument('-c', type=str, nargs="?", 
+                        dest="config_file", help='configuration file')
+args = parser.parse_args()
+config_file = args.config_file
 
 
 
@@ -96,6 +101,17 @@ class Server(object):
             print("receive ACK")
             self.user.sent_ack_cnts[1] += 1
 
+        if packet.type == Packet.PacketType.INIT_R3:
+            # add the payload into the recv_list
+
+            action.type = Action.ActionType.SEND 
+            action.payload = Packet(Packet.PacketType.INIT_R3_ACK).to_bytes()
+            self.user.recv_lists[2].add(packet.vals[0])
+
+        if packet.type == Packet.PacketType.INIT_R3_ACK:
+            print("receive ACK")
+            self.user.sent_ack_cnts[2] += 1
+
 
         return action
 
@@ -164,7 +180,7 @@ class Server(object):
         except socket.error as e:
             print("Socket error: %s" % str(e))
         except Exception as e:
-            print("%s: %s" % (type(e), str(e)))
+            traceback.print_exc()
 
 
 
@@ -182,7 +198,11 @@ class ServerTest(object):
     def __init__(self, user_id=b"Server", addr="0.0.0.0", port=10010):
         from user import User
         server2 = User(b"Client", "127.0.0.1", 10011)
-        self.user = User(user_id, addr, port, init_user_list=[server2])
+
+        if config_file:
+            self.user = User(config_file=config_file)
+        else:
+            self.user = User(user_id, addr, port, top_user_list=[server2])
         self.server = Server(self.user)
 
     def test_server_run(self):

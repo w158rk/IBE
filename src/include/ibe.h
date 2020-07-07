@@ -77,7 +77,7 @@ int ibe_ec_cal_xQ(EC_GROUP **group_ptr, EC_POINT **point, BIGNUM *x, EC_POINT *Q
 /* replace the sP in the mpk file with point */
 int ibe_ec_store_Ppub1(EC_POINT *point, char *mpk_file);
 int ibe_point_store_Ppub2(point_t *point, char *mpk_file);
-int ibe_ec_store_sk(EC_POINT *sQ, ID *id, char *mpk_file, char *sk_file);
+int ibe_ec_store_sk(EC_POINT *sQ, char *id, UINT id_len, char *mpk_file, char *sk_file);
 
 // wrap for point_t
 /**

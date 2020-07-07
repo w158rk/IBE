@@ -28,6 +28,26 @@ import socket
 import argparse
 import threading
 import time
+import traceback
+
+_valid_actions = {
+    "init": "invoke an initialization",
+    "sk": "request for the private key",
+    "comm": "initialize a secret session"
+}
+parser = argparse.ArgumentParser(description="IBE Client")
+parser.add_argument("--server-ip", action="store", dest="srv_addr",
+                    type=str, default="localhost")
+parser.add_argument("--server-port", action="store", dest="srv_port",
+                    type=int, default=10010)
+parser.add_argument("--action", action="store", dest="action", default="sk",
+                    choices=_valid_actions.keys(),
+                    help="the valid actions are: %s" % str(_valid_actions))
+parser.add_argument('-c', type=str, nargs="?", default="",
+                    dest="config_file", help='configuration file')
+                    
+args = parser.parse_args()
+config_file = args.config_file
 
 class Client(object):
     """
@@ -50,6 +70,10 @@ class Client(object):
             print("receive ACK")
             self.user.sent_ack_cnts[1] += 1
 
+        if packet.type == Packet.PacketType.INIT_R3_ACK:
+            print("receive ACK")
+            self.user.sent_ack_cnts[2] += 1
+            
         return action
 
     def gen_action_from_args(self, args):
@@ -124,7 +148,7 @@ class Client(object):
         except socket.error as e:
             print("Socket Error: %s" % str(e))
         except AssertionError as e:
-            print("Assertion Error: %s" % str(e))
+            traceback.print_exc()
         except Exception as e:
             print("%s: %s" % (type(e), str(e)))
         finally:
@@ -183,15 +207,23 @@ class ClientTest(object):
 
     def test_client_init(self):
         from user import User
-        server = User(b"Server", self.srv_addr, self.srv_port)
-        user = User(self.user_id, self.addr, self.port, init_user_list=[server])
+        server = {
+            "id" : "Server1", 
+            "ip_address" : self.srv_addr,
+            "port" : self.srv_port,
+            "parent" : None
+        }
+        if config_file:
+            user = User(config_file=config_file)
+        else:
+            user = User(self.user_id, self.addr, self.port, top_user_list=[server])
         client = Client(user)
         args = self.args 
         args.action = "init"
         client.run(args=args)
 
     def test_all(self):
-        self.test_client_run()
+        # self.test_client_run()
         self.test_client_init()
 
 
@@ -202,22 +234,7 @@ class ClientError(Exception):
 
 
 def main():
-    valid_actions = {
-        "init": "invoke an initialization",
-        "sk": "request for the private key",
-        "comm": "initialize a secret session"
-    }
 
-    parser = argparse.ArgumentParser(description="IBE Client")
-    parser.add_argument("--server-ip", action="store", dest="srv_addr",
-                        type=str, default="localhost")
-    parser.add_argument("--server-port", action="store", dest="srv_port",
-                        type=int, default=10010)
-    parser.add_argument("--action", action="store", dest="action", default="sk",
-                        choices=valid_actions.keys(),
-                        help="the valid actions are: %s" % str(valid_actions))
-
-    args = parser.parse_args()
     client_test = ClientTest(srv_addr=args.srv_addr, srv_port=args.srv_port,
                              args=args)
     client_test.test_all()

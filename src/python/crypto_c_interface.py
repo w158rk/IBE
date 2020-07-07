@@ -13,12 +13,16 @@
 
 from ctypes import c_char, c_char_p,  c_int, c_ulong, c_long, create_string_buffer, POINTER, CDLL, pointer, cast
 import os
+import argparse
 from constant import *
+from utils import str2bytes
 
 """
 global variables
 """
 
+
+_encrypt_only = False
 
 PCHAR = POINTER(c_char)
 PPCHAR = POINTER(c_char_p)
@@ -327,12 +331,14 @@ class CryptoTest(object):
 
     def __init__(self, mpk_file=b"mpk", msk_file=b"msk",
                  mpk_len_file=b"mpk_len", msk_len_file=b"msk_len",
+                 sk_file=b"sk",
                  user_id=b"Server1", m=b"This is a test text"):
 
         self.mpk_file = mpk_file
         self.msk_file = msk_file
         self.mpk_len_file = mpk_len_file
         self.msk_len_file = msk_len_file
+        self.sk_file = sk_file
         self.user_id = user_id
         self.m = m
 
@@ -342,6 +348,10 @@ class CryptoTest(object):
         self.c = None
         self.dm = None
         self.sm = None
+
+        if _encrypt_only:
+            self.mpk = ibe_read_from_file(mpk_file)
+            self.sk = ibe_read_from_file(sk_file)
 
     def test_ibe_setup(self):
         res = ibe_setup(self.mpk_file, self.msk_file,
@@ -443,13 +453,52 @@ class CryptoTest(object):
         if clean_after_test:
             self.remove_auxiliary_files()
 
+    def test_encrypt(self):
+        """
+        This is for testing if an sk file is correctly generated 
+        the following files are required:
+            self.mpk_file 
+            self.sk_file
+        """
+        if not os.path.exists(self.mpk_file):
+            raise Exception("%s does not exist" % self.mpk_file)
+
+        if not os.path.exists(self.sk_file):
+            raise Exception("%s does not exist" % self.sk_file)
+
+        res = True
+        res = res and self.test_ibe_encrypt()
+        res = res and self.test_ibe_decrypt()
+
+        if res:
+            print("test all passed!")
+
 
 def main():
     """main function
     """
 
-    cryptoTest = CryptoTest()
-    cryptoTest.test_all(False)
+    parser = argparse.ArgumentParser(description='test crypto function')
+    parser.add_argument('-e',  dest="encrypt_only", action="store_true",
+                        help='test the functionality of encrypt and decrypt only')
+    parser.add_argument('-id', type=str,  dest="user_id", help='the user id')
+    parser.add_argument('-sk', type=str,  dest="sk_file", help='the sk file')
+    parser.add_argument('-mpk', type=str,  dest="mpk_file", help='the mpk file')
+    parser.add_argument('-msk', type=str,  dest="msk_file", help='the msk file')
+    args = parser.parse_args()
+    global _encrypt_only
+    _encrypt_only = args.encrypt_only
+
+    if _encrypt_only:
+        "the following three args must be in place"
+        mpk_file = str2bytes(args.mpk_file)
+        user_id = str2bytes(args.user_id)
+        sk_file = str2bytes(args.sk_file)
+        cryptoTest = CryptoTest(mpk_file=mpk_file, sk_file=sk_file, user_id=user_id)
+        cryptoTest.test_encrypt()
+    else:
+        cryptoTest = CryptoTest()
+        cryptoTest.test_all(False)
 
 
 if __name__ == "__main__":
