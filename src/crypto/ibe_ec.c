@@ -396,12 +396,11 @@ int ibe_ec_store_sk(EC_POINT *sQ, char *id, UINT id_len, char *mpk_file, char *s
 
 	}
 
-		// try encrypt and decrypt with the given keys 
-{
-	char data[10] = "1234567890";
+/*{
+	char data[10] = "123456789";
 	char cipher[BUFFER_SIZE] = {0};
 	char ddata[BUFFER_SIZE] = {0};
-	int datalen = 10;
+	int datalen = 9;
 	int cipherlen = BUFFER_SIZE;
 	int ddata_len = BUFFER_SIZE;
 	printf("%s:%s\n", mpk_file, sk_file);
@@ -414,7 +413,7 @@ int ibe_ec_store_sk(EC_POINT *sQ, char *id, UINT id_len, char *mpk_file, char *s
 	}
 	printf("\n");
 	fprintf(stderr, "decrypt: %d\n", SMX_decrypt(NID_sm9encrypt_with_sm3_xor, cipher, cipherlen, ddata, &ddata_len, sk));
-}
+}*/
 
 	// output
 	{
