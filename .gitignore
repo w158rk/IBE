@@ -25,7 +25,8 @@ schedule.md
 U_*
 V_*
 __pycache__/
-*.conf 
+*.conf
+*.conf.*
 # *.txt
 *.pyc
 

@@ -1,0 +1,20 @@
+[
+    {
+        "id" : "Server1", 
+        "addr" : "127.0.0.1",
+        "port" : 5003,
+        "parent" : null
+    },
+    {
+        "id" : "Server2", 
+        "addr" : "127.0.0.1",
+        "port" : 5004,
+        "parent" : null
+    },
+    {
+        "id" : "Server3", 
+        "addr" : "127.0.0.1",
+        "port" : 5005,
+        "parent" : null
+    }
+]
