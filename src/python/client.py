@@ -35,19 +35,7 @@ _valid_actions = {
     "sk": "request for the private key",
     "comm": "initialize a secret session"
 }
-parser = argparse.ArgumentParser(description="IBE Client")
-parser.add_argument("--server-ip", action="store", dest="srv_addr",
-                    type=str, default="localhost")
-parser.add_argument("--server-port", action="store", dest="srv_port",
-                    type=int, default=10010)
-parser.add_argument("--action", action="store", dest="action", default="sk",
-                    choices=_valid_actions.keys(),
-                    help="the valid actions are: %s" % str(_valid_actions))
-parser.add_argument('-c', type=str, nargs="?", default="",
-                    dest="config_file", help='configuration file')
-                    
-args = parser.parse_args()
-config_file = args.config_file
+_config_file = ""
 
 class Client(object):
     """
@@ -198,26 +186,26 @@ class ClientTest(object):
         self.args = args
 
     def test_client_run(self):
-        from user import User
-        user = User(self.user_id, self.addr, self.port)
-        client = Client(user)
+        import user
+        usr = user.User(self.user_id, self.addr, self.port)
+        client = Client(usr)
         args = self.args 
         args.action = "sk"
         client.run(self.srv_addr, self.srv_port, args=args)
 
     def test_client_init(self):
-        from user import User
+        import user
         server = {
             "id" : "Server1", 
             "ip_address" : self.srv_addr,
             "port" : self.srv_port,
             "parent" : None
         }
-        if config_file:
-            user = User(config_file=config_file)
+        if _config_file:
+            usr = user.User(config_file=_config_file)
         else:
-            user = User(self.user_id, self.addr, self.port, top_user_list=[server])
-        client = Client(user)
+            usr = user.User(self.user_id, self.addr, self.port, top_user_list=[server])
+        client = Client(usr)
         args = self.args 
         args.action = "init"
         client.run(args=args)
@@ -234,9 +222,22 @@ class ClientError(Exception):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="IBE Client")
+    parser.add_argument("--server-ip", action="store", dest="srv_addr",
+                        type=str, default="localhost")
+    parser.add_argument("--server-port", action="store", dest="srv_port",
+                        type=int, default=10010)
+    parser.add_argument("--action", dest="action", default="sk",
+                        choices=_valid_actions.keys(),
+                        help="the valid actions are: %s" % str(_valid_actions))
+    parser.add_argument('-c', type=str, nargs="?", default="",
+                        dest="config_file", help='configuration file')
 
-    client_test = ClientTest(srv_addr=args.srv_addr, srv_port=args.srv_port,
-                             args=args)
+    _args = parser.parse_args()
+    global _config_file
+    _config_file = _args.config_file
+    client_test = ClientTest(srv_addr=_args.srv_addr, srv_port=_args.srv_port,
+                             args=_args)
     client_test.test_all()
 
 

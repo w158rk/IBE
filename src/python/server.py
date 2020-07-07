@@ -27,11 +27,7 @@ import traceback
 
 BUFFER_SIZE = 1024
 
-parser = argparse.ArgumentParser(description='run an IBE server')
-parser.add_argument('-c', type=str, nargs="?", 
-                        dest="config_file", help='configuration file')
-args = parser.parse_args()
-config_file = args.config_file
+_config_file = ""
 
 
 
@@ -199,8 +195,8 @@ class ServerTest(object):
         from user import User
         server2 = User(b"Client", "127.0.0.1", 10011)
 
-        if config_file:
-            self.user = User(config_file=config_file)
+        if _config_file:
+            self.user = User(config_file=_config_file)
         else:
             self.user = User(user_id, addr, port, top_user_list=[server2])
         self.server = Server(self.user)
@@ -213,6 +209,13 @@ class ServerTest(object):
 
 
 def main():
+    parser = argparse.ArgumentParser(description='run an IBE server')
+    parser.add_argument('-c', type=str, nargs="?", 
+                            dest="config_file", help='configuration file')
+    args = parser.parse_args()
+    global _config_file
+    _config_file = args.config_file
+
     server_test = ServerTest()
     server_test.test_all()
 
