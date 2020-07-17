@@ -62,6 +62,32 @@ class Client(object):
             print("receive ACK")
             self.user.sent_ack_cnts[2] += 1
             
+        if packet.type == Packet.PacketType.SK_RESPOND_INIT:
+
+            # store the mpk first 
+            mpk = packet.vals[0]
+            with open(self.user.local_mpk_file, "wb") as f:
+                f.write(mpk)
+            
+            # then we should send the random key
+            # let the user generate a key, for a client
+            # there is no need to bind anything in client end 
+            # just set the user's key
+            user = self.user
+            key = user.generate_sym_key()
+            packet = Packet.make_sk_request_key_plain(key)
+            plain_text = packet.to_bytes()
+            
+            user_id = user.parent.id 
+            cipher = user.ibe_encrypt(mode="local", m=plain_text, user_id=user_id)
+            packet = Packet.make_sk_request_key_sec(cipher=cipher)
+            
+            action.type = Action.ActionType.SEND
+            action.payload = packet.to_bytes()            
+
+
+            # encrypt the packet with IBE 
+
         return action
 
     def gen_action_from_args(self, args):
@@ -84,8 +110,21 @@ class Client(object):
         # TODO(wxy): complete the logic of sk request 
         # and secure channel construction
         if args.action == "sk":
-            ret.type = Action.ActionType.SEND
-            ret.payload = [b"sk"]
+            ret.type = Action.ActionType.SEND 
+            user = self.user
+
+            if not user.parent:
+                raise ClientError("cannot request for private key if no parent assigned")
+            parent = user.parent 
+            assert parent.id             
+            assert parent.addr             
+            assert parent.port             
+            ret.addr = parent.addr 
+            ret.port = parent.port
+            
+            user_id = user.id
+            payload = Packet.make_sk_request_init(user_id)
+            ret.payload = [payload.to_bytes()]
 
         if args.action == "comm":
             pass
@@ -138,7 +177,7 @@ class Client(object):
         except AssertionError as e:
             traceback.print_exc()
         except Exception as e:
-            print("%s: %s" % (type(e), str(e)))
+            traceback.print_exc()
         finally:
             sock.close()
 
@@ -155,7 +194,12 @@ class Client(object):
             action = self.gen_action_from_args(args)
 
         if action.type == Action.ActionType.SEND:
-            self.run_send(srv_host, srv_port, action)
+            if srv_host and srv_port:
+                self.run_send(srv_host, srv_port, action)
+            elif action.addr and action.port:
+                self.run_send(action.addr, action.port, action)
+            else:
+                raise ClientError("No address to send")
         if action.type == Action.ActionType.RUN:
             self.run_run(action)
 
@@ -236,9 +280,19 @@ def main():
     _args = parser.parse_args()
     global _config_file
     _config_file = _args.config_file
-    client_test = ClientTest(srv_addr=_args.srv_addr, srv_port=_args.srv_port,
-                             args=_args)
-    client_test.test_all()
+
+    import user
+    usr = None
+    if _config_file:
+        usr = user.User(config_file=_config_file)
+    client = Client(usr)
+    client.run(args=_args)
+
+    f_test = False
+    if f_test:
+        client_test = ClientTest(srv_addr=_args.srv_addr, srv_port=_args.srv_port,
+                                args=_args)
+        client_test.test_all()
 
 
 if __name__ == "__main__":

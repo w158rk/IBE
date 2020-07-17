@@ -14,7 +14,7 @@
 from action import Action
 from constant import *
 from init import *
-from crypto_c_interface import ibe_setup
+from crypto_c_interface import *
 from packet import Packet
 from client import Client 
 from server import Server
@@ -24,13 +24,16 @@ import socket
 import threading
 import time
 import json
+import random
 
 _bytes_attributes = ["id", "addr",
                         "global_mpk_file",
                         "global_sk_file",
-                        "local_mpk_file",
-                        "local_msk_file",
-                        "local_sk_file"]
+                        "admin_mpk_file",
+                        "admin_msk_file",
+                        "admin_sk_file",
+                        "local_sk_file",
+                        "local_mpk_file"]
 
 class User(object):
     """class presenting users in the network
@@ -65,8 +68,10 @@ class User(object):
         self.global_mpk_file = b""
         self.global_sk_file = b""
         self.local_mpk_file = b""
-        self.local_msk_file = b""
-        self.local_msk_file = b""
+        self.local_sk_file = b""
+        self.admin_mpk_file = b""
+        self.admin_msk_file = b""
+        self.admin_sk_file = b""
         self.parent = None
 
         # inner variables
@@ -74,6 +79,7 @@ class User(object):
         self.sent_ack_cnts = [0,0,0]
         self.client = None
         self.server = None 
+        self.sym_key = b""
 
         ## for init use
         self.is_in_init = False
@@ -83,12 +89,20 @@ class User(object):
         if config_file:
             self.load_config_file() 
         
-        if hasattr(self, "top_user_list"):
+        if self.top_user_list:
             top_user_list = []
             for user in self.top_user_list:
                 if str2bytes(user["id"]) != self.id:
                     top_user_list.append(self.from_dict(user))
             self.top_user_list = top_user_list
+
+        if self.parent:
+            # convert the json object to the User object 
+            parent = self.parent 
+            parent = self.from_dict(parent)
+            if not parent:
+                raise UserError('Error in the configuration of parent')
+            self.parent = parent
 
     @classmethod
     def from_dict(cls, user_dict):
@@ -149,21 +163,47 @@ class User(object):
             user = self
         return SS_cal_xQ(self.share, user_id=user.id, mpk_file=self.global_mpk_file)
 
+    def generate_sym_key(self):
+        """
+        just generate 256-bit byte string
+        """
+        lint = random.sample(range(256), 32)
+        lchar = [chr(a) for a in lint]
+        lchar = ''.join(lchar)
+        ret = str2bytes(lchar)
+        self.sym_key = ret
+        return ret
+
     def ibe_setup(self, mode="global"):
         """
         Args:
-            mode: choose in ["local", "global"] 
+            mode: choose in ["admin", "global"] 
         """
         mpk_file = self.global_mpk_file
         nouse_suffix = b".nouse"
         len_suffix = b".len"
         if mode=="global":
             ibe_setup(mpk_file, mpk_file+nouse_suffix, mpk_file+len_suffix, mpk_file+nouse_suffix+len_suffix)
-        if mode=="local":
-            mpk_file = self.local_mpk_file
-            msk_file = self.local_msk_file
+        if mode=="admin":
+            mpk_file = self.admin_mpk_file
+            msk_file = self.admin_msk_file
             ibe_setup(mpk_file, msk_file, mpk_file+len_suffix, msk_file+len_suffix)
+            # TODO(wrk): maybe generate the sk for itself
 
+    def ibe_encrypt(self, mode="global", m=b"", user_id=b""):
+        """ 
+        mode is in ["global", "admin", "local"]
+        """
+        mpk_file = b""
+        if mode == "global":
+            mpk_file = self.global_mpk_file
+        elif mode == "admin":
+            mpk_file = self.admin_mpk_file
+        elif mode == "local":
+            mpk_file = self.local_mpk_file
+        else:
+            raise UserError()
+        ibe_encrypt(m, mpk_file, user_id)
 
     def load_config_file(self):
         config = None 
@@ -300,6 +340,8 @@ class User(object):
         self.sent_ack_cnts = [0, 0, 0]
         for s in self.recv_lists:
             s.clear()
+
+        print("The initialization has finished")
 
     def send(self, user, data):
         addr = user.addr 

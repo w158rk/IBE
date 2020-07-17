@@ -24,6 +24,7 @@ import socket
 import threading
 import argparse
 import traceback
+import os
 
 BUFFER_SIZE = 1024
 
@@ -108,6 +109,21 @@ class Server(object):
             print("receive ACK")
             self.user.sent_ack_cnts[2] += 1
 
+        if packet.type == Packet.PacketType.SK_REQUEST_INIT:
+            # send system parameter and TODO(wxy): certificate 
+            
+            # check the system parameters
+            if os.path.exists(self.user.admin_mpk_file) and os.path.exists(self.user.admin_msk_file):
+                pass        # do nothing  
+            else:
+                self.run_gen_sys()
+
+            action = Action()
+            action.type = Action.ActionType.SEND 
+            mpk_file = self.user.admin_mpk_file
+            packet = Packet.make_sk_respond_init(mpk_file=mpk_file)
+            action.payload = packet.to_bytes()
+
 
         return action
 
@@ -128,10 +144,16 @@ class Server(object):
             t = threading.Thread(target=self.handle_thread, args=(conn, addr))
             t.start()
 
+    def run_gen_sys(self):
+        print("generate the system")
+        user = self.user 
+        user.ibe_setup(mode="admin")
+
     def run_run(self, action):
         if action.payload[0] == b"run_init":
             _, val = action.payload
             self.user.run_init(with_val=val, is_listening=True)
+
 
     def handle_thread(self, sock, addr, user=None):
         """the main function of handle thread
@@ -169,6 +191,10 @@ class Server(object):
                             send_action, run_action = action.payload
                             sock.send(send_action.payload)
                             self.run_run(run_action)
+                        if action.type == Action.ActionType.RUN_AND_SEND:
+                            run_action, send_action = action.payload 
+                            self.run_run(run_action)
+                            sock.send(send_action.payload)
 
 
             sock.close()

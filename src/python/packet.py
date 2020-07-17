@@ -15,6 +15,8 @@ from enum import Enum
 from init import SS_poly_apply, SS_id2num
 from utils import str2bytes
 
+import os
+
 class Packet(object):
     """class representing a packet
 
@@ -31,6 +33,13 @@ class Packet(object):
         INIT_R2_ACK = 4
         INIT_R3 = 5       # for the third round of initialization
         INIT_R3_ACK = 6
+        SK_REQUEST_INIT = 7
+        SK_RESPOND_INIT = 8
+        SK_REQUEST_KEY_PLAIN = 9
+        SK_REQUEST_KEY_SEC = 10
+        SK_RESPOND_KEY = 11
+        SK_KEY_ACK = 12
+        SK_KEY_ACK_ACK = 13
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type 
@@ -116,6 +125,82 @@ class Packet(object):
 
         packet.lens = lens
         packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_sk_request_init(cls, user_id):
+        """
+        plaintext, with only the user_id
+        """
+
+        packet = Packet()
+        packet.type = cls.PacketType.SK_REQUEST_INIT
+
+        lens = [len(user_id)]
+        vals = [user_id]
+
+        packet.lens = lens
+        packet.vals = vals 
+
+        return packet
+    
+    @classmethod
+    def make_sk_respond_init(cls, mpk_file="./mpk_file"):
+        """
+        read the content of the given files, TODO(wxy): certificate left
+        """
+        
+        assert os.path.exists(mpk_file)
+
+        mpk = b""
+        with open(mpk_file, "rb") as f:
+            mpk = f.read()
+        
+        packet = Packet()
+        packet.type = cls.PacketType.SK_RESPOND_INIT 
+
+        lens = [len(mpk)]
+        vals = [mpk]
+
+        packet.lens = lens 
+        packet.vals = vals 
+
+        return packet
+
+    @classmethod
+    def make_sk_request_key_plain(cls, key=b""):
+        """
+        make a packet with a random key
+        """
+
+        assert key 
+        packet = Packet()
+        packet.type = cls.PacketType.SK_REQUEST_KEY_PLAIN
+
+        lens = [len(key)]
+        vals = [key]
+
+        packet.lens = lens 
+        packet.vals = vals 
+
+        return packet
+
+    @classmethod
+    def make_sk_request_key_sec(cls, cipher=b'', sig=b"no"):
+        """
+        just make the cipher and the sig in the packet
+        """
+        assert cipher
+
+        packet = Packet()
+        packet.type = cls.PacketType.SK_REQUEST_KEY_SEC 
+
+        lens = [len(cipher), len(sig)]
+        vals = [cipher, sig]
+
+        packet.lens = lens 
+        packet.vals = vals 
 
         return packet
 
