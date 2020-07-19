@@ -4,7 +4,7 @@
 '''
 @File    :   packet.py
 @Time    :   2020/06/08 08:36:03
-@Author  :   Ruikai Wang 
+@Author  :   Ruikai Wang
 @Version :   1.0
 @Contact :   wrk15835@gmail.com
 @License :   Copyright (c) 2020 Ruikai Wang
@@ -17,12 +17,13 @@ from utils import str2bytes
 
 import os
 
+
 class Packet(object):
     """class representing a packet
 
     Attributes:
-        type: 
-        lens:       length of all the parts 
+        type:
+        lens:       length of all the parts
         vals:       values of all the parts
     """
 
@@ -42,31 +43,31 @@ class Packet(object):
         SK_KEY_ACK_ACK = 13
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
-        self.type = pack_type 
-        self.lens = lens 
-        self.vals = vals 
+        self.type = pack_type
+        self.lens = lens
+        self.vals = vals
 
     @classmethod
     def from_bytes(cls, bstr):
         index = 0
         ret = Packet()
 
-        pack_type = int.from_bytes(bstr[index: index+2], "little") 
+        pack_type = int.from_bytes(bstr[index: index+2], "little")
         pack_type = cls.PacketType(pack_type)
         ret.type = pack_type
 
         index += 2
         sz = int.from_bytes(bstr[index: index+2], "little")
 
-        # read the lens 
+        # read the lens
         index += 2
         lens = []
         for i in range(sz):
             lens.append(int.from_bytes(bstr[index: index+2], "little"))
             index += 2
         ret.lens = lens
-        
-        # read the values 
+
+        # read the values
         vals = []
         for l in lens:
             vals.append(bstr[index: index+l])
@@ -96,7 +97,7 @@ class Packet(object):
     @classmethod
     def make_init_2(cls, point):
         """
-        As the point is calculated in the user module, here we just arrange the 
+        As the point is calculated in the user module, here we just arrange the
         packet without calculate anything
         """
 
@@ -141,30 +142,30 @@ class Packet(object):
         vals = [user_id]
 
         packet.lens = lens
-        packet.vals = vals 
+        packet.vals = vals
 
         return packet
-    
+
     @classmethod
     def make_sk_respond_init(cls, mpk_file="./mpk_file"):
         """
         read the content of the given files, TODO(wxy): certificate left
         """
-        
+
         assert os.path.exists(mpk_file)
 
         mpk = b""
         with open(mpk_file, "rb") as f:
             mpk = f.read()
-        
+
         packet = Packet()
-        packet.type = cls.PacketType.SK_RESPOND_INIT 
+        packet.type = cls.PacketType.SK_RESPOND_INIT
 
         lens = [len(mpk)]
         vals = [mpk]
 
-        packet.lens = lens 
-        packet.vals = vals 
+        packet.lens = lens
+        packet.vals = vals
 
         return packet
 
@@ -174,15 +175,15 @@ class Packet(object):
         make a packet with a random key
         """
 
-        assert key 
+        assert key
         packet = Packet()
         packet.type = cls.PacketType.SK_REQUEST_KEY_PLAIN
 
         lens = [len(key)]
         vals = [key]
 
-        packet.lens = lens 
-        packet.vals = vals 
+        packet.lens = lens
+        packet.vals = vals
 
         return packet
 
@@ -194,20 +195,20 @@ class Packet(object):
         assert cipher
 
         packet = Packet()
-        packet.type = cls.PacketType.SK_REQUEST_KEY_SEC 
+        packet.type = cls.PacketType.SK_REQUEST_KEY_SEC
 
         lens = [len(cipher), len(sig)]
         vals = [cipher, sig]
 
-        packet.lens = lens 
-        packet.vals = vals 
+        packet.lens = lens
+        packet.vals = vals
 
         return packet
 
     def to_bytes(self):
         """
         Raise:
-            ValueError if the lengths of lens and vals differ 
+            ValueError if the lengths of lens and vals differ
         """
 
         if len(self.lens) != len(self.vals):
@@ -224,9 +225,10 @@ class Packet(object):
         vals = b''.join(self.vals)
         return b''.join([header, lens, vals])
 
+
 class PacketTest(object):
     def __init__(self):
-        self.packet = None 
+        self.packet = None
         self.bstr = None
 
     def test_to_bytes(self):
@@ -237,7 +239,7 @@ class PacketTest(object):
         print(res)
 
     def test_from_bytes(self):
-        res = Packet.from_bytes(self.bstr) 
+        res = Packet.from_bytes(self.bstr)
         print(res.type)
         print(res.lens)
         print(res.vals)
@@ -246,8 +248,10 @@ class PacketTest(object):
         self.test_to_bytes()
         self.test_from_bytes()
 
+
 def main():
     PacketTest().test_all()
+
 
 if __name__ == "__main__":
     main()

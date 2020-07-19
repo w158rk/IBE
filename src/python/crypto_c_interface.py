@@ -455,9 +455,9 @@ class CryptoTest(object):
 
     def test_encrypt(self):
         """
-        This is for testing if an sk file is correctly generated 
+        This is for testing if an sk file is correctly generated
         the following files are required:
-            self.mpk_file 
+            self.mpk_file
             self.sk_file
         """
         if not os.path.exists(self.mpk_file):

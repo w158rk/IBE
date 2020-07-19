@@ -16,24 +16,25 @@ from constant import *
 from init import *
 from crypto_c_interface import *
 from packet import Packet
-from client import Client 
+from client import Client
 from server import Server
 from utils import str2bytes
 
-import socket 
+import socket
 import threading
 import time
 import json
 import random
 
 _bytes_attributes = ["id", "addr",
-                        "global_mpk_file",
-                        "global_sk_file",
-                        "admin_mpk_file",
-                        "admin_msk_file",
-                        "admin_sk_file",
-                        "local_sk_file",
-                        "local_mpk_file"]
+                     "global_mpk_file",
+                     "global_sk_file",
+                     "admin_mpk_file",
+                     "admin_msk_file",
+                     "admin_sk_file",
+                     "local_sk_file",
+                     "local_mpk_file"]
+
 
 class User(object):
     """class presenting users in the network
@@ -48,16 +49,16 @@ class User(object):
     def __init__(self, user_id="", addr="", port=0,
                    top_user_list=[], config_file=None):
         """
-        Args: 
-            - top_user_list: 
+        Args:
+            - top_user_list:
                 a list of dicts which represent a user with keyset: (id, addr, port)
             - recv_list:
-                only used when a server is invoked by the init process 
+                only used when a server is invoked by the init process
         """
         # declare all the members
-        # all the variables used should be declared 
+        # all the variables used should be declared
         # here for maintaining convenience
-        self.top_user_list = top_user_list 
+        self.top_user_list = top_user_list
         self.config_file = config_file
         self.id = user_id
         self.addr = addr
@@ -75,20 +76,20 @@ class User(object):
         self.parent = None
 
         # inner variables
-        self.recv_lists = [set() for i in range(3)] 
-        self.sent_ack_cnts = [0,0,0]
+        self.recv_lists = [set() for i in range(3)]
+        self.sent_ack_cnts = [0, 0, 0]
         self.client = None
-        self.server = None 
+        self.server = None
         self.sym_key = b""
 
-        ## for init use
+        # for init use
         self.is_in_init = False
         self.share = None
         self.sP = (None, None)
 
         if config_file:
-            self.load_config_file() 
-        
+            self.load_config_file()
+
         if self.top_user_list:
             top_user_list = []
             for user in self.top_user_list:
@@ -97,8 +98,8 @@ class User(object):
             self.top_user_list = top_user_list
 
         if self.parent:
-            # convert the json object to the User object 
-            parent = self.parent 
+            # convert the json object to the User object
+            parent = self.parent
             parent = self.from_dict(parent)
             if not parent:
                 raise UserError('Error in the configuration of parent')
@@ -117,7 +118,7 @@ class User(object):
     def cal_share(self):
         """
         calculate the share with formula:
-        
+
                 share = (\sum f(x)) * l_x(0)
         """
         id_list = []
@@ -126,13 +127,12 @@ class User(object):
             id_list.append(user.id)
         return SS_cal_share(self.recv_lists[0], id_list, mpk_file=self.global_mpk_file)
 
-
     def cal_sP(self):
         """
         calculate sP1 = \sum share * P1
         calculate sP2 = \sum share * P2
         """
-        
+
         # l1 and l2 for list of sP1 and sP2
         l1 = []
         l2 = []
@@ -177,7 +177,7 @@ class User(object):
     def ibe_setup(self, mode="global"):
         """
         Args:
-            mode: choose in ["admin", "global"] 
+            mode: choose in ["admin", "global"]
         """
         mpk_file = self.global_mpk_file
         nouse_suffix = b".nouse"
@@ -191,7 +191,7 @@ class User(object):
             # TODO(wrk): maybe generate the sk for itself
 
     def ibe_encrypt(self, mode="global", m=b"", user_id=b""):
-        """ 
+        """
         mode is in ["global", "admin", "local"]
         """
         mpk_file = b""
@@ -206,7 +206,7 @@ class User(object):
         ibe_encrypt(m, mpk_file, user_id)
 
     def load_config_file(self):
-        config = None 
+        config = None
         with open(self.config_file, "r", encoding="utf-8") as f:
             config = json.load(f)
 
@@ -226,14 +226,13 @@ class User(object):
         except AttributeError:
             pass
 
-
     def output_sP(self, sP, mpk_file=b"./mpk"):
         SS_output_sP(sP, mpk_file=mpk_file)
 
     def output_sQ(self, sQ):
         SS_output_sQ(sQ, user=self)
 
-    def run_init(self, with_val=None, is_listening=False):  
+    def run_init(self, with_val=None, is_listening=False):
         """
         setup the HIBE system with secret sharing
         """
@@ -243,24 +242,24 @@ class User(object):
 
         if self.is_in_init:
             # if is in init, just add the val into the list
-            return 
-        
+            return
+
         if not os.path.exists(self.global_mpk_file):
             self.ibe_setup("global")
 
         print("begin running initialization")
-        self.is_in_init = True 
+        self.is_in_init = True
 
         # at the beginning, we should set up a server for
         # receiving the desired packets
         if not is_listening:
             if not self.server:
                 self.server = Server(self)
-            
+
             t = threading.Thread(target=self.server.run)
             t.start()
 
-        # setup the client 
+        # setup the client
         if not self.client:
             self.client = Client(self)
 
@@ -269,19 +268,19 @@ class User(object):
             raise UserError("The init cannot be invoked without the top users")
 
         # sz + 1 == the number of top users
-        sz = len(self.top_user_list)  
-        co_cnt = sz + 1          
+        sz = len(self.top_user_list)
+        co_cnt = sz + 1
 
         # generate a polynomial at first
         poly = SS_new_rand_poly(co_cnt)
 
-        ## add f_i(x_i) into the list
+        # add f_i(x_i) into the list
         bn = SS_id2num(self.id, mpk_file=self.global_mpk_file)
-        bn = SS_poly_apply(poly, co_cnt, bn) 
+        bn = SS_poly_apply(poly, co_cnt, bn)
         self.recv_lists[0].add(bn)
 
         # round one
-        # send the values while receiving 
+        # send the values while receiving
         while len(self.recv_lists[0]) < co_cnt or self.sent_ack_cnts[0] < sz:
             for user in top_user_list:
                 packet = Packet.make_init_1(poly, co_cnt, user.id, mpk_file=self.global_mpk_file)
@@ -292,7 +291,7 @@ class User(object):
 
         # now we have all the parts for our share
         # it's time to calculate the share with formula:
-        # 
+        #
         # share = (\sum f(x)) * l_x(0)
         share = self.cal_share()
         self.share = share
@@ -314,9 +313,9 @@ class User(object):
         self.sP = sP
         self.output_sP(sP, mpk_file=self.global_mpk_file)
 
-        # the public master key is stored in global_mpk_file 
-        # now it's time to calculate the private key for 
-        # the top users 
+        # the public master key is stored in global_mpk_file
+        # now it's time to calculate the private key for
+        # the top users
         round_index = 2
         point = self.cal_shareQ()
         self.recv_lists[round_index].add(point)
@@ -332,7 +331,7 @@ class User(object):
 
         # calculate sQ
         sQ = self.cal_sQ()
-        self.sQ = sQ 
+        self.sQ = sQ
         self.output_sQ(sQ)
 
         # clear the related data
@@ -344,8 +343,8 @@ class User(object):
         print("The initialization has finished")
 
     def send(self, user, data):
-        addr = user.addr 
-        port = user.port 
+        addr = user.addr
+        port = user.port
 
         action = Action()
         action.type = Action.ActionType.SEND
@@ -353,6 +352,7 @@ class User(object):
 
         t = threading.Thread(target=self.client.run_send, args=(addr, port, action))
         t.start()
+
 
 class UserError(Exception):
     def __init__(self, err='Error in Client Module'):
