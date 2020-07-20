@@ -72,13 +72,14 @@ int main()
 int main() 
 {
 	unsigned char *key 	= "1234567812345678";
-	char *m 		= "hello";
+	char *m 		= "This is a test text";
+	int m_len = strlen(m);
 	char c[50];
 	char dec_m[50];
 	int c_len = 50;
 	int dec_m_len = 50;
 
-	sym_crypt_ecb(key, 1, 5, m, c, &c_len);
+	sym_crypt_ecb(key, 1, m_len, m, c, &c_len);
 	printf("clen: %d\n", c_len);
 	sym_crypt_ecb(key, 0, c_len, c, dec_m, &dec_m_len);
 	printf("dec_len: %d\n", dec_m_len);

@@ -312,6 +312,88 @@ def ibe_verify(m, sm, mpk, user_id):
     return res
 
 
+def sm4_enc(key, m):
+    """encrypt the message with sm4 key
+
+    Args:
+        key: sm4 key
+        m: message to be encrypted
+
+    Return:
+        cipher
+    """
+
+    c_key = c_char_p()
+    c_key.value = key
+
+    c_m = c_char_p()
+    c_m.value = m
+    m_len = len(m)
+    c_m_len = c_ulong(m_len)
+
+    c_c = c_char_p()
+    c_c.value = b"\x00" * BUFFER_SIZE
+    c_c_len = c_ulong(BUFFER_SIZE)
+    p_c_len = pointer(c_c_len)
+
+    lib_ibe = CDLL(LIBIBE_PATH)
+    res = lib_ibe.sym_crypt_ecb(c_key, 1, c_m_len, c_m, c_c, p_c_len)
+
+    if res:
+        c_len = p_c_len.contents.value
+
+        c_c = cast(c_c, PCHAR)
+
+        res = []
+        for i in range(c_len):
+            res.append(c_c[i])
+
+        return b''.join(res)
+
+    return None
+
+
+def sm4_dec(key, c):
+    """decrypt the cipher with sm4 key
+
+    Args:
+        key: sm4 key
+        c: the cipher
+
+    Return:
+        the decrypted message
+    """
+
+    c_key = c_char_p()
+    c_key.value = key
+
+    c_c = c_char_p()
+    c_c.value = c
+    c_len = len(c)
+    c_c_len = c_ulong(c_len)
+
+    c_m = c_char_p()
+    c_m.value = b"\x00" * BUFFER_SIZE
+    c_m_len = c_ulong(BUFFER_SIZE)
+    p_m_len = pointer(c_m_len)
+
+    lib_ibe = CDLL(LIBIBE_PATH)
+    res = lib_ibe.sym_crypt_ecb(c_key, 0, c_c_len, c_c, c_m, p_m_len)
+
+    if res:
+        m_len = p_m_len.contents.value
+
+        c_m = cast(c_m, PCHAR)
+
+        res = []
+        for i in range(m_len):
+            res.append(c_m[i])
+
+        return b''.join(res)
+
+    return None
+
+
 class CryptoTest(object):
     """class for testing the cryptographic algorithms
 
@@ -327,12 +409,14 @@ class CryptoTest(object):
         m: message
         c: cipher
         dm: decrypted message
+        sm4_key: key for sm4
     """
 
     def __init__(self, mpk_file=b"mpk", msk_file=b"msk",
                  mpk_len_file=b"mpk_len", msk_len_file=b"msk_len",
                  sk_file=b"sk",
-                 user_id=b"Server1", m=b"This is a test text"):
+                 user_id=b"Server1", m=b"This is a test text",
+                 sm4_key=b"1234567812345678"):
 
         self.mpk_file = mpk_file
         self.msk_file = msk_file
@@ -341,6 +425,7 @@ class CryptoTest(object):
         self.sk_file = sk_file
         self.user_id = user_id
         self.m = m
+        self.sm4_key = sm4_key
 
         self.mpk = None
         self.msk = None
@@ -432,6 +517,35 @@ class CryptoTest(object):
             print("verify test failed!")
             return False
 
+    def test_sm4_enc(self):
+        if not self.sm4_key:
+            print("read sm4_key failed!")
+            return False
+        c = sm4_enc(self.sm4_key, self.m)
+        if c:
+            print("encrypt test passed!")
+            self.c = c
+            return True
+        else:
+            print("encrypt test failed")
+            return False
+
+    def test_sm4_dec(self):
+        if not self.sm4_key:
+            print("read sm4_key failed!")
+            return False
+        dm = sm4_dec(self.sm4_key, self.c)
+
+        if dm and dm == self.m:
+            print("decrypt test passed!")
+            self.dm = dm
+            return True
+        else:
+            print("decrypt test failed!")
+            print(list(self.m))
+            print(list(dm))
+            return False
+
     def remove_auxiliary_files(self):
         for filename in [self.mpk_file, self.mpk_len_file,
                          self.msk_file, self.msk_len_file]:
@@ -446,6 +560,8 @@ class CryptoTest(object):
         res = res and self.test_ibe_decrypt()
         res = res and self.test_ibe_sign()
         res = res and self.test_ibe_verify()
+        res = res and self.test_sm4_enc()
+        res = res and self.test_sm4_dec()
 
         if res:
             print("test all passed!")
