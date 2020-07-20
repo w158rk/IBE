@@ -38,7 +38,7 @@ class Packet(object):
         SK_RESPOND_INIT = 8
         SK_REQUEST_KEY_PLAIN = 9
         SK_REQUEST_KEY_SEC = 10
-        SK_RESPOND_KEY = 11
+        SK_RESPOND_KEY_PLAIN = 11
         SK_KEY_ACK = 12
         SK_KEY_ACK_ACK = 13
 
@@ -147,22 +147,27 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sk_respond_init(cls, mpk_file="./mpk_file"):
+    def make_sk_respond_init(cls, mpkglobal_file="./mpk-global.conf", mpk_file="./mpk_file"):
         """
         read the content of the given files, TODO(wxy): certificate left
         """
 
         assert os.path.exists(mpk_file)
+        assert os.path.exists(mpkglobal_file)
 
         mpk = b""
         with open(mpk_file, "rb") as f:
             mpk = f.read()
 
+        global_mpk = b""
+        with open(mpkglobal_file, "rb") as f:
+            global_mpk = f.read()
+
         packet = Packet()
         packet.type = cls.PacketType.SK_RESPOND_INIT
 
-        lens = [len(mpk)]
-        vals = [mpk]
+        lens = [len(global_mpk), len(mpk)]
+        vals = [global_mpk, mpk]
 
         packet.lens = lens
         packet.vals = vals
@@ -188,7 +193,7 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sk_request_key_sec(cls, cipher=b'', sig=b"no"):
+    def make_sk_request_key_sec(cls, user_id, cipher=b'', sig=b"no"):
         """
         just make the cipher and the sig in the packet
         """
@@ -197,13 +202,31 @@ class Packet(object):
         packet = Packet()
         packet.type = cls.PacketType.SK_REQUEST_KEY_SEC
 
-        lens = [len(cipher), len(sig)]
-        vals = [cipher, sig]
+        lens = [len(cipher), len(sig), len(user_id)]
+        vals = [cipher, sig, user_id]
 
         packet.lens = lens
         packet.vals = vals
 
         return packet
+
+    @classmethod
+    def make_sk_respond_key_plain(cls, user_sk=b''):
+        """
+        calculate the client's sk
+        """
+        assert user_sk
+
+        packet = Packet()
+        packet.type = cls.PacketType.SK_RESPOND_KEY_PLAIN
+
+        lens = [len(user_sk)]
+        vals = [user_sk]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return Packet
 
     def to_bytes(self):
         """

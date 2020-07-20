@@ -37,6 +37,7 @@ _valid_actions = {
 }
 _config_file = ""
 
+
 class Client(object):
     """
     Attributes:
@@ -61,32 +62,36 @@ class Client(object):
         if packet.type == Packet.PacketType.INIT_R3_ACK:
             print("receive ACK")
             self.user.sent_ack_cnts[2] += 1
-            
+
         if packet.type == Packet.PacketType.SK_RESPOND_INIT:
 
-            # store the mpk first 
-            mpk = packet.vals[0]
+            # store the global mpk
+            global_mpk = packet.vals[0]
+            with open(self.user.global_mpk_file, "wb") as f:
+                f.write(global_mpk)
+
+            # store the mpk
+            mpk = packet.vals[1]
             with open(self.user.local_mpk_file, "wb") as f:
                 f.write(mpk)
-            
+
             # then we should send the random key
             # let the user generate a key, for a client
-            # there is no need to bind anything in client end 
+            # there is no need to bind anything in client end
             # just set the user's key
             user = self.user
             key = user.generate_sym_key()
             packet = Packet.make_sk_request_key_plain(key)
             plain_text = packet.to_bytes()
-            
-            user_id = user.parent.id 
+
+            user_id = user.parent.id
             cipher = user.ibe_encrypt(mode="local", m=plain_text, user_id=user_id)
             packet = Packet.make_sk_request_key_sec(cipher=cipher)
-            
+
             action.type = Action.ActionType.SEND
-            action.payload = packet.to_bytes()            
+            action.payload = packet.to_bytes()
 
-
-            # encrypt the packet with IBE 
+            # encrypt the packet with IBE
 
         return action
 
@@ -101,27 +106,27 @@ class Client(object):
             the Action object
         """
         ret = Action()
-        
+
         # TODO(wrk): complete the logic of init
         if args.action == "init":
             ret.type = Action.ActionType.RUN
             ret.payload = [b"run_init"]
 
-        # TODO(wxy): complete the logic of sk request 
+        # TODO(wxy): complete the logic of sk request
         # and secure channel construction
         if args.action == "sk":
-            ret.type = Action.ActionType.SEND 
+            ret.type = Action.ActionType.SEND
             user = self.user
 
             if not user.parent:
                 raise ClientError("cannot request for private key if no parent assigned")
-            parent = user.parent 
-            assert parent.id             
-            assert parent.addr             
-            assert parent.port             
-            ret.addr = parent.addr 
+            parent = user.parent
+            assert parent.id
+            assert parent.addr
+            assert parent.port
+            ret.addr = parent.addr
             ret.port = parent.port
-            
+
             user_id = user.id
             payload = Packet.make_sk_request_init(user_id)
             ret.payload = [payload.to_bytes()]
@@ -137,7 +142,7 @@ class Client(object):
 
     def run_send(self, addr, port, action):
         """
-        send data to addr:port 
+        send data to addr:port
 
         Ensure:
             the list action.payload only contain the data to be sent
@@ -181,14 +186,12 @@ class Client(object):
         finally:
             sock.close()
 
-
     def run(self, srv_host=None, srv_port=None, action=None, args=None):
         """
         do the actual behavior as the action or args identified
 
-        neither srv_host nor sev_port should be None if action.type = SEND 
+        neither srv_host nor sev_port should be None if action.type = SEND
         """
-
 
         if args:
             action = self.gen_action_from_args(args)
@@ -202,9 +205,6 @@ class Client(object):
                 raise ClientError("No address to send")
         if action.type == Action.ActionType.RUN:
             self.run_run(action)
-
-
-
 
 
 class ClientTest(object):
@@ -223,7 +223,7 @@ class ClientTest(object):
     def __init__(self, user_id=b"Client", addr="0.0.0.0", port=10011,
                  srv_addr="localhost", srv_port=10010, args=None):
         self.user_id = user_id
-        self.addr = addr 
+        self.addr = addr
         self.port = port
         self.srv_addr = srv_addr
         self.srv_port = srv_port
@@ -233,31 +233,30 @@ class ClientTest(object):
         import user
         usr = user.User(self.user_id, self.addr, self.port)
         client = Client(usr)
-        args = self.args 
+        args = self.args
         args.action = "sk"
         client.run(self.srv_addr, self.srv_port, args=args)
 
     def test_client_init(self):
         import user
         server = {
-            "id" : "Server1", 
-            "ip_address" : self.srv_addr,
-            "port" : self.srv_port,
-            "parent" : None
+            "id": "Server1",
+            "ip_address": self.srv_addr,
+            "port": self.srv_port,
+            "parent": None
         }
         if _config_file:
             usr = user.User(config_file=_config_file)
         else:
             usr = user.User(self.user_id, self.addr, self.port, top_user_list=[server])
         client = Client(usr)
-        args = self.args 
+        args = self.args
         args.action = "init"
         client.run(args=args)
 
     def test_all(self):
         # self.test_client_run()
         self.test_client_init()
-
 
 
 class ClientError(Exception):

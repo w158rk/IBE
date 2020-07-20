@@ -101,7 +101,7 @@ class Server(object):
         if packet.type == Packet.PacketType.INIT_R3:
             # add the payload into the recv_list
 
-            action.type = Action.ActionType.SEND 
+            action.type = Action.ActionType.SEND
             action.payload = Packet(Packet.PacketType.INIT_R3_ACK).to_bytes()
             self.user.recv_lists[2].add(packet.vals[0])
 
@@ -110,20 +110,27 @@ class Server(object):
             self.user.sent_ack_cnts[2] += 1
 
         if packet.type == Packet.PacketType.SK_REQUEST_INIT:
-            # send system parameter and TODO(wxy): certificate 
-            
+            # send system parameter and TODO(wxy): certificate
+
             # check the system parameters
             if os.path.exists(self.user.admin_mpk_file) and os.path.exists(self.user.admin_msk_file):
-                pass        # do nothing  
+                pass        # do nothing
             else:
                 self.run_gen_sys()
 
             action = Action()
-            action.type = Action.ActionType.SEND 
+            action.type = Action.ActionType.SEND
             mpk_file = self.user.admin_mpk_file
             packet = Packet.make_sk_respond_init(mpk_file=mpk_file)
             action.payload = packet.to_bytes()
 
+        if packet.type == Packet.PacketType.SK_REQUEST_KEY_SEC:
+            # send sk and sig to client
+
+            sm4_key = packet.vals[0]
+            client_id = packet.vals[2]
+            client_sk = self.user.ibe_extract(client_id)
+            packet = Packet.make_sk_respond_key_plain(client_sk)
 
         return action
 

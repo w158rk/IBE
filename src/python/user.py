@@ -174,6 +174,9 @@ class User(object):
         self.sym_key = ret
         return ret
 
+    def sm4_enc(self, key=b"", m=b""):
+        sm4_enc(key, m)
+
     def ibe_setup(self, mode="global"):
         """
         Args:
@@ -189,6 +192,10 @@ class User(object):
             msk_file = self.admin_msk_file
             ibe_setup(mpk_file, msk_file, mpk_file+len_suffix, msk_file+len_suffix)
             # TODO(wrk): maybe generate the sk for itself
+
+    def ibe_extract(self, id=b""):
+        msk_file = self.admin_msk_file
+        ibe_extract(msk_file, id)
 
     def ibe_encrypt(self, mode="global", m=b"", user_id=b""):
         """
