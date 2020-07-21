@@ -6,7 +6,37 @@
 
 每一轮的包都需要有一个类型枚举，位于`Packet.PacketType`，然后（最好）每一轮的包都要写一个`make_xxx`函数。例如，私钥请求第一轮的类型为`Packet.PacketType.SK_REQUEST_INIT`，同时存在一个做包函数`make_sk_request_init`（后缀和类型是一样的，只是大小写不同）返回这一轮的包，函数参数按需选择。对于需要加密的包，使用`PLAIN`和`SEC`进行区分。
 
+## 2 User 
 
+`User`存储配置相关的东西（ID、网络地址、参数文件），所以所有在`crypto_c_interface`里定义的函数，需要在`User`里包装一下，获取相关参数会容易一些，例如：`ibe_encrypt`的包装如下
+
+```python
+class User:
+  ...
+  def ibe_encrypt(self, mode="global", m=b"", user_id=b""):
+      """ 
+      mode is in ["global", "admin", "local"]
+      """
+      mpk_file = b""
+      if mode == "global":
+          mpk_file = self.global_mpk_file
+      elif mode == "admin":
+          mpk_file = self.admin_mpk_file
+      elif mode == "local":
+          mpk_file = self.local_mpk_file
+      else:
+          raise UserError()
+      ibe_encrypt(m, mpk_file, user_id)
+```
+
+## Server 
+
+`server.py`定义服务器响应逻辑，主要函数是`gen_action_from_data`，它根据收到的数据产生一个`Action`对象，`run`函数作为一个对这些`Action`进行调度和执行。
+
+
+## Client
+
+`client.py`与`server.py`差不多，只是多了一个`gen_action_from_args`，这是根据用户给定参数产生`Action`对象的，`run`函数依旧作为`Action`的调度函数
 
 # 2020-07-07
 
