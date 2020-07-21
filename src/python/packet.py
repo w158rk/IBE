@@ -39,8 +39,9 @@ class Packet(object):
         SK_REQUEST_KEY_PLAIN = 9
         SK_REQUEST_KEY_SEC = 10
         SK_RESPOND_KEY_PLAIN = 11
-        SK_KEY_ACK = 12
-        SK_KEY_ACK_ACK = 13
+        SK_RESPOND_KEY_SEC = 12
+        SK_KEY_ACK = 13
+        SK_KEY_ACK_ACK = 14
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type
@@ -175,17 +176,18 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sk_request_key_plain(cls, key=b""):
+    def make_sk_request_key_plain(cls, key=b'', user_id=b''):
         """
         make a packet with a random key
         """
 
         assert key
+        assert user_id
         packet = Packet()
         packet.type = cls.PacketType.SK_REQUEST_KEY_PLAIN
 
-        lens = [len(key)]
-        vals = [key]
+        lens = [len(key), len(user_id)]
+        vals = [key, user_id]
 
         packet.lens = lens
         packet.vals = vals
@@ -193,7 +195,7 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sk_request_key_sec(cls, user_id, cipher=b'', sig=b"no"):
+    def make_sk_request_key_sec(cls, cipher=b'', sig=b"no"):
         """
         just make the cipher and the sig in the packet
         """
@@ -202,8 +204,8 @@ class Packet(object):
         packet = Packet()
         packet.type = cls.PacketType.SK_REQUEST_KEY_SEC
 
-        lens = [len(cipher), len(sig), len(user_id)]
-        vals = [cipher, sig, user_id]
+        lens = [len(cipher), len(sig)]
+        vals = [cipher, sig]
 
         packet.lens = lens
         packet.vals = vals
@@ -211,22 +213,40 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sk_respond_key_plain(cls, user_sk=b''):
+    def make_sk_respond_key_plain(cls, user_sk=b'', sk_len=b''):
         """
-        calculate the client's sk
+        make the packet with client's sk and sk length
         """
         assert user_sk
 
         packet = Packet()
         packet.type = cls.PacketType.SK_RESPOND_KEY_PLAIN
 
-        lens = [len(user_sk)]
-        vals = [user_sk]
+        lens = [len(user_sk), len(sk_len)]
+        vals = [user_sk, sk_len]
 
         packet.lens = lens
         packet.vals = vals
 
-        return Packet
+        return packet
+
+    @classmethod
+    def make_sk_respond_key_sec(cls, cipher=b''):
+        """
+        just make the cipher in the packet
+        """
+        assert cipher
+
+        packet = Packet()
+        packet.type = cls.PacketType.SK_RESPOND_KEY_SEC
+
+        lens = [len(cipher)]
+        vals = [cipher]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
 
     def to_bytes(self):
         """

@@ -59,7 +59,6 @@ def ibe_setup(mpk_file, msk_file, mpk_len_file, msk_len_file):
     except TypeError:
         raise TypeError("the filenames should be in bytes type, "
                         "try add b in front of the \"")
-
     lib_ibe = CDLL(LIBIBE_PATH)
     res = lib_ibe.ibe_setup(c_mpk_file, c_msk_file, c_mpk_len_file, c_msk_len_file)
     return res

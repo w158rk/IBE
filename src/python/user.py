@@ -73,6 +73,7 @@ class User(object):
         self.admin_mpk_file = b""
         self.admin_msk_file = b""
         self.admin_sk_file = b""
+        self.sm4_key = b""
         self.parent = None
 
         # inner variables
@@ -177,6 +178,9 @@ class User(object):
     def sm4_enc(self, key=b"", m=b""):
         sm4_enc(key, m)
 
+    def sm4_dec(self, key=b"", c=b""):
+        sm4_dec(key, c)
+
     def ibe_setup(self, mode="global"):
         """
         Args:
@@ -197,7 +201,7 @@ class User(object):
         msk_file = self.admin_msk_file
         ibe_extract(msk_file, id)
 
-    def ibe_encrypt(self, mode="global", m=b"", user_id=b""):
+    def ibe_encrypt(self, mode="", m=b"", user_id=b""):
         """
         mode is in ["global", "admin", "local"]
         """
@@ -211,6 +215,21 @@ class User(object):
         else:
             raise UserError()
         ibe_encrypt(m, mpk_file, user_id)
+
+    def ibe_decrypt(self, mode="", c=b""):
+        """
+        mode is in ["global", "admin", "local"]
+        """
+        sk_file = b""
+        if mode == "global":
+            sk_file = self.global_sk_file
+        elif mode == "admin":
+            sk_file == self.admin_sk_file
+        elif mode == "local":
+            sk_file == self.local_sk_file
+        else:
+            raise UserError()
+        ibe_decrypt(c, sk_file)
 
     def load_config_file(self):
         config = None

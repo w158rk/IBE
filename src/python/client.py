@@ -81,7 +81,8 @@ class Client(object):
             # just set the user's key
             user = self.user
             key = user.generate_sym_key()
-            packet = Packet.make_sk_request_key_plain(key)
+            user.sm4_key = key
+            packet = Packet.make_sk_request_key_plain(key, id)
             plain_text = packet.to_bytes()
 
             user_id = user.parent.id
@@ -92,6 +93,24 @@ class Client(object):
             action.payload = packet.to_bytes()
 
             # encrypt the packet with IBE
+
+        if packet.type == Packet.PacketType.SK_RESPOND_KEY_SEC:
+
+            # get the sec_sk
+            cipher = packet.vals[0]
+
+            user = self.user
+            key = user.sm4_key
+
+            # decrypt to get the sk
+            m = user.sm4_dec(key=key, c=cipher)
+            packet = Packet.from_bytes(m)
+
+            sk = packet.vals[0]
+            sk_len = packet.vals[1]
+            sk = sk[0:sk_len]
+
+            print(sk)
 
         return action
 

@@ -31,7 +31,6 @@ BUFFER_SIZE = 1024
 _config_file = ""
 
 
-
 class Server(object):
     """class representing a server
 
@@ -66,10 +65,10 @@ class Server(object):
             packet = Packet.from_bytes(data)
         except Exception:
             packet = None
-        
+
         if not packet:
             return action
-        
+
         if packet.type == Packet.PacketType.INIT_R1:
             # add the payload into the recv_list
 
@@ -78,7 +77,7 @@ class Server(object):
             run_action.payload = [b"run_init", packet.vals[0]]
 
             send_action = Action()
-            send_action.type = Action.ActionType.SEND 
+            send_action.type = Action.ActionType.SEND
             send_action.payload = Packet(Packet.PacketType.INIT_R1_ACK).to_bytes()
 
             action.type = Action.ActionType.SEND_AND_RUN
@@ -90,7 +89,7 @@ class Server(object):
         if packet.type == Packet.PacketType.INIT_R2:
             # add the payload into the recv_list
 
-            action.type = Action.ActionType.SEND 
+            action.type = Action.ActionType.SEND
             action.payload = Packet(Packet.PacketType.INIT_R2_ACK).to_bytes()
             self.user.recv_lists[1].add(packet.vals[0])
 
@@ -127,10 +126,26 @@ class Server(object):
         if packet.type == Packet.PacketType.SK_REQUEST_KEY_SEC:
             # send sk and sig to client
 
+            cipher = packet.vals[0]
+
+            user = self.user
+            m = user.ibe_decrypt(mode="admin", c=cipher)
+            packet = Packet.from_bytes(m)
+
             sm4_key = packet.vals[0]
-            client_id = packet.vals[2]
+            client_id = packet.vals[1]
+
             client_sk = self.user.ibe_extract(client_id)
-            packet = Packet.make_sk_respond_key_plain(client_sk)
+            print(client_sk)
+            sk_len = len(client_sk)
+            packet = Packet.make_sk_respond_key_plain(client_sk, sk_len)
+            plain_text = packet.to_bytes()
+
+            cipher = user.sm4_enc(key=sm4_key, m=plain_text)
+            packet = Packet.make_sk_respond_key_sec(cipher=cipher)
+
+            action.type = Action.ActionType.SEND
+            action.payload = packet.to_bytes()
 
         return action
 
@@ -153,14 +168,13 @@ class Server(object):
 
     def run_gen_sys(self):
         print("generate the system")
-        user = self.user 
+        user = self.user
         user.ibe_setup(mode="admin")
 
     def run_run(self, action):
         if action.payload[0] == b"run_init":
             _, val = action.payload
             self.user.run_init(with_val=val, is_listening=True)
-
 
     def handle_thread(self, sock, addr, user=None):
         """the main function of handle thread
@@ -199,10 +213,9 @@ class Server(object):
                             sock.send(send_action.payload)
                             self.run_run(run_action)
                         if action.type == Action.ActionType.RUN_AND_SEND:
-                            run_action, send_action = action.payload 
+                            run_action, send_action = action.payload
                             self.run_run(run_action)
                             sock.send(send_action.payload)
-
 
             sock.close()
 
@@ -210,8 +223,6 @@ class Server(object):
             print("Socket error: %s" % str(e))
         except Exception as e:
             traceback.print_exc()
-
-
 
 
 class ServerTest(object):
@@ -243,8 +254,8 @@ class ServerTest(object):
 
 def main():
     parser = argparse.ArgumentParser(description='run an IBE server')
-    parser.add_argument('-c', type=str, nargs="?", 
-                            dest="config_file", help='configuration file')
+    parser.add_argument('-c', type=str, nargs="?",
+                        dest="config_file", help='configuration file')
     args = parser.parse_args()
     global _config_file
     _config_file = args.config_file
