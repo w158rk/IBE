@@ -18,6 +18,7 @@ function exists.
 
 from action import Action
 from packet import Packet
+from utils import int2bytes
 
 import sys
 import socket
@@ -136,8 +137,8 @@ class Server(object):
             client_id = packet.vals[1]
 
             client_sk = self.user.ibe_extract(mode="local", c_id=client_id)
-            print(client_sk)
             sk_len = len(client_sk)
+            sk_len = int2bytes(sk_len, 4)
             packet = Packet.make_sk_respond_key_plain(client_sk, sk_len)
             plain_text = packet.to_bytes()
 

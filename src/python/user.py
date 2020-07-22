@@ -266,6 +266,18 @@ class User(object):
             self.top_user_list = top_user_list
         except AttributeError:
             pass
+    
+    def output_sk(self, sk, mode="global"):
+        sk_file = None
+        if mode == "global":
+            sk_file = self.global_sk_file
+        elif mode == "admin":
+            sk_file = self.admin_sk_file
+        elif mode == "local":
+            sk_file = self.local_sk_file
+        else:
+            raise UserError()
+        ibe_write_to_file(sk, sk_file)
 
     def output_sP(self, sP, mpk_file=b"./mpk"):
         SS_output_sP(sP, mpk_file=mpk_file)

@@ -71,6 +71,11 @@ def ibe_read_from_file(filename):
         return res
     return None
 
+def ibe_write_to_file(content, filename):
+    """write to the file"""
+    with open(filename, "wb") as f:
+        f.write(content)
+
 
 def ibe_extract_file(msk, user_id, sk_file):
     """extract the private key for given ID
@@ -126,9 +131,7 @@ def ibe_extract_file(msk, user_id, sk_file):
 
         re = b''.join(res)
 
-        with open(sk_file, "wb") as f:
-            f.write(re)
-
+        ibe_write_to_file(re, sk_file)
 
 def ibe_extract(msk, user_id):
     """extract the private key for given ID
@@ -278,9 +281,15 @@ def ibe_decrypt(c, sk):
     lib_ibe = CDLL(LIBIBE_PATH)
     res = lib_ibe.ibe_decrypt(c_c, c_c_len, c_m, p_m_len, p_sk, c_sk_len)
 
+    assert res
+
     m_len = p_m_len.contents.value
-    res = c_m.value[:m_len]
-    return res
+    m = cast(c_m, PCHAR)
+    res = []
+    for i in range(m_len):
+        res.append(m[i])
+    
+    return b"".join(res)
 
 
 def ibe_sign(m, sk):

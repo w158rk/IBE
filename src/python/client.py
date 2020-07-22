@@ -22,6 +22,7 @@ Functions:
 from constant import *
 from action import Action
 from packet import Packet
+from utils import bytes2int
 
 import sys
 import socket
@@ -110,9 +111,10 @@ class Client(object):
 
             sk = packet.vals[0]
             sk_len = packet.vals[1]
-            sk = sk[0:sk_len]
+            sk_len = bytes2int(sk_len)
+            sk = sk[:sk_len]
 
-            print(sk)
+            user.output_sk(sk, mode="local")
 
         return action
 
