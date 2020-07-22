@@ -13,9 +13,10 @@
 
 from enum import Enum
 from init import SS_poly_apply, SS_id2num
-from utils import str2bytes
+from utils import str2bytes, int2bytes, bytes2int
 
 import os
+from base64 import b64encode, b64decode
 
 
 class Packet(object):
@@ -50,28 +51,35 @@ class Packet(object):
 
     @classmethod
     def from_bytes(cls, bstr):
-        index = 0
         ret = Packet()
 
-        pack_type = int.from_bytes(bstr[index: index+2], "little")
+        header, lens, vals = bstr.split(b'|')
+        bstr_header = b64decode(header)
+        bstr_lens = b64decode(lens)
+        print("vals: ", vals)
+        bstr_vals = b64decode(vals)
+
+        index = 0
+        pack_type = bytes2int(bstr_header[index: index+2])
         pack_type = cls.PacketType(pack_type)
         ret.type = pack_type
 
         index += 2
-        sz = int.from_bytes(bstr[index: index+2], "little")
+        sz = bytes2int(bstr_header[index: index+2])
 
         # read the lens
-        index += 2
+        index = 0
         lens = []
-        for i in range(sz):
-            lens.append(int.from_bytes(bstr[index: index+2], "little"))
+        for _ in range(sz):
+            lens.append(bytes2int(bstr_lens[index: index+2]))
             index += 2
         ret.lens = lens
 
         # read the values
+        index = 0
         vals = []
         for l in lens:
-            vals.append(bstr[index: index+l])
+            vals.append(bstr_vals[index: index+l])
             index += l
         ret.vals = vals
 
@@ -262,12 +270,15 @@ class Packet(object):
         header.append(self.type.value.to_bytes(2, 'little'))
         header.append(len(self.lens).to_bytes(2, 'little'))
         header = b''.join(header)
+        header = b64encode(header)
 
         lens = [l.to_bytes(2, 'little') for l in self.lens]
         lens = b''.join(lens)
+        lens = b64encode(lens)
 
         vals = b''.join(self.vals)
-        return b''.join([header, lens, vals])
+        vals = b64encode(vals)
+        return b'|'.join([header, lens, vals])
 
 
 class PacketTest(object):

@@ -8,3 +8,4 @@ def int2bytes(num, length):
 
 def bytes2int(bstr):
     return int.from_bytes(bstr, 'little')
+

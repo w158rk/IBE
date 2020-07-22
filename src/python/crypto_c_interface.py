@@ -452,7 +452,12 @@ def sm4_dec(key, c):
         c_m = cast(c_m, PCHAR)
 
         res = []
+
+        # TODO(wxy): this is very inappropriate to handle the decrypted text this way
+        # it should be replaced soon
         for i in range(m_len):
+            if(c_m[i]==b'\x00'):
+                break
             res.append(c_m[i])
 
         return b''.join(res)
