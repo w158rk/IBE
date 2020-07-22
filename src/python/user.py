@@ -24,7 +24,10 @@ import socket
 import threading
 import time
 import json
-import random
+import string
+from os import urandom
+# from random import sample
+# import random
 
 _bytes_attributes = ["id", "addr",
                      "global_mpk_file",
@@ -168,18 +171,20 @@ class User(object):
         """
         just generate 256-bit byte string
         """
-        lint = random.sample(range(256), 32)
-        lchar = [chr(a) for a in lint]
-        lchar = ''.join(lchar)
-        ret = str2bytes(lchar)
-        self.sym_key = ret
-        return ret
+        # lint = random.sample(range(256), 32)
+        lint = urandom(16)
+        print(lint)
+        # lchar = [chr(a) for a in lint]
+        # lchar = ''.join(lchar)
+        # ret = str2bytes(lchar)
+        # self.sym_key = ret
+        return lint
 
     def sm4_enc(self, key=b"", m=b""):
-        sm4_enc(key, m)
+        return sm4_enc(key, m)
 
     def sm4_dec(self, key=b"", c=b""):
-        sm4_dec(key, c)
+        return sm4_dec(key, c)
 
     def ibe_setup(self, mode="global"):
         """
@@ -197,9 +202,15 @@ class User(object):
             ibe_setup(mpk_file, msk_file, mpk_file+len_suffix, msk_file+len_suffix)
             # TODO(wrk): maybe generate the sk for itself
 
-    def ibe_extract(self, id=b""):
+    def ibe_extract(self, mode="", c_id=b""):
         msk_file = self.admin_msk_file
-        ibe_extract(msk_file, id)
+        with open(msk_file, "rb") as f:
+            msk = f.read()
+        if mode == "admin":
+            sk_file = self.admin_sk_file
+            ibe_extract_file(msk, c_id, sk_file)
+        if mode == "local":
+            return ibe_extract(msk, c_id)
 
     def ibe_encrypt(self, mode="", m=b"", user_id=b""):
         """
@@ -214,22 +225,26 @@ class User(object):
             mpk_file = self.local_mpk_file
         else:
             raise UserError()
-        ibe_encrypt(m, mpk_file, user_id)
+        with open(mpk_file, "rb") as f:
+            mpk = f.read()
+        return ibe_encrypt(m, mpk, user_id)
 
-    def ibe_decrypt(self, mode="", c=b""):
+    def ibe_decrypt(self, mode=b"", c=b""):
         """
         mode is in ["global", "admin", "local"]
         """
-        sk_file = b""
+        sk_file = b''
         if mode == "global":
             sk_file = self.global_sk_file
         elif mode == "admin":
-            sk_file == self.admin_sk_file
+            sk_file = self.admin_sk_file
         elif mode == "local":
             sk_file == self.local_sk_file
         else:
             raise UserError()
-        ibe_decrypt(c, sk_file)
+        with open(sk_file, "rb") as f:
+            sk = f.read()
+        return ibe_decrypt(c, sk)
 
     def load_config_file(self):
         config = None

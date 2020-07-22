@@ -82,15 +82,17 @@ class Client(object):
             user = self.user
             key = user.generate_sym_key()
             user.sm4_key = key
-            packet = Packet.make_sk_request_key_plain(key, id)
+
+            packet = Packet.make_sk_request_key_plain(key=key, user_id=user.id)
             plain_text = packet.to_bytes()
 
             user_id = user.parent.id
             cipher = user.ibe_encrypt(mode="local", m=plain_text, user_id=user_id)
             packet = Packet.make_sk_request_key_sec(cipher=cipher)
 
+            action = Action()
             action.type = Action.ActionType.SEND
-            action.payload = packet.to_bytes()
+            action.payload = [packet.to_bytes()]
 
             # encrypt the packet with IBE
 

@@ -185,6 +185,7 @@ class Packet(object):
         assert user_id
         packet = Packet()
         packet.type = cls.PacketType.SK_REQUEST_KEY_PLAIN
+        print(key)
 
         lens = [len(key), len(user_id)]
         vals = [key, user_id]

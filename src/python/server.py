@@ -112,7 +112,7 @@ class Server(object):
             # send system parameter and TODO(wxy): certificate
 
             # check the system parameters
-            if os.path.exists(self.user.admin_mpk_file) and os.path.exists(self.user.admin_msk_file):
+            if os.path.exists(self.user.admin_mpk_file) and os.path.exists(self.user.admin_msk_file) and os.path.exists(self.user.admin_sk_file):
                 pass        # do nothing
             else:
                 self.run_gen_sys()
@@ -135,7 +135,7 @@ class Server(object):
             sm4_key = packet.vals[0]
             client_id = packet.vals[1]
 
-            client_sk = self.user.ibe_extract(client_id)
+            client_sk = self.user.ibe_extract(mode="local", c_id=client_id)
             print(client_sk)
             sk_len = len(client_sk)
             packet = Packet.make_sk_respond_key_plain(client_sk, sk_len)
@@ -170,6 +170,7 @@ class Server(object):
         print("generate the system")
         user = self.user
         user.ibe_setup(mode="admin")
+        user.ibe_extract(mode="admin", c_id=user.id)
 
     def run_run(self, action):
         if action.payload[0] == b"run_init":

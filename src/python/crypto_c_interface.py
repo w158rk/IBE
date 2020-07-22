@@ -72,6 +72,64 @@ def ibe_read_from_file(filename):
     return None
 
 
+def ibe_extract_file(msk, user_id, sk_file):
+    """extract the private key for given ID
+
+    given the master key and the id, return the corresponding private key
+
+    Args:
+        msk: the bytes read representing for master key, often read from msk_file
+        user_id: the user ID, in bytes type
+
+    Returns:
+        the bytes object for the private key if success, None else
+    """
+
+    sk = c_char_p(None)
+    p_sk = PPCHAR(sk)       # TODO(wrk): still not figure out how to create a NULL pointer
+
+    sk_len = c_int(0)
+    p_sk_len = pointer(sk_len)
+
+    # use the following code to generate a char ** pointer
+    # using create_string_buffer would create a char[]
+    # it will trigger the bus error if using inappropriately
+
+    c_msk = c_char_p()
+    c_msk.value = msk
+    p_msk = pointer(c_msk)
+    c_msk_len = len(msk)
+
+    c_id = c_char_p()
+    c_id.value = user_id
+    c_id_len = len(user_id)
+
+    lib_ibe = CDLL(LIBIBE_PATH)
+    res = lib_ibe.ibe_extract(p_sk, p_sk_len, p_msk, c_msk_len, c_id, c_id_len)
+    if res:
+        sk_len = p_sk_len.contents
+        sk_len = sk_len.value
+
+        # As the attribute `value` of a c_char_p object is a string that ends with
+        # '\0', so usually the length of the `value` is shorter than the actual length
+        # of private keys. So we have to read the private key byte by byte.
+        # By the way, as the c_char_p object does not support the index [],
+        # so use the `cast` function to cast it to POINTER(c_char) is the
+        # appropriate method
+
+        sk = p_sk.contents
+        sk = cast(sk, PCHAR)
+
+        res = []
+        for i in range(sk_len):
+            res.append(sk[i])
+
+        re = b''.join(res)
+
+        with open(sk_file, "wb") as f:
+            f.write(re)
+
+
 def ibe_extract(msk, user_id):
     """extract the private key for given ID
 
