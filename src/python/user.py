@@ -77,6 +77,7 @@ class User(object):
         self.admin_msk_file = b""
         self.admin_sk_file = b""
         self.sm4_key = b""
+        self.key = b""
         self.parent = None
 
         # inner variables
@@ -173,7 +174,6 @@ class User(object):
         """
         # lint = random.sample(range(256), 32)
         lint = urandom(16)
-        print(lint)
         # lchar = [chr(a) for a in lint]
         # lchar = ''.join(lchar)
         # ret = str2bytes(lchar)
@@ -266,7 +266,7 @@ class User(object):
             self.top_user_list = top_user_list
         except AttributeError:
             pass
-    
+
     def output_sk(self, sk, mode="global"):
         sk_file = None
         if mode == "global":

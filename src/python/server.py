@@ -19,6 +19,7 @@ function exists.
 from action import Action
 from packet import Packet
 from utils import int2bytes
+from crypto_c_interface import ibe_read_from_file
 
 import sys
 import socket
@@ -144,6 +145,94 @@ class Server(object):
 
             cipher = user.sm4_enc(key=sm4_key, m=plain_text)
             packet = Packet.make_sk_respond_key_sec(cipher=cipher)
+
+            action.type = Action.ActionType.SEND
+            action.payload = packet.to_bytes()
+
+        if packet.type == Packet.PacketType.COMM_REQUEST_INIT:
+
+            des_id = packet.vals[0]
+            src_id = packet.vals[1]
+            src_father_id = packet.vals[2]
+            src_mpk = packet.vals[3]
+
+            user = self.user
+            if user.parent is None:
+                father_id = b"null"
+            else:
+                father_id = user.parent.id
+
+            mpk_file = user.local_mpk_file
+            mpk = ibe_read_from_file(mpk_file)
+            adm_mpk_file = user.admin_mpk_file
+            adm_mpk = ibe_read_from_file(adm_mpk_file)
+
+            if user.id != des_id:
+                str1 = "des_id = "
+                str1 = str1 + des_id.decode()
+                str2 = "user_id = "
+                str2 = str2 + user.id.decode()
+                print(str1)
+                print(str2)
+                print("SendError!")
+
+            elif src_father_id == father_id and src_mpk == mpk:
+                # comm in the same domin
+                des_id = src_id
+                src_id = user.id
+                packet = Packet.make_comm_respond_init(mode=b'1', des_id=des_id, src_id=src_id, mpk=mpk)
+
+                action.type = Action.ActionType.SEND
+                action.payload = packet.to_bytes()
+
+            elif src_father_id == user.id and src_mpk == adm_mpk:
+                # comm with father node
+                des_id = src_id
+                src_id = user.id
+                packet = Packet.make_comm_respond_init(mode=b'3', des_id=des_id, src_id=src_id, mpk=adm_mpk)
+
+                action.type = Action.ActionType.SEND
+                action.payload = packet.to_bytes()
+
+            elif src_father_id == father_id and src_mpk != mpk:
+                print("MPKERROR!")
+            elif src_father_id != father_id and src_mpk == mpk:
+                print("FatherIDERROR!")
+            else:
+                # comm cross the domin
+
+                # TODO: sig certification
+                des_id = src_id
+                src_id = user.id
+                packet = Packet.make_comm_respond_init(mode=b'2', des_id=des_id, src_id=src_id, mpk=mpk)
+
+                action.type = Action.ActionType.SEND
+                action.payload = packet.to_bytes()
+
+        if packet.type == Packet.PacketType.KEY_REQUEST_SEC:
+
+            mode = packet.vals[0]
+            cipher = packet.vals[1]
+
+            user = self.user
+            if mode == b'1':
+                m = user.ibe_decrypt(mode="local", c=cipher)
+            elif mode == b'3':
+                m = user.ibe_decrypt(mode="admin", c=cipher)
+            else:
+                pass
+            packet = Packet.from_bytes(m)
+
+            des_id = packet.vals[0]
+            src_id = packet.vals[1]
+            sm4_key = packet.vals[2]
+
+            sm4_key_file = "sm4-" + src_id.decode() + ".conf"
+            with open(sm4_key_file, "wb") as f:
+                f.write(sm4_key)
+
+            cipher = user.sm4_enc(key=sm4_key, m=b"ACK")
+            packet = Packet.make_key_respond(des_id=src_id, src_id=des_id, m=cipher)
 
             action.type = Action.ActionType.SEND
             action.payload = packet.to_bytes()
