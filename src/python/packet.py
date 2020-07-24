@@ -43,6 +43,11 @@ class Packet(object):
         SK_RESPOND_KEY_SEC = 12
         SK_KEY_ACK = 13
         SK_KEY_ACK_ACK = 14
+        COMM_REQUEST_INIT = 15
+        COMM_RESPOND_INIT = 16
+        KEY_REQUEST_PLAIN = 17
+        KEY_REQUEST_SEC = 18
+        KEY_RESPOND = 19
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type
@@ -251,6 +256,107 @@ class Packet(object):
 
         lens = [len(cipher)]
         vals = [cipher]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_comm_request_init(cls, des_id=b'', src_id=b'', father_id=b'', mpk=b'', sig=b"no"):
+        """
+        for the first communication init
+        """
+        assert des_id
+        assert src_id
+        assert father_id
+        assert mpk
+        assert sig
+
+        packet = Packet()
+        packet.type = cls.PacketType.COMM_REQUEST_INIT
+
+        lens = [len(des_id), len(src_id), len(father_id), len(mpk), len(sig)]
+        vals = [des_id, src_id, father_id, mpk, sig]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_comm_respond_init(cls, mode=b'', des_id=b'', src_id=b'', mpk=b'', sig=b'no'):
+        """
+        for the first communication init respond
+
+        mode:
+            1: same domin
+            2: cross domin
+            3: comm with father node
+        """
+        assert des_id
+        assert src_id
+        assert mpk
+        assert sig
+
+        packet = Packet()
+        packet.type = cls.PacketType.COMM_RESPOND_INIT
+
+        lens = [len(mode), len(des_id), len(src_id), len(mpk), len(sig)]
+        vals = [mode, des_id, src_id, mpk, sig]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_key_request_plain(cls, des_id=b'', src_id=b'', key=b''):
+        assert des_id
+        assert src_id
+        assert key
+
+        packet = Packet()
+        packet.type = cls.PacketType.KEY_REQUEST_PLAIN
+
+        lens = [len(des_id), len(src_id), len(key)]
+        vals = [des_id, src_id, key]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_key_request_sec(cls, mode=b'', cipher=b''):
+        """
+        just make the cipher in the packet
+        """
+        assert mode
+        assert cipher
+
+        packet = Packet()
+        packet.type = cls.PacketType.KEY_REQUEST_SEC
+
+        lens = [len(mode), len(cipher)]
+        vals = [mode, cipher]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_key_respond(cls, des_id=b'', src_id=b'', m=b''):
+        assert des_id
+        assert src_id
+        assert m
+
+        packet = Packet()
+        packet.type = cls.PacketType.KEY_RESPOND
+
+        lens = [len(des_id), len(src_id), len(m)]
+        vals = [des_id, src_id, m]
 
         packet.lens = lens
         packet.vals = vals

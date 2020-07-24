@@ -20,9 +20,11 @@ Functions:
 '''
 
 from constant import *
+from crypto_c_interface import ibe_read_from_file
 from action import Action
 from packet import Packet
 from utils import bytes2int
+from os import urandom
 
 import sys
 import socket
@@ -30,6 +32,7 @@ import argparse
 import threading
 import time
 import traceback
+import os
 
 _valid_actions = {
     "init": "invoke an initialization",
@@ -116,6 +119,58 @@ class Client(object):
 
             user.output_sk(sk, mode="local")
 
+        if packet.type == Packet.PacketType.COMM_RESPOND_INIT:
+
+            mode = packet.vals[0]
+            des_id = packet.vals[1]
+            src_id = packet.vals[2]
+            src_mpk = packet.vals[3]
+
+            user = self.user
+            if user.id != des_id:
+                str1 = "des_id = "
+                str1 = str1 + des_id.decode()
+                str2 = "user_id = "
+                str2 = str2 + user.id.decode()
+                print(str1)
+                print(str2)
+                print("SendError!")
+            mpk_file = user.local_mpk_file
+            mpk = ibe_read_from_file(mpk_file)
+
+            if mode == b'1' or mode == b'3':
+                # use the local mpk to comm
+                if mpk != src_mpk:
+                    print("MPKERROR!")
+                key = urandom(16)
+                user.key = key
+                packet = Packet.make_key_request_plain(des_id=src_id, src_id=des_id, key=key)
+                plain_text = packet.to_bytes()
+
+                cipher = user.ibe_encrypt(mode="local", m=plain_text, user_id=src_id)
+                packet = Packet.make_key_request_sec(mode=mode, cipher=cipher)
+
+                action = Action()
+                action.type = Action.ActionType.SEND
+                action.payload = [packet.to_bytes()]
+
+            else:
+                # use the receive mpk to comm
+                # TODO: need to sig ceritfication
+                pass
+
+        if packet.type == Packet.PacketType.KEY_RESPOND:
+
+            cipher = packet.vals[2]
+            src_id = packet.vals[1]
+            user = self.user
+            key = user.key
+            m = user.sm4_dec(key, cipher)
+            if m == b"ACK":
+                sm4_key_file = "sm4-" + src_id.decode() + ".conf"
+                with open(sm4_key_file, "wb") as f:
+                    f.write(key)
+
         return action
 
     def gen_action_from_args(self, args):
@@ -155,7 +210,31 @@ class Client(object):
             ret.payload = [payload.to_bytes()]
 
         if args.action == "comm":
-            pass
+            ret.type = Action.ActionType.SEND
+            user = self.user
+
+            if os.path.exists(self.user.local_mpk_file) and os.path.exists(self.user.local_sk_file):
+                pass        # do nothing
+            else:
+                raise ClientError("please generate your own sk first")
+            assert args.comm_addr
+            assert args.comm_port
+            assert args.comm_id
+            ret.addr = args.comm_addr
+            ret.port = args.comm_port
+            comm_id = args.comm_id
+            comm_id = comm_id.encode()
+
+            user_id = user.id
+            if user.parent is None:
+                father_id = b"null"
+            else:
+                father_id = user.parent.id
+            mpk_file = user.local_mpk_file
+            mpk = ibe_read_from_file(mpk_file)
+
+            payload = Packet.make_comm_request_init(des_id=comm_id, src_id=user_id, father_id=father_id, mpk=mpk)
+            ret.payload = [payload.to_bytes()]
 
         return ret
 
@@ -298,6 +377,9 @@ def main():
                         help="the valid actions are: %s" % str(_valid_actions))
     parser.add_argument('-c', type=str, nargs="?", default="",
                         dest="config_file", help='configuration file')
+    parser.add_argument('--addr', type=str, default="", dest="comm_addr")
+    parser.add_argument('--port', type=int, default="", dest="comm_port")
+    parser.add_argument('--id', type=str, default="", dest="comm_id")
 
     _args = parser.parse_args()
     global _config_file

@@ -1,3 +1,11 @@
+# 2020-07-23
+
+有关IBE参数文件的函数：
+'ibe_read_from_file'和'ibe_write_to_file'
+
+user模块中的文件函数：
+与输入文件相关：'load_xxx'，与输出文件相关：'output_xxx'
+
 # 2020-07-17
 
 添加一个功能需要关注的地方
