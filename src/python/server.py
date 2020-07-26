@@ -19,7 +19,7 @@ function exists.
 from action import Action
 from packet import Packet
 from utils import int2bytes
-from crypto_c_interface import ibe_read_from_file
+from crypto_c_interface import ibe_read_from_file, ibe_write_to_file
 
 import sys
 import socket
@@ -205,9 +205,13 @@ class Server(object):
             elif src_father_id != father_id and src_mpk == mpk:
                 print("FatherIDERROR!")
             else:
-                # comm cross the domin
+                # comm cross the domi
 
                 # TODO: sig certification
+
+                src_mpk_file = "mpk-" + src_id.decode() + ".conf"
+                ibe_write_to_file(src_mpk, src_mpk_file)
+
                 des_id = src_id
                 src_id = user.id
                 packet = Packet.make_comm_respond_init(mode=b'2', des_id=des_id, src_id=src_id, mpk=mpk)
@@ -221,12 +225,11 @@ class Server(object):
             cipher = packet.vals[1]
 
             user = self.user
-            if mode == b'1':
+            if mode == b'1' or b'2':
                 m = user.ibe_decrypt(mode="local", c=cipher)
             elif mode == b'3':
                 m = user.ibe_decrypt(mode="admin", c=cipher)
-            else:
-                pass
+
             packet = Packet.from_bytes(m)
 
             des_id = packet.vals[0]
