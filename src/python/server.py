@@ -164,8 +164,14 @@ class Server(object):
 
             mpk_file = user.local_mpk_file
             mpk = ibe_read_from_file(mpk_file)
-            adm_mpk_file = user.admin_mpk_file
-            adm_mpk = ibe_read_from_file(adm_mpk_file)
+
+            admin = 0
+            if os.path.exists(self.user.admin_mpk_file):
+                admin = 1
+
+            if admin == 1:
+                adm_mpk_file = user.admin_mpk_file
+                adm_mpk = ibe_read_from_file(adm_mpk_file)
 
             if user.id != des_id:
                 str1 = "des_id = "
@@ -185,7 +191,7 @@ class Server(object):
                 action.type = Action.ActionType.SEND
                 action.payload = packet.to_bytes()
 
-            elif src_father_id == user.id and src_mpk == adm_mpk:
+            elif admin == 1 and src_father_id == user.id and src_mpk == adm_mpk:
                 # comm with father node
                 des_id = src_id
                 src_id = user.id

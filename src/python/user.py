@@ -239,7 +239,7 @@ class User(object):
         elif mode == "admin":
             sk_file = self.admin_sk_file
         elif mode == "local":
-            sk_file == self.local_sk_file
+            sk_file = self.local_sk_file
         else:
             raise UserError()
         with open(sk_file, "rb") as f:

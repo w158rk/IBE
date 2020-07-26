@@ -378,7 +378,7 @@ def main():
     parser.add_argument('-c', type=str, nargs="?", default="",
                         dest="config_file", help='configuration file')
     parser.add_argument('--addr', type=str, default="", dest="comm_addr")
-    parser.add_argument('--port', type=int, default="", dest="comm_port")
+    parser.add_argument('--port', type=int, default=0, dest="comm_port")
     parser.add_argument('--id', type=str, default="", dest="comm_id")
 
     _args = parser.parse_args()

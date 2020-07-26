@@ -1,0 +1,18 @@
+{
+    "log" : "server.log",
+    "top_user_list": "../top_user_list.json",
+
+    "global_mpk_file" : "mpk-global.conf",
+    "local_mpk_file" : "mpk-local.conf",
+    "local_sk_file" : "sk-local.conf",
+
+    "id" : "Client2", 
+    "addr" : "127.0.0.1",
+    "port" : 5005,
+    "parent" : {
+        "id" : "Server1",
+        "addr" : "127.0.0.1",
+        "port" : 5003
+    }
+}
+    
