@@ -20,7 +20,7 @@ Functions:
 '''
 
 from constant import *
-from crypto_c_interface import ibe_read_from_file
+from crypto_c_interface import ibe_read_from_file, ibe_write_to_file, ibe_encrypt
 from action import Action
 from packet import Packet
 from utils import bytes2int
@@ -157,7 +157,20 @@ class Client(object):
             else:
                 # use the receive mpk to comm
                 # TODO: need to sig ceritfication
-                pass
+                src_mpk_file = "mpk-" + src_id.decode() + ".conf"
+                ibe_write_to_file(mpk, src_mpk_file)
+
+                key = urandom(16)
+                user.key = key
+                packet = Packet.make_key_request_plain(des_id=src_id, src_id=des_id, key=key)
+                plain_text = packet.to_bytes()
+
+                cipher = ibe_encrypt(plain_text, src_mpk, src_id)
+                packet = Packet.make_key_request_sec(mode=mode, cipher=cipher)
+
+                action = Action()
+                action.type = Action.ActionType.SEND
+                action.payload = [packet.to_bytes()]
 
         if packet.type == Packet.PacketType.KEY_RESPOND:
 
@@ -378,7 +391,7 @@ def main():
     parser.add_argument('-c', type=str, nargs="?", default="",
                         dest="config_file", help='configuration file')
     parser.add_argument('--addr', type=str, default="", dest="comm_addr")
-    parser.add_argument('--port', type=int, default="", dest="comm_port")
+    parser.add_argument('--port', type=int, default=0, dest="comm_port")
     parser.add_argument('--id', type=str, default="", dest="comm_id")
 
     _args = parser.parse_args()
