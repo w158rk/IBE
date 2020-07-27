@@ -328,18 +328,19 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_key_request_sec(cls, mode=b'', cipher=b''):
+    def make_key_request_sec(cls, mode=b'', cipher=b'', sign=b''):
         """
         just make the cipher in the packet
         """
         assert mode
         assert cipher
+        assert sign
 
         packet = Packet()
         packet.type = cls.PacketType.KEY_REQUEST_SEC
 
-        lens = [len(mode), len(cipher)]
-        vals = [mode, cipher]
+        lens = [len(mode), len(cipher), len(sign)]
+        vals = [mode, cipher, sign]
 
         packet.lens = lens
         packet.vals = vals

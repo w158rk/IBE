@@ -288,7 +288,7 @@ def ibe_decrypt(c, sk):
     res = []
     for i in range(m_len):
         res.append(m[i])
-    
+
     return b"".join(res)
 
 

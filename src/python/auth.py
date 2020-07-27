@@ -11,3 +11,8 @@
 @Desc    :   The logics for authentication in this system
 '''
 
+
+class Auth(object):
+    """class representing the anthentication used for cross domin identity
+
+    """

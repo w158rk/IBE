@@ -223,9 +223,10 @@ class Server(object):
 
             mode = packet.vals[0]
             cipher = packet.vals[1]
+            sign = packet.vals[2]
 
             user = self.user
-            if mode == b'1' or b'2':
+            if mode == b'1' or mode == b'2':
                 m = user.ibe_decrypt(mode="local", c=cipher)
             elif mode == b'3':
                 m = user.ibe_decrypt(mode="admin", c=cipher)
@@ -236,9 +237,21 @@ class Server(object):
             src_id = packet.vals[1]
             sm4_key = packet.vals[2]
 
-            sm4_key_file = "sm4-" + src_id.decode() + ".conf"
-            with open(sm4_key_file, "wb") as f:
-                f.write(sm4_key)
+            if mode == b'1':
+                verify = user.ibe_verify(mode="local", m=m, sm=sign, user_id=src_id)
+            elif mode == b'2':
+                src_mpk_file = "mpk-" + src_id.decode() + ".conf"
+                verify = user.ibe_verify(mode="comm", m=m, sm=sign, user_id=src_id, filename=src_mpk_file)
+            elif mode == b'3':
+                src_mpk_file = "mpk-" + src_id.decode() + ".conf"
+                verify = user.ibe_verify(mode="admin", m=m, sm=sign, user_id=src_id)
+
+            if verify:
+                sm4_key_file = "sm4-" + src_id.decode() + ".conf"
+                with open(sm4_key_file, "wb") as f:
+                    f.write(sm4_key)
+            else:
+                print("VerifyError!")
 
             cipher = user.sm4_enc(key=sm4_key, m=b"ACK")
             packet = Packet.make_key_respond(des_id=src_id, src_id=des_id, m=cipher)

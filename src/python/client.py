@@ -148,7 +148,8 @@ class Client(object):
                 plain_text = packet.to_bytes()
 
                 cipher = user.ibe_encrypt(mode="local", m=plain_text, user_id=src_id)
-                packet = Packet.make_key_request_sec(mode=mode, cipher=cipher)
+                sign = user.ibe_sign(mode="local", m=plain_text)
+                packet = Packet.make_key_request_sec(mode=mode, cipher=cipher, sign=sign)
 
                 action = Action()
                 action.type = Action.ActionType.SEND
@@ -158,15 +159,16 @@ class Client(object):
                 # use the receive mpk to comm
                 # TODO: need to sig ceritfication
                 src_mpk_file = "mpk-" + src_id.decode() + ".conf"
-                ibe_write_to_file(mpk, src_mpk_file)
+                ibe_write_to_file(src_mpk, src_mpk_file)
 
                 key = urandom(16)
                 user.key = key
                 packet = Packet.make_key_request_plain(des_id=src_id, src_id=des_id, key=key)
                 plain_text = packet.to_bytes()
 
-                cipher = ibe_encrypt(plain_text, src_mpk, src_id)
-                packet = Packet.make_key_request_sec(mode=mode, cipher=cipher)
+                cipher = user.ibe_encrypt(mode="comm", m=plain_text, user_id=src_id, filename=src_mpk_file)
+                sign = user.ibe_sign(mode="local", m=plain_text)
+                packet = Packet.make_key_request_sec(mode=mode, cipher=cipher, sign=sign)
 
                 action = Action()
                 action.type = Action.ActionType.SEND

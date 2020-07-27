@@ -212,9 +212,9 @@ class User(object):
         if mode == "local":
             return ibe_extract(msk, c_id)
 
-    def ibe_encrypt(self, mode="", m=b"", user_id=b""):
+    def ibe_encrypt(self, mode="", m=b"", user_id=b"", filename=""):
         """
-        mode is in ["global", "admin", "local"]
+        mode is in ["global", "admin", "local", "comm"]
         """
         mpk_file = b""
         if mode == "global":
@@ -223,13 +223,15 @@ class User(object):
             mpk_file = self.admin_mpk_file
         elif mode == "local":
             mpk_file = self.local_mpk_file
+        elif mode == "comm":
+            mpk_file = filename
         else:
             raise UserError()
         with open(mpk_file, "rb") as f:
             mpk = f.read()
         return ibe_encrypt(m, mpk, user_id)
 
-    def ibe_decrypt(self, mode=b"", c=b""):
+    def ibe_decrypt(self, mode="", c=b""):
         """
         mode is in ["global", "admin", "local"]
         """
@@ -245,6 +247,42 @@ class User(object):
         with open(sk_file, "rb") as f:
             sk = f.read()
         return ibe_decrypt(c, sk)
+
+    def ibe_sign(self, mode="", m=b""):
+        """
+        mode is in ["global", "admin", "local"]
+        """
+        sk_file = b''
+        if mode == "global":
+            sk_file = self.global_sk_file
+        elif mode == "admin":
+            sk_file = self.admin_sk_file
+        elif mode == "local":
+            sk_file = self.local_sk_file
+        else:
+            raise UserError()
+        with open(sk_file, "rb") as f:
+            sk = f.read()
+        return ibe_sign(m, sk)
+
+    def ibe_verify(self, mode="", m=b"", sm=b"", user_id=b"", filename=""):
+        """
+        mode is in ["global", "admin", "local", "comm"]
+        """
+        mpk_file = b""
+        if mode == "global":
+            mpk_file = self.global_mpk_file
+        elif mode == "admin":
+            mpk_file = self.admin_mpk_file
+        elif mode == "local":
+            mpk_file = self.local_mpk_file
+        elif mode == "comm":
+            mpk_file = filename
+        else:
+            raise UserError()
+        with open(mpk_file, "rb") as f:
+            mpk = f.read()
+        return ibe_verify(m, sm, mpk, user_id)
 
     def load_config_file(self):
         config = None
