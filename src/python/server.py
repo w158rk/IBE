@@ -19,6 +19,7 @@ function exists.
 from action import Action
 from packet import Packet
 from utils import int2bytes
+from auth import Certificate
 from crypto_c_interface import ibe_read_from_file, ibe_write_to_file
 
 import sys
@@ -118,6 +119,10 @@ class Server(object):
                 pass        # do nothing
             else:
                 self.run_gen_sys()
+
+            # check the certificate
+            if self.user.parent is None and not os.path.exists(self.user.certificate_file):
+                self.run_gen_auth()
 
             action = Action()
             action.type = Action.ActionType.SEND
@@ -283,6 +288,31 @@ class Server(object):
         user = self.user
         user.ibe_setup(mode="admin")
         user.ibe_extract(mode="admin", c_id=user.id)
+
+    def run_gen_auth(self):
+        print("generate the certificate")
+        # user = self.user
+        # certif = Certificate()
+
+        # sig_payload = certif.Payload()
+        # sig_payload.iss = user.id
+        # sig_payload.aud = user.id
+        # mpk_file = user.local_mpk_file
+        # mpk = ibe_read_from_file(mpk_file)
+        # sig_payload.mpk = mpk
+        # sig_payload.parent = b"null"
+        # certif.Payload = sig_payload
+
+        # sig_payload_mes = sig_payload.to_bytes()
+        # sig_sign = certif.Signature()
+        # sig_sign = user.ibe_sign(mode="local", m=sig_payload_mes)
+        # certif.Signature = sig_sign
+
+        # certif_mes = certif.to_bytes()
+        # c = Certificate()
+        # c.from_bytes(certif_mes)
+        # sig_load = c.Payload()
+        # print(sig_load.iss)
 
     def run_run(self, action):
         if action.payload[0] == b"run_init":

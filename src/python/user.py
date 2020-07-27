@@ -76,6 +76,7 @@ class User(object):
         self.admin_mpk_file = b""
         self.admin_msk_file = b""
         self.admin_sk_file = b""
+        self.certificate_file = b""
         self.sm4_key = b""
         self.key = b""
         self.parent = None
