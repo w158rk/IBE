@@ -176,8 +176,8 @@ int main(int argc, char *argv[]) {
     if(-1 == test_get_public_parameters()) goto end;    //获取sP，并输出文件
     if(-1 == test_get_master_secret()) goto end;    //获取s，并输出文件
     if(-1 == test_extract_private_key()) goto end;  //获取sk
-    if(-1 == test_put_private_key()) goto end;  //加密
-    if(-1 == test_get_private_key()) goto end;  //解密
+    if(-1 == test_put_private_key()) goto end;  
+    if(-1 == test_get_private_key()) goto end;  
 
     start=clock();
     if(-1 == test_smx_encrypt()) goto end;  //加密

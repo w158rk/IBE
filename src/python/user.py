@@ -181,6 +181,18 @@ class User(object):
         # self.sym_key = ret
         return lint
 
+    def get_sk_file_from_mode(self, mode):
+        sk_file = ""
+        if mode == "global":
+            sk_file = self.global_sk_file
+        elif mode == "admin":
+            sk_file = self.admin_sk_file
+        elif mode == "local":
+            sk_file = self.local_sk_file
+        else:
+            raise UserError()
+        return sk_file        
+
     def sm4_enc(self, key=b"", m=b""):
         return sm4_enc(key, m)
 
@@ -204,14 +216,12 @@ class User(object):
             # TODO(wrk): maybe generate the sk for itself
 
     def ibe_extract(self, mode="", c_id=b""):
+        assert mode == "admin"
         msk_file = self.admin_msk_file
         with open(msk_file, "rb") as f:
             msk = f.read()
-        if mode == "admin":
-            sk_file = self.admin_sk_file
-            ibe_extract_file(msk, c_id, sk_file)
-        if mode == "local":
-            return ibe_extract(msk, c_id)
+
+        return ibe_extract(msk, c_id)
 
     def ibe_encrypt(self, mode="", m=b"", user_id=b"", filename=""):
         """
@@ -245,8 +255,8 @@ class User(object):
             sk_file = self.local_sk_file
         else:
             raise UserError()
-        with open(sk_file, "rb") as f:
-            sk = f.read()
+        
+        sk = ibe_read_from_file(sk_file)
         return ibe_decrypt(c, sk)
 
     def ibe_sign(self, mode="", m=b""):
@@ -285,6 +295,22 @@ class User(object):
             mpk = f.read()
         return ibe_verify(m, sm, mpk, user_id)
 
+    def input_mpk(self, mode="local"):
+        if mode == "global":
+            mpk_file = self.global_mpk_file
+        elif mode == "admin":
+            mpk_file = self.admin_mpk_file
+        elif mode == "local":
+            mpk_file = self.local_mpk_file
+        else:
+            raise UserError()
+
+        return ibe_read_from_file(mpk_file)
+
+    def input_sk(self, mode="local"):
+        return ibe_read_from_file(self.get_sk_file_from_mode(mode))
+
+
     def load_config_file(self):
         config = None
         with open(self.config_file, "r", encoding="utf-8") as f:
@@ -305,6 +331,12 @@ class User(object):
             self.top_user_list = top_user_list
         except AttributeError:
             pass
+    
+
+
+    def output_cert(self, cert=""):
+        with open(self.certificate_file, "w") as f:
+            f.write(cert)
 
     def output_sk(self, sk, mode="global"):
         sk_file = None

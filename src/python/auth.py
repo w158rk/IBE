@@ -45,17 +45,18 @@ from datetime import datetime
 from time import mktime
 from base64 import b64encode, b64decode
 from utils import str2bytes, bytes2str
+from crypto_c_interface import ibe_sign
 
 
-def to_json(obj):
+def global_to_json(obj):
     """
     obj should be a list or a dict
     """
-    return json.dumps(obj, ensure_ascii=False).encode(obj)
+    return json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=4)
 
 
-def from_json(json_str):
-    return json.loads(json_str, ensure_ascii=False).encode(json_str)
+def global_from_json(json_str):
+    return json.loads(json_str, encoding="utf-8")
 
 
 class Certificate:
@@ -80,7 +81,7 @@ class Certificate:
         @classmethod
         def from_json(cls, json_str):
             ret = cls()
-            obj = from_json(json_str)
+            obj = global_from_json(json_str)
             for attr in obj:
                 assert attr in cls._valid_attrs
                 ret.__setattr__(attr, obj[attr])
@@ -98,7 +99,7 @@ class Certificate:
                 "alg": self.alg
             }
 
-            return to_json(obj)
+            return global_to_json(obj)
 
         def to_bytes(self):
             obj = self.to_json()
@@ -117,13 +118,13 @@ class Certificate:
         ]
 
         def __init__(self,
-                     iss=b"",
-                     aud=b"",
+                     iss="",
+                     aud="",
                      exp=None,
                      nbf=None,
                      iat=None,
-                     mpk=b"",
-                     parent=b""):
+                     mpk="",
+                     parent=""):
 
             now = datetime.now()
             stamp = mktime(now.timetuple())
@@ -146,10 +147,13 @@ class Certificate:
         @classmethod
         def from_json(cls, json_str):
             ret = cls()
-            obj = from_json(json_str)
+            obj = global_from_json(json_str)
             for attr in obj:
                 assert attr in cls._valid_attrs
-                ret.__setattr__(attr, obj[attr])
+                val = obj[attr]
+                if attr == 'mpk':
+                    val = b64decode(val)
+                ret.__setattr__(attr, val)
             return ret
 
         @classmethod
@@ -161,9 +165,14 @@ class Certificate:
         def to_json(self):
             obj = {}
             for attr in self._valid_attrs:
-                obj[attr] = getattr(self, attr)
+                val = getattr(self, attr)
+                if attr == 'mpk':
+                    val = b64encode(val)
+                if type(val) == bytes:
+                    val = bytes2str(val)
+                obj[attr] = val
 
-            return to_json(obj)
+            return global_to_json(obj)
 
         def to_bytes(self):
             obj = self.to_json()
@@ -178,9 +187,9 @@ class Certificate:
         ]
 
         def __init__(self,
-                     header=b"",
-                     payload=b"",
-                     sig=b""):
+                     header="",
+                     payload="",
+                     sig=""):
             self.header = header
             self.payload = payload
             self.sig = sig
@@ -188,7 +197,7 @@ class Certificate:
         @classmethod
         def from_json(cls, json_str):
             ret = cls()
-            obj = from_json(json_str)
+            obj = global_from_json(json_str)
             for attr in obj:
                 assert attr in cls._valid_attrs
                 ret.__setattr__(attr, obj[attr])
@@ -203,9 +212,13 @@ class Certificate:
         def to_json(self):
             obj = {}
             for attr in self._valid_attrs:
-                obj[attr] = getattr(self, attr)
+                val = getattr(self, attr)
+                if type(val) == bytes:
+                    val = bytes2str(val)
+                obj[attr] = val
 
-            return to_json(obj)
+            return global_to_json(obj)
+
 
         def to_bytes(self):
             obj = self.to_json()
@@ -227,22 +240,25 @@ class Certificate:
         self.payload = payload
         self.sig = sig
 
-    def make_sig(self, sk):
+    def make_sig(self, sk=b""):
         header = self.header.to_bytes()
         payload = self.payload.to_bytes()
         sig = Certificate.Signature()
-        sig.header = header
-        sig.payload = payload
+        sig.header = ""
+        sig.payload = ""
         m = b".".join([header, payload])
-        digest = ibe_sign()
+        digest = ibe_sign(m, sk)
+        sig.sig = digest
 
     @classmethod
     def from_json(cls, json_str):
         ret = cls()
-        obj = from_json(json_str)
-        for attr in obj:
-            assert attr in cls._valid_attrs
-            ret.__setattr__(attr, obj[attr])
+        obj = global_from_json(json_str)
+
+        ret.header = cls.Header.from_json(global_to_json(obj['header']))
+        ret.payload = cls.Payload.from_json(global_to_json(obj['payload']))
+        ret.sig = cls.Signature.from_json(global_to_json(obj['sig']))
+
         return ret
 
     @classmethod
@@ -254,9 +270,11 @@ class Certificate:
     def to_json(self):
         obj = {}
         for attr in self._valid_attrs:
-            obj[attr] = getattr(self, attr)
+            val = getattr(self, attr)
+            val = val.to_json()
+            obj[attr] = global_from_json(val)
 
-        return to_json(obj)
+        return global_to_json(obj)
 
     def to_bytes(self):
         obj = self.to_json()
@@ -264,4 +282,3 @@ class Certificate:
         return b64encode(obj)
 
 
-cert = Certificate()

@@ -398,8 +398,9 @@ def sm4_enc(key, m):
     c_m_len = c_ulong(m_len)
 
     c_c = c_char_p()
-    c_c.value = b"\x00" * BUFFER_SIZE
-    c_c_len = c_ulong(BUFFER_SIZE)
+    c_len = m_len + 32 # for ensurance
+    c_c.value = b"\x00" * c_len
+    c_c_len = c_ulong(c_len)
     p_c_len = pointer(c_c_len)
 
     lib_ibe = CDLL(LIBIBE_PATH)
@@ -439,8 +440,9 @@ def sm4_dec(key, c):
     c_c_len = c_ulong(c_len)
 
     c_m = c_char_p()
-    c_m.value = b"\x00" * BUFFER_SIZE
-    c_m_len = c_ulong(BUFFER_SIZE)
+    m_len = c_len + 32
+    c_m.value = b"\x00" * m_len
+    c_m_len = c_ulong(m_len)
     p_m_len = pointer(c_m_len)
 
     lib_ibe = CDLL(LIBIBE_PATH)

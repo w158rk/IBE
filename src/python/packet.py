@@ -61,7 +61,6 @@ class Packet(object):
         header, lens, vals = bstr.split(b'|')
         bstr_header = b64decode(header)
         bstr_lens = b64decode(lens)
-        print("vals: ", vals)
         bstr_vals = b64decode(vals)
 
         index = 0
@@ -198,7 +197,6 @@ class Packet(object):
         assert user_id
         packet = Packet()
         packet.type = cls.PacketType.SK_REQUEST_KEY_PLAIN
-        print(key)
 
         lens = [len(key), len(user_id)]
         vals = [key, user_id]
@@ -227,17 +225,18 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sk_respond_key_plain(cls, user_sk=b'', sk_len=b''):
+    def make_sk_respond_key_plain(cls, user_sk=b'', sk_len=b'', user_cert=b'', cert_len=b''):
         """
         make the packet with client's sk and sk length
         """
         assert user_sk
+        assert user_cert
 
         packet = Packet()
         packet.type = cls.PacketType.SK_RESPOND_KEY_PLAIN
 
-        lens = [len(user_sk), len(sk_len)]
-        vals = [user_sk, sk_len]
+        lens = [len(user_sk), len(sk_len), len(user_cert), len(cert_len)]
+        vals = [user_sk, sk_len, user_cert, cert_len]
 
         packet.lens = lens
         packet.vals = vals

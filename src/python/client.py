@@ -25,6 +25,7 @@ from action import Action
 from packet import Packet
 from utils import bytes2int
 from os import urandom
+from auth import Certificate
 
 import sys
 import socket
@@ -115,9 +116,16 @@ class Client(object):
             sk = packet.vals[0]
             sk_len = packet.vals[1]
             sk_len = bytes2int(sk_len)
-            sk = sk[:sk_len]
+            assert len(sk) == sk_len
 
+            cert = packet.vals[2]
+            cert_len = packet.vals[3]
+            cert_len = bytes2int(cert_len)
+            assert len(cert) == cert_len
+
+            cert = Certificate.from_bytes(cert)
             user.output_sk(sk, mode="local")
+            user.output_cert(cert.to_json())
 
         if packet.type == Packet.PacketType.COMM_RESPOND_INIT:
 
@@ -290,7 +298,7 @@ class Client(object):
                     # TODO(wrk): Is this line possible?
                     self.run_run(action)
 
-                data = sock.recv(BUFFER_SIZE)
+                data = sock.recv(RECEIVE_BUFFER_SIZE)
                 print("received: ", data)
                 action = self.gen_action_from_data(data)
 
