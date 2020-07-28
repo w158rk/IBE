@@ -51,11 +51,11 @@ def to_json(obj):
     """
     obj should be a list or a dict
     """
-    return json.dumps(obj, ensure_ascii=False).encode(obj)
+    return json.dumps(obj, ensure_ascii=False)
 
 
 def from_json(json_str):
-    return json.loads(json_str, ensure_ascii=False).encode(json_str)
+    return json.loads(json_str)
 
 
 class Certificate:
@@ -119,9 +119,9 @@ class Certificate:
         def __init__(self,
                      iss=b"",
                      aud=b"",
-                     exp=None,
-                     nbf=None,
-                     iat=None,
+                     exp=b"null",
+                     nbf=b"null",
+                     iat=b"null",
                      mpk=b"",
                      parent=b""):
 
@@ -161,7 +161,7 @@ class Certificate:
         def to_json(self):
             obj = {}
             for attr in self._valid_attrs:
-                obj[attr] = getattr(self, attr)
+                obj[attr] = getattr(self, attr).decode()
 
             return to_json(obj)
 
@@ -203,7 +203,7 @@ class Certificate:
         def to_json(self):
             obj = {}
             for attr in self._valid_attrs:
-                obj[attr] = getattr(self, attr)
+                obj[attr] = getattr(self, attr).decode()
 
             return to_json(obj)
 
@@ -213,9 +213,9 @@ class Certificate:
             return b64encode(obj)
 
     def __init__(self,
-                 header=None,
-                 payload=None,
-                 sig=None):
+                 header=b"null",
+                 payload=b"null",
+                 sig=b"null"):
         if not header:
             header = Certificate.Header()
         if not payload:
@@ -254,7 +254,7 @@ class Certificate:
     def to_json(self):
         obj = {}
         for attr in self._valid_attrs:
-            obj[attr] = getattr(self, attr)
+            obj[attr] = getattr(self, attr).decode()
 
         return to_json(obj)
 

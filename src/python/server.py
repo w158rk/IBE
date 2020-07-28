@@ -291,28 +291,42 @@ class Server(object):
 
     def run_gen_auth(self):
         print("generate the certificate")
-        # user = self.user
-        # certif = Certificate()
+        user = self.user
+        certif = Certificate()
 
-        # sig_payload = certif.Payload()
-        # sig_payload.iss = user.id
-        # sig_payload.aud = user.id
-        # mpk_file = user.local_mpk_file
-        # mpk = ibe_read_from_file(mpk_file)
-        # sig_payload.mpk = mpk
-        # sig_payload.parent = b"null"
-        # certif.Payload = sig_payload
+        sig_payload = certif.Payload()
+        sig_payload.iss = user.id
+        sig_payload.aud = user.id
+        mpk_file = user.local_mpk_file
+        mpk = ibe_read_from_file(mpk_file)
+        sig_payload.mpk = b"null"
+        sig_payload.parent = b"null"
 
-        # sig_payload_mes = sig_payload.to_bytes()
-        # sig_sign = certif.Signature()
-        # sig_sign = user.ibe_sign(mode="local", m=sig_payload_mes)
-        # certif.Signature = sig_sign
+        sig_payload_mes = sig_payload.to_bytes()
+        certif.payload = sig_payload_mes
 
-        # certif_mes = certif.to_bytes()
-        # c = Certificate()
-        # c.from_bytes(certif_mes)
-        # sig_load = c.Payload()
-        # print(sig_load.iss)
+        sig_sign = certif.Signature()
+        sig = user.ibe_sign(mode="local", m=sig_payload_mes)
+        sig_sign.sig = b"null"
+        sig_sign_mes = sig_sign.to_bytes()
+        certif.sig = sig_sign_mes
+
+        # sig_load = certif.payload
+        # s_l = Certificate.Payload
+        # s_l = s_l.from_bytes(sig_load)
+
+        certif_mes = certif.to_bytes()
+
+        certif_file = user.certificate_file
+        ibe_write_to_file(certif_mes, certif_file)
+
+        # c_mes = Certificate
+        # c_mes = c_mes.from_bytes(certif_mes)
+        # s_l_m = c_mes.payload
+        # s_l = Certificate.Payload
+        # s_l = s_l.from_bytes(s_l_m)
+
+        # print(s_l.iss)
 
     def run_run(self, action):
         if action.payload[0] == b"run_init":

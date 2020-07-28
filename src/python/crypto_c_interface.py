@@ -71,6 +71,7 @@ def ibe_read_from_file(filename):
         return res
     return None
 
+
 def ibe_write_to_file(content, filename):
     """write to the file"""
     with open(filename, "wb") as f:
