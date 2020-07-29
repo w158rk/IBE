@@ -26,6 +26,7 @@ import threading
 import time
 import json
 import string
+import time
 from os import urandom
 # from random import sample
 # import random
@@ -298,6 +299,8 @@ class User(object):
 
     def sig_verify(self, client_id=b"", sig=b""):
 
+        # time_start=time.time()
+
         s = Certificate()
         s = s.from_bytes(sig)
 
@@ -338,6 +341,9 @@ class User(object):
             return False
         else:
             pass
+
+        # time_end=time.time()
+        # print('totally cost',time_end-time_start)
 
         return True
 
