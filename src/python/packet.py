@@ -61,7 +61,6 @@ class Packet(object):
         header, lens, vals = bstr.split(b'|')
         bstr_header = b64decode(header)
         bstr_lens = b64decode(lens)
-        print("vals: ", vals)
         bstr_vals = b64decode(vals)
 
         index = 0
@@ -198,7 +197,6 @@ class Packet(object):
         assert user_id
         packet = Packet()
         packet.type = cls.PacketType.SK_REQUEST_KEY_PLAIN
-        print(key)
 
         lens = [len(key), len(user_id)]
         vals = [key, user_id]

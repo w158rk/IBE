@@ -349,7 +349,6 @@ class InitTest(object):
 
     def test_id2num(self):
         res = SS_id2num(b"Client")
-        print(res)
 
     def test_all(self):
         self.test_new()

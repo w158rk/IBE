@@ -85,8 +85,6 @@ int get_msk_fp(const char* msk_filename, IBEMasterSecret* msk) {
         goto end;
     }
 
-    fclose(msk_fp);
-
     int rtn = i2d_SMXMasterSecret(smx_msk, msk);
 
     if(!rtn) {

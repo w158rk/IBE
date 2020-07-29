@@ -21,6 +21,11 @@ from packet import Packet
 from utils import int2bytes
 from auth import Certificate
 from crypto_c_interface import ibe_read_from_file, ibe_write_to_file
+from auth import Certificate
+from wsgiref.handlers import format_date_time
+from datetime import datetime, timedelta
+from time import mktime
+from constant import RECEIVE_BUFFER_SIZE
 
 import sys
 import socket
@@ -29,7 +34,6 @@ import argparse
 import traceback
 import os
 
-BUFFER_SIZE = 8192
 
 _config_file = ""
 
@@ -58,7 +62,6 @@ class Server(object):
             data: the received byte stream
         """
 
-        # TODO(wrk)
         action = Action()
         if data == b"sk":
             action.type = Action.ActionType.SEND_AND_EXIT
@@ -142,13 +145,37 @@ class Server(object):
             sm4_key = packet.vals[0]
             client_id = packet.vals[1]
 
-            client_sk = self.user.ibe_extract(mode="local", c_id=client_id)
+            client_sk = self.user.ibe_extract(mode="admin", c_id=client_id)
+            assert client_sk
             sk_len = len(client_sk)
             sk_len = int2bytes(sk_len, 4)
-            client_sig = self.gen_client_sig(client_id, client_sk)
-            sig_len = len(client_sig)
-            sig_len = int2bytes(sig_len, 4)
-            packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, client_sig, sig_len)
+            
+            # client_sig = self.gen_client_sig(client_id, client_sk)
+            # sig_len = len(client_sig)
+            # sig_len = int2bytes(sig_len, 4)
+            # packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, client_sig, sig_len)
+            
+
+            # certificate
+            client_cert = Certificate()
+
+            # necessary properties
+            client_cert.payload.iss = user.id
+            client_cert.payload.aud = client_id
+            exp = datetime.now()
+            exp += timedelta(days=365)
+            stamp = mktime(exp.timetuple())
+            client_cert.payload.exp = format_date_time(stamp)
+            client_cert.payload.mpk = user.input_mpk()
+            # TODO(wrk): what parent should be
+            client_cert.payload.parent = user.id
+            client_cert.make_sig(user.input_sk(mode="local"))
+
+            client_cert = client_cert.to_bytes()
+            cert_len = len(client_cert)
+            cert_len = int2bytes(cert_len, 4)
+
+            packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, client_cert, cert_len)
             plain_text = packet.to_bytes()
 
             cipher = user.sm4_enc(key=sm4_key, m=plain_text)
@@ -298,7 +325,8 @@ class Server(object):
         print("generate the system")
         user = self.user
         user.ibe_setup(mode="admin")
-        user.ibe_extract(mode="admin", c_id=user.id)
+        sk = user.ibe_extract(mode="admin", c_id=user.id)
+        user.output_sk(sk, mode="admin")
 
     def run_gen_auth(self):
         print("generate the certificate")
@@ -359,19 +387,28 @@ class Server(object):
         sig_payload = certif.Payload()
         sig_payload.iss = user.id
         sig_payload.aud = client_id
-        # sig_payload.mpk = client_sk
-        sig_payload.mpk = b"null"
+
+        exp = datetime.now()
+        exp += timedelta(days=365)
+        stamp = mktime(exp.timetuple())
+
+        sig_payload.exp = format_date_time(stamp)
+
+        sig_payload.mpk = user.input_mpk()
+        # sig_payload.mpk = b"null"
         sig_payload.parent = server_sig
 
         sig_payload_mes = sig_payload.to_bytes()
         certif.payload = sig_payload_mes
 
-        sig_sign = certif.Signature()
-        sig = user.ibe_sign(mode="admin", m=sig_payload_mes)
-        sig_sign.sig = b"null"
+        certif.make_sig(user.input_sk(mode="admin"))
 
-        sig_sign_mes = sig_sign.to_bytes()
-        certif.sig = sig_sign_mes
+        # sig_sign = certif.Signature()
+        # sig = user.ibe_sign(mode="admin", m=sig_payload_mes)
+        # sig_sign.sig = b"null"
+
+        # sig_sign_mes = sig_sign.to_bytes()
+        # certif.sig = sig_sign_mes
 
         client_sig = certif.to_bytes()
         return client_sig
@@ -390,7 +427,7 @@ class Server(object):
 
         try:
             while True:
-                data = sock.recv(BUFFER_SIZE)
+                data = sock.recv(RECEIVE_BUFFER_SIZE)
                 if data:
 
                     # TODO(wrk): maybe generate some log information
