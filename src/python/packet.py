@@ -227,17 +227,20 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sk_respond_key_plain(cls, user_sk=b'', sk_len=b''):
+    def make_sk_respond_key_plain(cls, user_sk=b'', sk_len=b'', client_sig=b'', sig_len=b''):
         """
         make the packet with client's sk and sk length
         """
         assert user_sk
+        assert sk_len
+        assert client_sig
+        assert sig_len
 
         packet = Packet()
         packet.type = cls.PacketType.SK_RESPOND_KEY_PLAIN
 
-        lens = [len(user_sk), len(sk_len)]
-        vals = [user_sk, sk_len]
+        lens = [len(user_sk), len(sk_len), len(client_sig), len(sig_len)]
+        vals = [user_sk, sk_len, client_sig, sig_len]
 
         packet.lens = lens
         packet.vals = vals
@@ -263,7 +266,7 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_comm_request_init(cls, des_id=b'', src_id=b'', father_id=b'', mpk=b'', sig=b"no"):
+    def make_comm_request_init(cls, des_id=b'', src_id=b'', father_id=b'', mpk=b'', sig=b""):
         """
         for the first communication init
         """
@@ -285,7 +288,7 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_comm_respond_init(cls, mode=b'', des_id=b'', src_id=b'', mpk=b'', sig=b'no'):
+    def make_comm_respond_init(cls, mode=b'', des_id=b'', src_id=b'', mpk=b'', sig=b''):
         """
         for the first communication init respond
 

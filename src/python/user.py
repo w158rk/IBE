@@ -19,6 +19,7 @@ from packet import Packet
 from client import Client
 from server import Server
 from utils import str2bytes
+from auth import Certificate
 
 import socket
 import threading
@@ -49,7 +50,7 @@ class User(object):
 
     """
 
-    def __init__(self, user_id="", addr="", port=0,
+    def __init__(self, user_id=b"", addr="", port=0,
                    top_user_list=[], config_file=None):
         """
         Args:
@@ -284,6 +285,55 @@ class User(object):
         with open(mpk_file, "rb") as f:
             mpk = f.read()
         return ibe_verify(m, sm, mpk, user_id)
+
+    def sig_verify(self, client_id=b"", sig=b""):
+
+        s = Certificate
+        s = s.from_bytes(sig)
+
+        sm_payload = s.payload
+        s_payload = Certificate.Payload
+        s_payload = s_payload.from_bytes(sm_payload)
+
+        s_iss = s_payload.iss
+        s_aud = s_payload.aud
+        s_mpk = s_payload.mpk
+        s_parent = s_payload.parent
+
+        if s_aud.encode() != client_id:
+            print("ClientIDError!")
+            print(s_aud)
+            print(client_id)
+            return False
+        else:
+            pass
+
+        if s_parent == "null":
+            # the inner packet
+            global_mpk_file = self.global_mpk_file
+            global_mpk = ibe_read_from_file(global_mpk_file)
+
+            # if global_mpk != s_mpk or s_iss != s_aud:
+            #     print("InnerVerifyError!")
+            #     return False
+            # else:
+            #     pass
+
+        else:
+            self.sig_verify(s_iss.encode(), s_parent)
+
+        sm_sig = s.sig
+        s_sig = Certificate.Signature
+        s_sig = s_sig.from_bytes(sm_sig)
+        sign_mes = s_sig.sig
+
+        # if not ibe_verify(sm_payload, sign_mes, s_mpk, client_id):
+        #     print("SignError!")
+        #     return False
+        # else:
+        #     pass
+
+        return True
 
     def load_config_file(self):
         config = None

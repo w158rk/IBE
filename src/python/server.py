@@ -29,7 +29,7 @@ import argparse
 import traceback
 import os
 
-BUFFER_SIZE = 1024
+BUFFER_SIZE = 8192
 
 _config_file = ""
 
@@ -145,7 +145,10 @@ class Server(object):
             client_sk = self.user.ibe_extract(mode="local", c_id=client_id)
             sk_len = len(client_sk)
             sk_len = int2bytes(sk_len, 4)
-            packet = Packet.make_sk_respond_key_plain(client_sk, sk_len)
+            client_sig = self.gen_client_sig(client_id, client_sk)
+            sig_len = len(client_sig)
+            sig_len = int2bytes(sig_len, 4)
+            packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, client_sig, sig_len)
             plain_text = packet.to_bytes()
 
             cipher = user.sm4_enc(key=sm4_key, m=plain_text)
@@ -160,6 +163,7 @@ class Server(object):
             src_id = packet.vals[1]
             src_father_id = packet.vals[2]
             src_mpk = packet.vals[3]
+            src_sig = packet.vals[4]
 
             user = self.user
             if user.parent is None:
@@ -169,6 +173,9 @@ class Server(object):
 
             mpk_file = user.local_mpk_file
             mpk = ibe_read_from_file(mpk_file)
+
+            sig_file = user.certificate_file
+            user_sig = ibe_read_from_file(sig_file)
 
             admin = 0
             if os.path.exists(self.user.admin_mpk_file):
@@ -191,7 +198,7 @@ class Server(object):
                 # comm in the same domin
                 des_id = src_id
                 src_id = user.id
-                packet = Packet.make_comm_respond_init(mode=b'1', des_id=des_id, src_id=src_id, mpk=mpk)
+                packet = Packet.make_comm_respond_init(mode=b'1', des_id=des_id, src_id=src_id, mpk=mpk, sig=user_sig)
 
                 action.type = Action.ActionType.SEND
                 action.payload = packet.to_bytes()
@@ -200,7 +207,7 @@ class Server(object):
                 # comm with father node
                 des_id = src_id
                 src_id = user.id
-                packet = Packet.make_comm_respond_init(mode=b'3', des_id=des_id, src_id=src_id, mpk=adm_mpk)
+                packet = Packet.make_comm_respond_init(mode=b'3', des_id=des_id, src_id=src_id, mpk=adm_mpk, sig=user_sig)
 
                 action.type = Action.ActionType.SEND
                 action.payload = packet.to_bytes()
@@ -210,19 +217,23 @@ class Server(object):
             elif src_father_id != father_id and src_mpk == mpk:
                 print("FatherIDERROR!")
             else:
-                # comm cross the domi
-
+                # comm cross the domin
                 # TODO: sig certification
 
-                src_mpk_file = "mpk-" + src_id.decode() + ".conf"
-                ibe_write_to_file(src_mpk, src_mpk_file)
+                if user.sig_verify(client_id=src_id, sig=src_sig):
+                    print("Certification Verify done!")
+                    src_mpk_file = "mpk-" + src_id.decode() + ".conf"
+                    ibe_write_to_file(src_mpk, src_mpk_file)
 
-                des_id = src_id
-                src_id = user.id
-                packet = Packet.make_comm_respond_init(mode=b'2', des_id=des_id, src_id=src_id, mpk=mpk)
+                    des_id = src_id
+                    src_id = user.id
+                    packet = Packet.make_comm_respond_init(mode=b'2', des_id=des_id, src_id=src_id, mpk=mpk, sig=user_sig)
 
-                action.type = Action.ActionType.SEND
-                action.payload = packet.to_bytes()
+                    action.type = Action.ActionType.SEND
+                    action.payload = packet.to_bytes()
+
+                else:
+                    print("SigError!")
 
         if packet.type == Packet.PacketType.KEY_REQUEST_SEC:
 
@@ -294,6 +305,10 @@ class Server(object):
         user = self.user
         certif = Certificate()
 
+        sig_head = certif.Header()
+        sig_head_mes = sig_head.to_bytes()
+        certif.header = sig_head_mes
+
         sig_payload = certif.Payload()
         sig_payload.iss = user.id
         sig_payload.aud = user.id
@@ -308,6 +323,7 @@ class Server(object):
         sig_sign = certif.Signature()
         sig = user.ibe_sign(mode="local", m=sig_payload_mes)
         sig_sign.sig = b"null"
+
         sig_sign_mes = sig_sign.to_bytes()
         certif.sig = sig_sign_mes
 
@@ -327,6 +343,38 @@ class Server(object):
         # s_l = s_l.from_bytes(s_l_m)
 
         # print(s_l.iss)
+
+    def gen_client_sig(self, client_id=b"", client_sk=b""):
+        print("generate the client's certificate")
+        user = self.user
+        certif_file = user.certificate_file
+        server_sig = ibe_read_from_file(certif_file)
+
+        certif = Certificate()
+
+        sig_head = certif.Header()
+        sig_head_mes = sig_head.to_bytes()
+        certif.header = sig_head_mes
+
+        sig_payload = certif.Payload()
+        sig_payload.iss = user.id
+        sig_payload.aud = client_id
+        # sig_payload.mpk = client_sk
+        sig_payload.mpk = b"null"
+        sig_payload.parent = server_sig
+
+        sig_payload_mes = sig_payload.to_bytes()
+        certif.payload = sig_payload_mes
+
+        sig_sign = certif.Signature()
+        sig = user.ibe_sign(mode="admin", m=sig_payload_mes)
+        sig_sign.sig = b"null"
+
+        sig_sign_mes = sig_sign.to_bytes()
+        certif.sig = sig_sign_mes
+
+        client_sig = certif.to_bytes()
+        return client_sig
 
     def run_run(self, action):
         if action.payload[0] == b"run_init":

@@ -114,10 +114,17 @@ class Client(object):
 
             sk = packet.vals[0]
             sk_len = packet.vals[1]
+            client_sig = packet.vals[2]
+            sig_len = packet.vals[3]
             sk_len = bytes2int(sk_len)
             sk = sk[:sk_len]
+            sig_len = bytes2int(sig_len)
+            client_sig = client_sig[:sig_len]
 
             user.output_sk(sk, mode="local")
+
+            sig_file = user.certificate_file
+            ibe_write_to_file(client_sig, sig_file)
 
         if packet.type == Packet.PacketType.COMM_RESPOND_INIT:
 
@@ -125,6 +132,7 @@ class Client(object):
             des_id = packet.vals[1]
             src_id = packet.vals[2]
             src_mpk = packet.vals[3]
+            src_sig = packet.vals[4]
 
             user = self.user
             if user.id != des_id:
@@ -158,21 +166,27 @@ class Client(object):
             else:
                 # use the receive mpk to comm
                 # TODO: need to sig ceritfication
-                src_mpk_file = "mpk-" + src_id.decode() + ".conf"
-                ibe_write_to_file(src_mpk, src_mpk_file)
 
-                key = urandom(16)
-                user.key = key
-                packet = Packet.make_key_request_plain(des_id=src_id, src_id=des_id, key=key)
-                plain_text = packet.to_bytes()
+                if user.sig_verify(client_id=src_id, sig=src_sig):
+                    print("Certification Verify done!")
+                    src_mpk_file = "mpk-" + src_id.decode() + ".conf"
+                    ibe_write_to_file(src_mpk, src_mpk_file)
 
-                cipher = user.ibe_encrypt(mode="comm", m=plain_text, user_id=src_id, filename=src_mpk_file)
-                sign = user.ibe_sign(mode="local", m=plain_text)
-                packet = Packet.make_key_request_sec(mode=mode, cipher=cipher, sign=sign)
+                    key = urandom(16)
+                    user.key = key
+                    packet = Packet.make_key_request_plain(des_id=src_id, src_id=des_id, key=key)
+                    plain_text = packet.to_bytes()
 
-                action = Action()
-                action.type = Action.ActionType.SEND
-                action.payload = [packet.to_bytes()]
+                    cipher = user.ibe_encrypt(mode="comm", m=plain_text, user_id=src_id, filename=src_mpk_file)
+                    sign = user.ibe_sign(mode="local", m=plain_text)
+                    packet = Packet.make_key_request_sec(mode=mode, cipher=cipher, sign=sign)
+
+                    action = Action()
+                    action.type = Action.ActionType.SEND
+                    action.payload = [packet.to_bytes()]
+
+                else:
+                    print("SigError!")
 
         if packet.type == Packet.PacketType.KEY_RESPOND:
 
@@ -248,7 +262,10 @@ class Client(object):
             mpk_file = user.local_mpk_file
             mpk = ibe_read_from_file(mpk_file)
 
-            payload = Packet.make_comm_request_init(des_id=comm_id, src_id=user_id, father_id=father_id, mpk=mpk)
+            sig_file = user.certificate_file
+            user_sig = ibe_read_from_file(sig_file)
+
+            payload = Packet.make_comm_request_init(des_id=comm_id, src_id=user_id, father_id=father_id, mpk=mpk, sig=user_sig)
             ret.payload = [payload.to_bytes()]
 
         return ret
