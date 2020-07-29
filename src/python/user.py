@@ -298,17 +298,13 @@ class User(object):
 
     def sig_verify(self, client_id=b"", sig=b""):
 
-        s = Certificate
+        s = Certificate()
         s = s.from_bytes(sig)
 
-        sm_payload = s.payload
-        s_payload = Certificate.Payload
-        s_payload = s_payload.from_bytes(sm_payload)
-
-        s_iss = s_payload.iss
-        s_aud = s_payload.aud
-        s_mpk = s_payload.mpk
-        s_parent = s_payload.parent
+        s_iss = s.payload.iss
+        s_aud = s.payload.aud
+        s_mpk = s.payload.mpk
+        s_parent = s.payload.parent
 
         if s_aud.encode() != client_id:
             print("ClientIDError!")
@@ -320,28 +316,28 @@ class User(object):
 
         if s_parent == "null":
             # the inner packet
-            global_mpk_file = self.global_mpk_file
-            global_mpk = ibe_read_from_file(global_mpk_file)
+            global_mpk = self.input_mpk(mode="global")
 
-            # if global_mpk != s_mpk or s_iss != s_aud:
-            #     print("InnerVerifyError!")
-            #     return False
-            # else:
-            #     pass
+            if global_mpk != s_mpk or s_iss != s_aud:
+                print("InnerVerifyError!")
+                return False
+            else:
+                pass
 
         else:
             self.sig_verify(s_iss.encode(), s_parent)
 
-        sm_sig = s.sig
-        s_sig = Certificate.Signature
-        s_sig = s_sig.from_bytes(sm_sig)
-        sign_mes = s_sig.sig
+        s_sig = s.sig.sig.encode()
 
-        # if not ibe_verify(sm_payload, sign_mes, s_mpk, client_id):
-        #     print("SignError!")
-        #     return False
-        # else:
-        #     pass
+        header = s.header.to_bytes()
+        payload = s.payload.to_bytes()
+        m = b".".join([header, payload])
+
+        if not ibe_verify(m, s_sig, s_mpk, client_id):
+            print("SignError!")
+            return False
+        else:
+            pass
 
         return True
 
@@ -359,7 +355,6 @@ class User(object):
 
     def input_sk(self, mode="local"):
         return ibe_read_from_file(self.get_sk_file_from_mode(mode))
-
 
     def load_config_file(self):
         config = None
@@ -381,8 +376,6 @@ class User(object):
             self.top_user_list = top_user_list
         except AttributeError:
             pass
-    
-
 
     def output_cert(self, cert=""):
         with open(self.certificate_file, "w") as f:

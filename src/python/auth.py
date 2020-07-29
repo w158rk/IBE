@@ -49,18 +49,6 @@ from crypto_c_interface import ibe_sign
 
 
 def global_to_json(obj):
-    """
-    obj should be a list or a dict
-    """
-
-    """
-    change
-    #     return json.dumps(obj, ensure_ascii=False)
-
-
-    # def from_json(json_str):
-    #     return json.loads(json_str)
-    """
     return json.dumps(obj, ensure_ascii=False, sort_keys=True, indent=4)
 
 
@@ -126,15 +114,6 @@ class Certificate:
             "parent"
         ]
 
-        """
-        iss=b"",
-        aud=b"",
-        exp=b"null",
-        nbf=b"null",
-        iat=b"null",
-        mpk=b"",
-        parent=b""):
-        """
         def __init__(self,
                      iss="",
                      aud="",
@@ -253,9 +232,9 @@ class Certificate:
             return b64encode(obj)
 
     def __init__(self,
-                 header="null",
-                 payload="null",
-                 sig="null"):
+                 header=None,
+                 payload=None,
+                 sig=None):
         if not header:
             header = Certificate.Header()
         if not payload:
@@ -268,10 +247,8 @@ class Certificate:
         self.sig = sig
 
     def make_sig(self, sk=b""):
-        # header = self.header.to_bytes()
-        # payload = self.payload.to_bytes()
-        header = self.header
-        payload = self.payload
+        header = self.header.to_bytes()
+        payload = self.payload.to_bytes()
         sig = Certificate.Signature()
         sig.header = ""
         sig.payload = ""
@@ -303,7 +280,6 @@ class Certificate:
             """
             obj[attr] = getattr(self, attr).decode()
             """
-            print(attr)
             val = getattr(self, attr)
             val = val.to_json()
             obj[attr] = global_from_json(val)

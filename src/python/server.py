@@ -149,33 +149,12 @@ class Server(object):
             assert client_sk
             sk_len = len(client_sk)
             sk_len = int2bytes(sk_len, 4)
-            
-            # client_sig = self.gen_client_sig(client_id, client_sk)
-            # sig_len = len(client_sig)
-            # sig_len = int2bytes(sig_len, 4)
-            # packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, client_sig, sig_len)
-            
 
-            # certificate
-            client_cert = Certificate()
+            client_sig = self.gen_client_sig(client_id, client_sk)
+            sig_len = len(client_sig)
+            sig_len = int2bytes(sig_len, 4)
+            packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, client_sig, sig_len)
 
-            # necessary properties
-            client_cert.payload.iss = user.id
-            client_cert.payload.aud = client_id
-            exp = datetime.now()
-            exp += timedelta(days=365)
-            stamp = mktime(exp.timetuple())
-            client_cert.payload.exp = format_date_time(stamp)
-            client_cert.payload.mpk = user.input_mpk()
-            # TODO(wrk): what parent should be
-            client_cert.payload.parent = user.id
-            client_cert.make_sig(user.input_sk(mode="local"))
-
-            client_cert = client_cert.to_bytes()
-            cert_len = len(client_cert)
-            cert_len = int2bytes(cert_len, 4)
-
-            packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, client_cert, cert_len)
             plain_text = packet.to_bytes()
 
             cipher = user.sm4_enc(key=sm4_key, m=plain_text)
@@ -333,44 +312,23 @@ class Server(object):
         user = self.user
         certif = Certificate()
 
-        sig_head = certif.Header()
-        sig_head_mes = sig_head.to_bytes()
-        certif.header = sig_head_mes
+        certif.payload.iss = user.id
+        certif.payload.aud = user.id
 
-        sig_payload = certif.Payload()
-        sig_payload.iss = user.id
-        sig_payload.aud = user.id
-        mpk_file = user.local_mpk_file
-        mpk = ibe_read_from_file(mpk_file)
-        sig_payload.mpk = b"null"
-        sig_payload.parent = b"null"
+        exp = datetime.now()
+        exp += timedelta(days=365)
+        stamp = mktime(exp.timetuple())
 
-        sig_payload_mes = sig_payload.to_bytes()
-        certif.payload = sig_payload_mes
+        certif.payload.exp = format_date_time(stamp)
+        certif.payload.mpk = user.input_mpk(mode="global")
+        certif.payload.parent = "null"
 
-        sig_sign = certif.Signature()
-        sig = user.ibe_sign(mode="local", m=sig_payload_mes)
-        sig_sign.sig = b"null"
-
-        sig_sign_mes = sig_sign.to_bytes()
-        certif.sig = sig_sign_mes
-
-        # sig_load = certif.payload
-        # s_l = Certificate.Payload
-        # s_l = s_l.from_bytes(sig_load)
+        certif.make_sig(user.input_sk(mode="global"))
 
         certif_mes = certif.to_bytes()
 
         certif_file = user.certificate_file
         ibe_write_to_file(certif_mes, certif_file)
-
-        # c_mes = Certificate
-        # c_mes = c_mes.from_bytes(certif_mes)
-        # s_l_m = c_mes.payload
-        # s_l = Certificate.Payload
-        # s_l = s_l.from_bytes(s_l_m)
-
-        # print(s_l.iss)
 
     def gen_client_sig(self, client_id=b"", client_sk=b""):
         print("generate the client's certificate")
@@ -380,35 +338,18 @@ class Server(object):
 
         certif = Certificate()
 
-        sig_head = certif.Header()
-        sig_head_mes = sig_head.to_bytes()
-        certif.header = sig_head_mes
-
-        sig_payload = certif.Payload()
-        sig_payload.iss = user.id
-        sig_payload.aud = client_id
+        certif.payload.iss = user.id
+        certif.payload.aud = client_id
 
         exp = datetime.now()
         exp += timedelta(days=365)
         stamp = mktime(exp.timetuple())
 
-        sig_payload.exp = format_date_time(stamp)
-
-        sig_payload.mpk = user.input_mpk()
-        # sig_payload.mpk = b"null"
-        sig_payload.parent = server_sig
-
-        sig_payload_mes = sig_payload.to_bytes()
-        certif.payload = sig_payload_mes
+        certif.payload.exp = format_date_time(stamp)
+        certif.payload.mpk = user.input_mpk(mode="admin")
+        certif.payload.parent = server_sig
 
         certif.make_sig(user.input_sk(mode="admin"))
-
-        # sig_sign = certif.Signature()
-        # sig = user.ibe_sign(mode="admin", m=sig_payload_mes)
-        # sig_sign.sig = b"null"
-
-        # sig_sign_mes = sig_sign.to_bytes()
-        # certif.sig = sig_sign_mes
 
         client_sig = certif.to_bytes()
         return client_sig
