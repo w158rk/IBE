@@ -440,7 +440,7 @@ def main():
     f_test = False
     if f_test:
         client_test = ClientTest(srv_addr=_args.srv_addr, srv_port=_args.srv_port,
-                                args=_args)
+                                 args=_args)
         client_test.test_all()
 
 

@@ -52,7 +52,7 @@ class User(object):
     """
 
     def __init__(self, user_id=b"", addr="", port=0,
-                   top_user_list=[], config_file=None):
+                 top_user_list=[], config_file=None):
         """
         Args:
             - top_user_list:
@@ -193,7 +193,7 @@ class User(object):
             sk_file = self.local_sk_file
         else:
             raise UserError()
-        return sk_file        
+        return sk_file
 
     def sm4_enc(self, key=b"", m=b""):
         return sm4_enc(key, m)
@@ -257,7 +257,7 @@ class User(object):
             sk_file = self.local_sk_file
         else:
             raise UserError()
-        
+
         sk = ibe_read_from_file(sk_file)
         return ibe_decrypt(c, sk)
 

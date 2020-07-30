@@ -313,6 +313,9 @@ class Packet(object):
 
     @classmethod
     def make_key_request_plain(cls, des_id=b'', src_id=b'', key=b''):
+        """
+        make the packet with the key
+        """
         assert des_id
         assert src_id
         assert key
@@ -350,6 +353,9 @@ class Packet(object):
 
     @classmethod
     def make_key_respond(cls, des_id=b'', src_id=b'', m=b''):
+        """
+        make the packet with the "ACK"
+        """
         assert des_id
         assert src_id
         assert m

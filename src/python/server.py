@@ -21,7 +21,6 @@ from packet import Packet
 from utils import int2bytes
 from auth import Certificate
 from crypto_c_interface import ibe_read_from_file, ibe_write_to_file
-from auth import Certificate
 from wsgiref.handlers import format_date_time
 from datetime import datetime, timedelta
 from time import mktime
