@@ -330,7 +330,7 @@ class User(object):
         else:
             self.sig_verify(s_iss.encode(), s_parent)
 
-        s_sig = s.sig.sig.encode()
+        s_sig = s.sig.sig
 
         header = s.header.to_bytes()
         payload = s.payload.to_bytes()

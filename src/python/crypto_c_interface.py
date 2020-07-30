@@ -13,7 +13,6 @@
 
 from ctypes import c_char, c_char_p,  c_int, c_ulong, c_long, create_string_buffer, POINTER, CDLL, pointer, cast
 import os
-import time
 import argparse
 from constant import *
 from utils import str2bytes
@@ -354,8 +353,6 @@ def ibe_verify(m, sm, mpk, user_id):
         1 for pass, -1 for fail
     """
 
-    time_start = time.time()
-
     c_m = c_char_p()
     c_m.value = m
     m_len = len(m)
@@ -378,9 +375,6 @@ def ibe_verify(m, sm, mpk, user_id):
 
     lib_ibe = CDLL(LIBIBE_PATH)
     res = lib_ibe.ibe_verify(c_m, c_m_len, c_sm, c_sm_len, p_mpk, c_mpk_len, c_id, c_id_len)
-    print(res)
-    time_end = time.time()
-    print('verify totally cost', time_end-time_start)
 
     return res
 

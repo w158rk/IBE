@@ -33,6 +33,7 @@ import threading
 import argparse
 import traceback
 import os
+import time
 
 
 _config_file = ""
@@ -226,7 +227,11 @@ class Server(object):
                 # comm cross the domin
                 # TODO: sig certification
 
+                time_start = time.time()
+
                 if user.sig_verify(client_id=src_id, sig=src_sig):
+                    time_end = time.time()
+                    print('verify totally cost', time_end-time_start)
                     print("Certification Verify done!")
                     src_mpk_file = "mpk-" + src_id.decode() + ".conf"
                     ibe_write_to_file(src_mpk, src_mpk_file)
@@ -349,7 +354,7 @@ class Server(object):
         certif.payload.mpk = user.input_mpk(mode="admin")
         certif.payload.parent = server_sig
 
-        certif.make_sig(user.input_sk(mode="admin"))
+        certif.make_sig(client_sk)
 
         client_sig = certif.to_bytes()
         return client_sig

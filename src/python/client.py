@@ -176,7 +176,11 @@ class Client(object):
                 # use the receive mpk to comm
                 # TODO: need to sig ceritfication
 
+                time_start = time.time()
+
                 if user.sig_verify(client_id=src_id, sig=src_sig):
+                    time_end = time.time()
+                    print('verify totally cost', time_end-time_start)
                     print("Certification Verify done!")
                     src_mpk_file = "mpk-" + src_id.decode() + ".conf"
                     ibe_write_to_file(src_mpk, src_mpk_file)

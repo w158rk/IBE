@@ -202,7 +202,10 @@ class Certificate:
             obj = global_from_json(json_str)
             for attr in obj:
                 assert attr in cls._valid_attrs
-                ret.__setattr__(attr, obj[attr])
+                val = obj[attr]
+                if attr == 'sig':
+                    val = b64decode(val)
+                ret.__setattr__(attr, val)
             return ret
 
         @classmethod
@@ -220,6 +223,8 @@ class Certificate:
                 """
 
                 val = getattr(self, attr)
+                if attr == 'sig':
+                    val = b64encode(val)
                 if type(val) == bytes:
                     val = bytes2str(val)
                 obj[attr] = val
@@ -255,6 +260,7 @@ class Certificate:
         m = b".".join([header, payload])
         digest = ibe_sign(m, sk)
         sig.sig = digest
+        self.sig = sig
 
     @classmethod
     def from_json(cls, json_str):
