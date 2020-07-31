@@ -23,13 +23,13 @@ class IOT_key:
 
     _valid_attrs = [
         "time_stamp",
-        "dur_time",
+        "end_time",
         "key"
     ]
 
     def __init__(self,
                  time_stamp="",
-                 dur_time="",
+                 end_time="",
                  key=""):
 
         now = datetime.now()
@@ -41,11 +41,11 @@ class IOT_key:
 
         if not time_stamp:
             time_stamp = format_date_time(stamp)
-        if not dur_time:
-            dur_time = format_date_time(end_stamp)
+        if not end_time:
+            end_time = format_date_time(end_stamp)
 
         self.time_stamp = time_stamp
-        self.dur_time = dur_time
+        self.end_time = end_time
         self.key = key
 
     @classmethod

@@ -313,7 +313,7 @@ class Client(object):
         delta = timedelta(days=dur_time)
         end = now + delta
         end_stamp = mktime(end.timetuple())
-        IOTkey.dur_time = end_stamp
+        IOTkey.end_time = end_stamp
 
         IOTkey.key = key
         key_mes = IOTkey.to_bytes()
