@@ -81,6 +81,7 @@ class User(object):
         self.certificate_file = b""
         self.sm4_key = b""
         self.key = b""
+        self.IOT_key = b""
         self.parent = None
 
         # inner variables

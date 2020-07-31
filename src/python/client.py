@@ -165,7 +165,8 @@ class Client(object):
             if key_mode == b'sm4':
                 key_mes = key
             elif key_mode == b'IOT':
-                key_mes = self.make_key(key)
+                key_mes = self.make_key(KEY_DUR_TIME, key)
+                user.IOT_key = key_mes
             else:
                 print("KeyModeError!")
 
@@ -223,7 +224,10 @@ class Client(object):
             if m == b"ACK":
                 sm4_key_file = key_mode.decode() + "-" + src_id.decode() + ".conf"
                 with open(sm4_key_file, "wb") as f:
-                    key_mes = self.make_key(key)
+                    if key_mode == b'sm4':
+                        key_mes = key
+                    elif key_mode == b'IOT':
+                        key_mes = user.IOT_key
                     f.write(key_mes)
 
         return action
@@ -302,8 +306,14 @@ class Client(object):
         if action.payload[0] == b"run_init":
             self.user.run_init()
 
-    def make_key(self, key=b''):
+    def make_key(self, dur_time, key=b''):
         IOTkey = IOT_key()
+
+        now = datetime.now()
+        delta = timedelta(days=dur_time)
+        end = now + delta
+        end_stamp = mktime(end.timetuple())
+        IOTkey.dur_time = end_stamp
 
         IOTkey.key = key
         key_mes = IOTkey.to_bytes()
