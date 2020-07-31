@@ -25,6 +25,7 @@ from wsgiref.handlers import format_date_time
 from datetime import datetime, timedelta
 from time import mktime
 from constant import RECEIVE_BUFFER_SIZE
+from key import IOT_key
 
 import sys
 import socket
@@ -170,6 +171,7 @@ class Server(object):
             src_father_id = packet.vals[2]
             src_mpk = packet.vals[3]
             src_sig = packet.vals[4]
+            key_mode = packet.vals[5]
 
             user = self.user
             if user.parent is None:
@@ -204,7 +206,7 @@ class Server(object):
                 # comm in the same domin
                 des_id = src_id
                 src_id = user.id
-                packet = Packet.make_comm_respond_init(mode=b'1', des_id=des_id, src_id=src_id, mpk=mpk, sig=user_sig)
+                packet = Packet.make_comm_respond_init(mode=b'1', des_id=des_id, src_id=src_id, mpk=mpk, sig=user_sig, key_mode=key_mode)
 
                 action.type = Action.ActionType.SEND
                 action.payload = packet.to_bytes()
@@ -213,7 +215,7 @@ class Server(object):
                 # comm with father node
                 des_id = src_id
                 src_id = user.id
-                packet = Packet.make_comm_respond_init(mode=b'3', des_id=des_id, src_id=src_id, mpk=adm_mpk, sig=user_sig)
+                packet = Packet.make_comm_respond_init(mode=b'3', des_id=des_id, src_id=src_id, mpk=adm_mpk, sig=user_sig, key_mode=key_mode)
 
                 action.type = Action.ActionType.SEND
                 action.payload = packet.to_bytes()
@@ -237,7 +239,7 @@ class Server(object):
 
                     des_id = src_id
                     src_id = user.id
-                    packet = Packet.make_comm_respond_init(mode=b'2', des_id=des_id, src_id=src_id, mpk=mpk, sig=user_sig)
+                    packet = Packet.make_comm_respond_init(mode=b'2', des_id=des_id, src_id=src_id, mpk=mpk, sig=user_sig, key_mode=key_mode)
 
                     action.type = Action.ActionType.SEND
                     action.payload = packet.to_bytes()
@@ -261,7 +263,15 @@ class Server(object):
 
             des_id = packet.vals[0]
             src_id = packet.vals[1]
-            sm4_key = packet.vals[2]
+            key_mes = packet.vals[2]
+            key_mode = packet.vals[3]
+
+            if key_mode == b'sm4':
+                sm4_key = key_mes
+            elif key_mode == b'IOT':
+                key = IOT_key()
+                key = key.from_bytes(key_mes)
+                sm4_key = key.key
 
             if mode == b'1':
                 verify = user.ibe_verify(mode="local", m=m, sm=sign, user_id=src_id)
@@ -273,14 +283,14 @@ class Server(object):
                 verify = user.ibe_verify(mode="admin", m=m, sm=sign, user_id=src_id)
 
             if verify:
-                sm4_key_file = "sm4-" + src_id.decode() + ".conf"
+                sm4_key_file = key_mode.decode() + "-" + src_id.decode() + ".conf"
                 with open(sm4_key_file, "wb") as f:
-                    f.write(sm4_key)
+                    f.write(key_mes)
             else:
                 print("VerifyError!")
 
             cipher = user.sm4_enc(key=sm4_key, m=b"ACK")
-            packet = Packet.make_key_respond(des_id=src_id, src_id=des_id, m=cipher)
+            packet = Packet.make_key_respond(des_id=src_id, src_id=des_id, m=cipher, key_mode=key_mode)
 
             action.type = Action.ActionType.SEND
             action.payload = packet.to_bytes()

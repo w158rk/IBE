@@ -264,7 +264,7 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_comm_request_init(cls, des_id=b'', src_id=b'', father_id=b'', mpk=b'', sig=b""):
+    def make_comm_request_init(cls, des_id=b'', src_id=b'', father_id=b'', mpk=b'', sig=b"", key_mode=b""):
         """
         for the first communication init
         """
@@ -273,12 +273,13 @@ class Packet(object):
         assert father_id
         assert mpk
         assert sig
+        assert key_mode
 
         packet = Packet()
         packet.type = cls.PacketType.COMM_REQUEST_INIT
 
-        lens = [len(des_id), len(src_id), len(father_id), len(mpk), len(sig)]
-        vals = [des_id, src_id, father_id, mpk, sig]
+        lens = [len(des_id), len(src_id), len(father_id), len(mpk), len(sig), len(key_mode)]
+        vals = [des_id, src_id, father_id, mpk, sig, key_mode]
 
         packet.lens = lens
         packet.vals = vals
@@ -286,7 +287,7 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_comm_respond_init(cls, mode=b'', des_id=b'', src_id=b'', mpk=b'', sig=b''):
+    def make_comm_respond_init(cls, mode=b'', des_id=b'', src_id=b'', mpk=b'', sig=b'', key_mode=b''):
         """
         for the first communication init respond
 
@@ -299,12 +300,13 @@ class Packet(object):
         assert src_id
         assert mpk
         assert sig
+        assert key_mode
 
         packet = Packet()
         packet.type = cls.PacketType.COMM_RESPOND_INIT
 
-        lens = [len(mode), len(des_id), len(src_id), len(mpk), len(sig)]
-        vals = [mode, des_id, src_id, mpk, sig]
+        lens = [len(mode), len(des_id), len(src_id), len(mpk), len(sig), len(key_mode)]
+        vals = [mode, des_id, src_id, mpk, sig, key_mode]
 
         packet.lens = lens
         packet.vals = vals
@@ -312,19 +314,20 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_key_request_plain(cls, des_id=b'', src_id=b'', key=b''):
+    def make_key_request_plain(cls, des_id=b'', src_id=b'', key=b'', key_mode=b''):
         """
         make the packet with the key
         """
         assert des_id
         assert src_id
         assert key
+        assert key_mode
 
         packet = Packet()
         packet.type = cls.PacketType.KEY_REQUEST_PLAIN
 
-        lens = [len(des_id), len(src_id), len(key)]
-        vals = [des_id, src_id, key]
+        lens = [len(des_id), len(src_id), len(key), len(key_mode)]
+        vals = [des_id, src_id, key, key_mode]
 
         packet.lens = lens
         packet.vals = vals
@@ -352,19 +355,20 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_key_respond(cls, des_id=b'', src_id=b'', m=b''):
+    def make_key_respond(cls, des_id=b'', src_id=b'', m=b'', key_mode=b''):
         """
         make the packet with the "ACK"
         """
         assert des_id
         assert src_id
         assert m
+        assert key_mode
 
         packet = Packet()
         packet.type = cls.PacketType.KEY_RESPOND
 
-        lens = [len(des_id), len(src_id), len(m)]
-        vals = [des_id, src_id, m]
+        lens = [len(des_id), len(src_id), len(m), len(key_mode)]
+        vals = [des_id, src_id, m, key_mode]
 
         packet.lens = lens
         packet.vals = vals

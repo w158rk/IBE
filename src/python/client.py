@@ -26,6 +26,10 @@ from packet import Packet
 from utils import bytes2int
 from os import urandom
 from auth import Certificate
+from key import IOT_key
+from wsgiref.handlers import format_date_time
+from datetime import datetime, timedelta
+from time import mktime
 
 import sys
 import socket
@@ -142,6 +146,7 @@ class Client(object):
             src_id = packet.vals[2]
             src_mpk = packet.vals[3]
             src_sig = packet.vals[4]
+            key_mode = packet.vals[5]
 
             user = self.user
             if user.id != des_id:
@@ -155,13 +160,21 @@ class Client(object):
             mpk_file = user.local_mpk_file
             mpk = ibe_read_from_file(mpk_file)
 
+            key = urandom(16)
+            user.key = key
+            if key_mode == b'sm4':
+                key_mes = key
+            elif key_mode == b'IOT':
+                key_mes = self.make_key(key)
+            else:
+                print("KeyModeError!")
+
             if mode == b'1' or mode == b'3':
                 # use the local mpk to comm
                 if mpk != src_mpk:
                     print("MPKERROR!")
-                key = urandom(16)
-                user.key = key
-                packet = Packet.make_key_request_plain(des_id=src_id, src_id=des_id, key=key)
+
+                packet = Packet.make_key_request_plain(des_id=src_id, src_id=des_id, key=key_mes, key_mode=key_mode)
                 plain_text = packet.to_bytes()
 
                 cipher = user.ibe_encrypt(mode="local", m=plain_text, user_id=src_id)
@@ -185,9 +198,7 @@ class Client(object):
                     src_mpk_file = "mpk-" + src_id.decode() + ".conf"
                     ibe_write_to_file(src_mpk, src_mpk_file)
 
-                    key = urandom(16)
-                    user.key = key
-                    packet = Packet.make_key_request_plain(des_id=src_id, src_id=des_id, key=key)
+                    packet = Packet.make_key_request_plain(des_id=src_id, src_id=des_id, key=key_mes, key_mode=key_mode)
                     plain_text = packet.to_bytes()
 
                     cipher = user.ibe_encrypt(mode="comm", m=plain_text, user_id=src_id, filename=src_mpk_file)
@@ -205,13 +216,15 @@ class Client(object):
 
             cipher = packet.vals[2]
             src_id = packet.vals[1]
+            key_mode = packet.vals[3]
             user = self.user
             key = user.key
             m = user.sm4_dec(key, cipher)
             if m == b"ACK":
-                sm4_key_file = "sm4-" + src_id.decode() + ".conf"
+                sm4_key_file = key_mode.decode() + "-" + src_id.decode() + ".conf"
                 with open(sm4_key_file, "wb") as f:
-                    f.write(key)
+                    key_mes = self.make_key(key)
+                    f.write(key_mes)
 
         return action
 
@@ -262,10 +275,12 @@ class Client(object):
             assert args.comm_addr
             assert args.comm_port
             assert args.comm_id
+            assert args.key_mode
             ret.addr = args.comm_addr
             ret.port = args.comm_port
             comm_id = args.comm_id
             comm_id = comm_id.encode()
+            key_mode = args.key_mode.encode()
 
             user_id = user.id
             if user.parent is None:
@@ -278,7 +293,7 @@ class Client(object):
             sig_file = user.certificate_file
             user_sig = ibe_read_from_file(sig_file)
 
-            payload = Packet.make_comm_request_init(des_id=comm_id, src_id=user_id, father_id=father_id, mpk=mpk, sig=user_sig)
+            payload = Packet.make_comm_request_init(des_id=comm_id, src_id=user_id, father_id=father_id, mpk=mpk, sig=user_sig, key_mode=key_mode)
             ret.payload = [payload.to_bytes()]
 
         return ret
@@ -286,6 +301,14 @@ class Client(object):
     def run_run(self, action):
         if action.payload[0] == b"run_init":
             self.user.run_init()
+
+    def make_key(self, key=b''):
+        IOTkey = IOT_key()
+
+        IOTkey.key = key
+        key_mes = IOTkey.to_bytes()
+
+        return key_mes
 
     def run_send(self, addr, port, action):
         """
@@ -425,6 +448,7 @@ def main():
     parser.add_argument('--addr', type=str, default="", dest="comm_addr")
     parser.add_argument('--port', type=int, default=0, dest="comm_port")
     parser.add_argument('--id', type=str, default="", dest="comm_id")
+    parser.add_argument('--key', type=str, default="sm4", dest="key_mode")
 
     _args = parser.parse_args()
     global _config_file
