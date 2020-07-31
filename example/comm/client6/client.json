@@ -10,13 +10,13 @@
     "local_sk_file" : "sk-local.conf",
     "certificate_file": "certificate.conf",
 
-    "id" : "Client4", 
+    "id" : "Client6", 
     "addr" : "127.0.0.1",
-    "port" : 5008,
+    "port" : 5010,
     "parent" : {
-        "id" : "Client1",
+        "id" : "Client5",
         "addr" : "127.0.0.1",
-        "port" : 5004
+        "port" : 5009
     }
 }
     

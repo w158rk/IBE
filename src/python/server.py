@@ -388,6 +388,7 @@ class Server(object):
                     # TODO(wrk): maybe generate some log information
 
                     print("received: ", data)
+                    print("data len: ", len(data))
                     action = self.gen_action_from_data(data)
                     if action:
                         if action.type == Action.ActionType.EXIT:

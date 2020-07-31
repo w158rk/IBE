@@ -355,6 +355,7 @@ class Client(object):
 
                 data = sock.recv(RECEIVE_BUFFER_SIZE)
                 print("received: ", data)
+                print("data len: ", len(data))
                 action = self.gen_action_from_data(data)
 
         except socket.error as e:
