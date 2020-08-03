@@ -33,9 +33,9 @@ ROOT_DIR = "/{path-to-find-IBE}/IBE"
 
 2. 配置用户json文件，例如[init_server.json](../example/init/server1/init_server.json)
 
-其中，能作为父节点的json文件需要有'admin_mpk_file'，'admin_msk_file'，'admin_sk_file'
+其中，能作为父节点的json文件需要有`admin_mpk_file`，`admin_msk_file`，`admin_sk_file`
 
-顶级节点的json文件需要有'global_sk_file'
+顶级节点的json文件需要有`global_sk_file`
 
 3. 如果要运行顶级功能，配置顶级用户目录，如[top_user_list.json](../example/init/top_user_list.json)并在用户配置文件中加入 
 
@@ -43,9 +43,9 @@ ROOT_DIR = "/{path-to-find-IBE}/IBE"
 "top_user_list": "../top_user_list.json"
 ```
 
-现有'example'为测试文件夹，‘init’用于顶级参数生成的测试，'sk'用于私钥申请的测试，'comm'用于会话密钥申请的测试
+现有`example`为测试文件夹，`init`用于顶级参数生成的测试，`sk`用于私钥申请的测试，`comm`用于会话密钥申请的测试
 
-其中'comm'文件夹下各节点的关系为：
+其中`comm`文件夹下各节点的关系为：
 
 ![image](image/json.png)
 
