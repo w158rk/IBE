@@ -47,33 +47,9 @@ ROOT_DIR = "/{path-to-find-IBE}/IBE"
 
 其中'comm'文件夹下各节点的关系为：
 
-   Server1          Server2
-    
-   /       \           |
+![image](image/json.png)
 
-Client1  Client2     Client3
-
-   |
-
-Client4
-
-   |
-
-Client5
-
-   |
-
-Client6
-
-   |
-
-Client7
-
-   |
-
-Client8
-
-4. 链接python目录
+1. 链接python目录
 ```sh
 ln -s {path-to-IBE}/src/python .
 ```
