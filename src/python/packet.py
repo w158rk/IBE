@@ -225,20 +225,23 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sk_respond_key_plain(cls, user_sk=b'', sk_len=b'', client_sig=b'', sig_len=b''):
+    def make_sk_respond_key_plain(cls, user_sk=b'', sk_len=b'', cert_list=[]):
         """
         make the packet with client's sk and sk length
         """
         assert user_sk
         assert sk_len
-        assert client_sig
-        assert sig_len
+        assert cert_list
 
         packet = Packet()
         packet.type = cls.PacketType.SK_RESPOND_KEY_PLAIN
 
-        lens = [len(user_sk), len(sk_len), len(client_sig), len(sig_len)]
-        vals = [user_sk, sk_len, client_sig, sig_len]
+        lens = [len(user_sk), len(sk_len)]
+        vals = [user_sk, sk_len]
+
+        for cert in cert_list:
+            vals.append(cert)
+            lens.append(len(cert))
 
         packet.lens = lens
         packet.vals = vals

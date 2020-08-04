@@ -54,6 +54,9 @@ int sym_crypt_ecb(unsigned char key[16], int mode,
                      unsigned char *output,
                      int *output_length);
 
+char *hash_sm3_py(char *m, long m_len);
+
+
 #ifdef __cplusplus
 }
 #endif

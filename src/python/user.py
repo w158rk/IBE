@@ -348,6 +348,12 @@ class User(object):
 
         return True
 
+    def input_cert(self, filename=None):
+        if not filename:
+            filename = self.certificate_file
+        with open(filename, "r") as f:
+            return f.read()
+
     def input_mpk(self, mode="local"):
         if mode == "global":
             mpk_file = self.global_mpk_file
@@ -384,8 +390,10 @@ class User(object):
         except AttributeError:
             pass
 
-    def output_cert(self, cert=""):
-        with open(self.certificate_file, "w") as f:
+    def output_cert(self, cert="", cert_file=""):
+        if not cert_file:
+            cert_file = self.certificate_file
+        with open(cert_file, "w") as f:
             f.write(cert)
 
     def output_sk(self, sk, mode="global"):
