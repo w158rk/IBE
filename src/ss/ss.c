@@ -393,6 +393,8 @@ int SS_id2num_init(BIGNUM *res, ID *id, char *filename)
         ERROR("error in calculating X*Z^2");
     }
 
+    return 1;
+
 }
 
 
