@@ -127,21 +127,27 @@ class Client(object):
 
             # The rest of the packet is all the certificate files
             # Store them one by one
-            last_cert_file = None
+            certs = []
+            cert_files = []
+
             for cert, cert_len in zip(packet.vals[2:], packet.lens[2:]):
 
                 assert len(cert) == cert_len
                 cert = Certificate.from_bytes(cert)
-                # ATTENTION: A FILENAME MUST BE ASSIGNED TO THE CERTIFICATE, THERE IS NO CHECK
-                # IT MIGHT LEAD TO SOME OTHER ERROR IF THE FILENAME IS NOT GIVEN
+                certs.append(cert)
                 if cert.payload.aud == bytes2str(user.id):
                     cert_file = user.certificate_file
                 else:
                     cert_file = "cert-" + cert.payload.aud + ".conf"
-                if last_cert_file:
-                    cert.payload.parent.filename = last_cert_file
+                cert_files.append(cert_file)
+
+            # ATTENTION: A FILENAME MUST BE ASSIGNED TO THE CERTIFICATE, THERE IS NO CHECK
+            # IT MIGHT LEAD TO SOME OTHER ERROR IF THE FILENAME IS NOT GIVEN
+            for i in range(len(certs)-1):
+                certs[i].payload.parent.filename = cert_files[i+1]
+            
+            for cert, cert_file in zip(certs, cert_files):
                 user.output_cert(cert.to_json(with_filename=True), cert_file)
-                last_cert_file = cert_file
 
         
         if packet.type == Packet.PacketType.COMM_RESPOND_INIT:

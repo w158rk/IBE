@@ -151,8 +151,14 @@ class Server(object):
             sk_len = len(client_sk)
             sk_len = int2bytes(sk_len, 4)
 
-            # get all the certificates of current user
+
             cert_list = []
+
+            # append the cert file generated for the next layer
+            client_cert = self.gen_client_sig(client_id)
+            cert_list.append(client_cert.to_bytes())
+
+            # get all the certificates of current user
             cert_file = user.certificate_file
             while True:
                 assert os.path.exists(cert_file)
@@ -164,9 +170,6 @@ class Server(object):
                 # next certificate name
                 cert_file = cert.payload.parent.filename
 
-            # append the cert file generated for the next
-            client_cert = self.gen_client_sig(client_id)
-            cert_list.append(client_cert.to_bytes())
 
             packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, cert_list)
 
