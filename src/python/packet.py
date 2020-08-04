@@ -48,6 +48,7 @@ class Packet(object):
         KEY_REQUEST_PLAIN = 17
         KEY_REQUEST_SEC = 18
         KEY_RESPOND = 19
+        COMM_REFUSE = 20
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type
@@ -267,22 +268,25 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_comm_request_init(cls, des_id=b'', src_id=b'', father_id=b'', mpk=b'', sig=b"", key_mode=b""):
+    def make_comm_request_init(cls, des_id=b'', src_id=b'', mpk=b'', key_mode=b"", certs=[]):
         """
         for the first communication init
         """
         assert des_id
         assert src_id
-        assert father_id
         assert mpk
-        assert sig
+        assert certs
         assert key_mode
 
         packet = Packet()
         packet.type = cls.PacketType.COMM_REQUEST_INIT
 
-        lens = [len(des_id), len(src_id), len(father_id), len(mpk), len(sig), len(key_mode)]
-        vals = [des_id, src_id, father_id, mpk, sig, key_mode]
+        lens = [len(des_id), len(src_id), len(mpk), len(key_mode)]
+        vals = [des_id, src_id, mpk, key_mode]
+
+        for cert in certs:
+            lens.append(len(cert))
+            vals.append(cert)
 
         packet.lens = lens
         packet.vals = vals
@@ -290,11 +294,11 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_comm_respond_init(cls, mode=b'', des_id=b'', src_id=b'', mpk=b'', sig=b'', key_mode=b''):
+    def make_comm_respond_init(cls, mode=b'', des_id=b'', src_id=b'', mpk=b'', certs=[], key_mode=b''):
         """
         for the first communication init respond
 
-        mode:
+        mode(?):
             1: same domin
             2: cross domin
             3: comm with father node
@@ -302,14 +306,18 @@ class Packet(object):
         assert des_id
         assert src_id
         assert mpk
-        assert sig
+        assert certs
         assert key_mode
 
         packet = Packet()
         packet.type = cls.PacketType.COMM_RESPOND_INIT
 
-        lens = [len(mode), len(des_id), len(src_id), len(mpk), len(sig), len(key_mode)]
-        vals = [mode, des_id, src_id, mpk, sig, key_mode]
+        lens = [len(mode), len(des_id), len(src_id), len(mpk), len(key_mode)]
+        vals = [mode, des_id, src_id, mpk, key_mode]
+
+        for cert in certs:
+            lens.append(len(cert))
+            vals.append(cert)
 
         packet.lens = lens
         packet.vals = vals
@@ -338,11 +346,11 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_key_request_sec(cls, mode=b'', cipher=b'', sign=b''):
+    def make_key_request_sec(cls, mode=b"comm", cipher=b'', sign=b''):
         """
         just make the cipher in the packet
         """
-        assert mode
+        assert mode in {b"parent", b"comm", b"sibling"}
         assert cipher
         assert sign
 

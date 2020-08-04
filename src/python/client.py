@@ -23,7 +23,7 @@ from constant import *
 from crypto_c_interface import ibe_read_from_file, ibe_write_to_file, ibe_encrypt
 from action import Action
 from packet import Packet
-from utils import bytes2int, bytes2str
+from utils import bytes2int, bytes2str, str2bytes
 from os import urandom
 from auth import Certificate
 from key import IOT_key
@@ -42,7 +42,8 @@ import os
 _valid_actions = {
     "init": "invoke an initialization",
     "sk": "request for the private key",
-    "comm": "initialize a secret session"
+    "comm": "initialize a secret session inter-domain",
+    "comm-no-auth": "initialize a secret session in a domain"
 }
 _config_file = ""
 
@@ -152,25 +153,31 @@ class Client(object):
         
         if packet.type == Packet.PacketType.COMM_RESPOND_INIT:
 
-            mode = packet.vals[0]
-            des_id = packet.vals[1]
-            src_id = packet.vals[2]
-            src_mpk = packet.vals[3]
-            src_sig = packet.vals[4]
-            key_mode = packet.vals[5]
-
+            target_id = packet.vals[1]
+            server_id = packet.vals[2]
+            server_mpk = packet.vals[3]
+            key_mode = packet.vals[4]
+            # first, check the parameters
             user = self.user
-            if user.id != des_id:
-                str1 = "des_id = "
-                str1 = str1 + des_id.decode()
-                str2 = "user_id = "
-                str2 = str2 + user.id.decode()
-                print(str1)
-                print(str2)
-                print("SendError!")
-            mpk_file = user.local_mpk_file
-            mpk = ibe_read_from_file(mpk_file)
+            assert target_id==user.id 
+            assert key_mode in {b"sm4", b"IOT"}
 
+            # Then check the validation of mpk
+            certs = []
+            for certbytes, certlen in zip(packet.vals[5:], packet.lens[5:]):
+                assert len(certbytes) == certlen
+                cert = Certificate.from_bytes(certbytes)
+                certs.append(cert)
+
+            if not user.check_mpk(server_mpk, certs):
+                action = Action()
+                action.type = Action.ActionType.SEND
+                packet = Packet()
+                packet.type = Packet.PacketType.COMM_REFUSE
+                action.payload = packet.to_bytes()
+                return action
+
+            # generate a random key and send it to the server
             key = urandom(16)
             user.key = key
             if key_mode == b'sm4':
@@ -181,48 +188,17 @@ class Client(object):
             else:
                 print("KeyModeError!")
 
-            if mode == b'1' or mode == b'3':
-                # use the local mpk to comm
-                if mpk != src_mpk:
-                    print("MPKERROR!")
+            packet = Packet.make_key_request_plain(des_id=server_id, src_id=target_id, key=key_mes, key_mode=key_mode)
+            plain_text = packet.to_bytes()
 
-                packet = Packet.make_key_request_plain(des_id=src_id, src_id=des_id, key=key_mes, key_mode=key_mode)
-                plain_text = packet.to_bytes()
+            cipher = user.ibe_encrypt(mode="comm", m=plain_text, user_id=server_id, mpk=server_mpk)
+            sign = user.ibe_sign(mode="local", m=plain_text)
+            packet = Packet.make_key_request_sec(cipher=cipher, sign=sign) # default mode = "comm"
 
-                cipher = user.ibe_encrypt(mode="local", m=plain_text, user_id=src_id)
-                sign = user.ibe_sign(mode="local", m=plain_text)
-                packet = Packet.make_key_request_sec(mode=mode, cipher=cipher, sign=sign)
-
-                action = Action()
-                action.type = Action.ActionType.SEND
-                action.payload = [packet.to_bytes()]
-
-            else:
-                # use the receive mpk to comm
-                # TODO: need to sig ceritfication
-
-                time_start = time.time()
-
-                if user.sig_verify(client_id=src_id, sig=src_sig):
-                    time_end = time.time()
-                    print('verify totally cost', time_end-time_start)
-                    print("Certification Verify done!")
-                    src_mpk_file = "mpk-" + src_id.decode() + ".conf"
-                    ibe_write_to_file(src_mpk, src_mpk_file)
-
-                    packet = Packet.make_key_request_plain(des_id=src_id, src_id=des_id, key=key_mes, key_mode=key_mode)
-                    plain_text = packet.to_bytes()
-
-                    cipher = user.ibe_encrypt(mode="comm", m=plain_text, user_id=src_id, filename=src_mpk_file)
-                    sign = user.ibe_sign(mode="local", m=plain_text)
-                    packet = Packet.make_key_request_sec(mode=mode, cipher=cipher, sign=sign)
-
-                    action = Action()
-                    action.type = Action.ActionType.SEND
-                    action.payload = [packet.to_bytes()]
-
-                else:
-                    print("SigError!")
+            action = Action()
+            action.type = Action.ActionType.SEND
+            action.payload = [packet.to_bytes()]
+            return action
 
         if packet.type == Packet.PacketType.KEY_RESPOND:
 
@@ -255,13 +231,10 @@ class Client(object):
         """
         ret = Action()
 
-        # TODO(wrk): complete the logic of init
         if args.action == "init":
             ret.type = Action.ActionType.RUN
             ret.payload = [b"run_init"]
 
-        # TODO(wxy): complete the logic of sk request
-        # and secure channel construction
         if args.action == "sk":
             ret.type = Action.ActionType.SEND
             user = self.user
@@ -280,6 +253,8 @@ class Client(object):
             ret.payload = [payload.to_bytes()]
 
         if args.action == "comm":
+            # At this point, we don't take into account the size of data in the air (in channel)
+            # Just send them! Our current goal is minimize the time of verification
             ret.type = Action.ActionType.SEND
             user = self.user
 
@@ -294,22 +269,77 @@ class Client(object):
             ret.addr = args.comm_addr
             ret.port = args.comm_port
             comm_id = args.comm_id
-            comm_id = comm_id.encode()
-            key_mode = args.key_mode.encode()
+            comm_id = str2bytes(comm_id)
+            key_mode = str2bytes(args.key_mode)
 
             user_id = user.id
-            if user.parent is None:
-                father_id = b"null"
-            else:
-                father_id = user.parent.id
             mpk_file = user.local_mpk_file
             mpk = ibe_read_from_file(mpk_file)
 
-            sig_file = user.certificate_file
-            user_sig = ibe_read_from_file(sig_file)
+            certs = user.input_all_certs()
+            certs = [cert.to_bytes() for cert in certs]
 
-            payload = Packet.make_comm_request_init(des_id=comm_id, src_id=user_id, father_id=father_id, mpk=mpk, sig=user_sig, key_mode=key_mode)
+            payload = Packet.make_comm_request_init(des_id=comm_id, src_id=user_id, mpk=mpk, certs=certs, key_mode=key_mode)
             ret.payload = [payload.to_bytes()]
+
+        if args.action == "comm-no-auth":
+            # This option is for the case that the user has known that it is 
+            # to communicate with who shares the public master key with it  
+            # 1. If it communicates with its parent, the mode is in `parent`
+            # 2. If it communicates with its siblings, the mode is in `sibling`
+            # 3. If it communicates with its children, the mode is in `child`
+            # send a packet with type KEY_REQUEST_SEC
+            # NOTE: currently, there is no way to distinguish the mode `sibline` and `child` 
+            #       so we only provide the mode `parent` and `sibling` for simplicity
+            ret.type = Action.ActionType.SEND
+            user = self.user
+
+            if os.path.exists(self.user.local_mpk_file) and os.path.exists(self.user.local_sk_file):
+                pass        # do nothing
+            else:
+                raise ClientError("please generate your own sk first")
+
+            assert args.comm_addr
+            assert args.comm_port
+            assert args.comm_id
+            ret.addr = args.comm_addr
+            ret.port = args.comm_port
+            comm_id = args.comm_id
+            comm_id = str2bytes(comm_id)
+            key_mode = str2bytes(args.key_mode)
+            assert key_mode in {b"sm4", b"IOT"}
+            mode = None 
+
+            if comm_id == user.parent.id:
+                mode = b"parent"
+            else:
+                mode = b"sibling"
+
+            # generate a random key and send it to the server
+            key = urandom(16)
+            user.key = key
+            if key_mode == b'sm4':
+                key_mes = key
+            elif key_mode == b'IOT':
+                key_mes = self.make_key(KEY_DUR_TIME, key)
+                user.IOT_key = key_mes
+            else:
+                print("KeyModeError!")
+
+            packet = Packet.make_key_request_plain(des_id=comm_id, src_id=user.id, key=key_mes, key_mode=key_mode)
+            plain_text = packet.to_bytes()
+
+            cipher = user.ibe_encrypt(mode="local", m=plain_text, user_id=comm_id)
+            sign = user.ibe_sign(mode="local", m=plain_text)
+            packet = Packet.make_key_request_sec(mode=mode, cipher=cipher, sign=sign)
+
+            ret.payload = [packet.to_bytes()]
+            
+        # NOTE: We don't provide the option of single-side authentication for simplicity
+        # In fact, it can be true that when Bob's certificate is in Alice's cache, Alice can send 
+        # the init packet with a notification saying I trust you. In this way, Bob can generate a 
+        # random symmetric key directly and send it to Alice securely without send his certificates 
+        # at the first step
 
         return ret
 
@@ -358,15 +388,15 @@ class Client(object):
                     break
                 if action.type == Action.ActionType.SEND:
                     assert (len(action.payload) == 1)
-                    print("send: ", action.payload[0])
+                    # print("send: ", action.payload[0])
                     sock.sendall(action.payload[0])
                 if action.type == Action.ActionType.RUN:
                     # TODO(wrk): Is this line possible?
                     self.run_run(action)
 
                 data = sock.recv(RECEIVE_BUFFER_SIZE)
-                print("received: ", data)
-                print("data len: ", len(data))
+                # print("received: ", data)
+                # print("data len: ", len(data))
                 action = self.gen_action_from_data(data)
 
         except socket.error as e:
