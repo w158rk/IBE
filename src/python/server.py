@@ -20,7 +20,7 @@ from action import Action
 from packet import Packet
 from utils import int2bytes
 from auth import Certificate
-from crypto_c_interface import ibe_read_from_file, ibe_write_to_file
+from crypto_c_interface import ibe_read_from_file, ibe_write_to_file, sm3_hash
 from wsgiref.handlers import format_date_time
 from datetime import datetime, timedelta
 from time import mktime
@@ -124,8 +124,8 @@ class Server(object):
             else:
                 self.run_gen_sys()
 
-            # check the certificate
-            if self.user.parent is None and not os.path.exists(self.user.certificate_file):
+            if not self.user.parent and not os.path.exists(self.user.certificate_file):
+                # top user without certificate file
                 self.run_gen_auth()
 
             action = Action()
@@ -135,7 +135,7 @@ class Server(object):
             action.payload = packet.to_bytes()
 
         if packet.type == Packet.PacketType.SK_REQUEST_KEY_SEC:
-            # send sk and sig to client
+            # send sk and cert to client
 
             cipher = packet.vals[0]
 
@@ -151,10 +151,24 @@ class Server(object):
             sk_len = len(client_sk)
             sk_len = int2bytes(sk_len, 4)
 
-            client_sig = self.gen_client_sig(client_id, client_sk)
-            sig_len = len(client_sig)
-            sig_len = int2bytes(sig_len, 4)
-            packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, client_sig, sig_len)
+            # get all the certificates of current user
+            cert_list = []
+            cert_file = user.certificate_file
+            while True:
+                assert os.path.exists(cert_file)
+                cert = user.input_cert(cert_file)
+                cert = Certificate.from_json(cert)
+                cert_list.append(cert.to_bytes())
+                if not cert.payload.parent:
+                    break
+                # next certificate name
+                cert_file = cert.payload.parent.filename
+
+            # append the cert file generated for the next
+            client_cert = self.gen_client_sig(client_id)
+            cert_list.append(client_cert.to_bytes())
+
+            packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, cert_list)
 
             plain_text = packet.to_bytes()
 
@@ -324,49 +338,56 @@ class Server(object):
     def run_gen_auth(self):
         print("generate the certificate")
         user = self.user
-        certif = Certificate()
+        cert = Certificate()
 
-        certif.payload.iss = user.id
-        certif.payload.aud = user.id
+        cert.payload.iss = None             # top user
+        cert.payload.aud = user.id
 
         exp = datetime.now()
         exp += timedelta(days=365)
         stamp = mktime(exp.timetuple())
 
-        certif.payload.exp = format_date_time(stamp)
-        certif.payload.mpk = user.input_mpk(mode="global")
-        certif.payload.parent = "null"
+        cert.payload.exp = format_date_time(stamp)
+        cert.payload.mpk = user.input_mpk(mode="global")
+        cert.payload.parent = None
 
-        certif.make_sig(user.input_sk(mode="global"))
+        # There is no need for a top user to generate a signature 
+        # Users trust them with the fact that they own the  
+        # private keys corresponding to global public master key
 
-        certif_mes = certif.to_bytes()
+        user.output_cert(cert.to_json())        
 
-        certif_file = user.certificate_file
-        ibe_write_to_file(certif_mes, certif_file)
-
-    def gen_client_sig(self, client_id=b"", client_sk=b""):
+    def gen_client_sig(self, client_id=b""):
+        """the private key used here belongs to the server
+        
+        Returns:
+            cert: Certificate
+        """
         print("generate the client's certificate")
         user = self.user
         certif_file = user.certificate_file
-        server_sig = ibe_read_from_file(certif_file)
+        server_cert = user.input_cert()
+        server_cert = Certificate.from_json(server_cert)
 
-        certif = Certificate()
+        cert = Certificate()
 
-        certif.payload.iss = user.id
-        certif.payload.aud = client_id
+        cert.payload.iss = user.id
+        cert.payload.aud = client_id
 
         exp = datetime.now()
         exp += timedelta(days=365)
         stamp = mktime(exp.timetuple())
 
-        certif.payload.exp = format_date_time(stamp)
-        certif.payload.mpk = user.input_mpk(mode="admin")
-        certif.payload.parent = server_sig
+        cert.payload.exp = format_date_time(stamp)
+        cert.payload.mpk = user.input_mpk(mode="admin")
+        cert.payload.parent.id = user.id 
+        
+        # calculate the hash of the server's cert
+        cert.payload.parent.hash = sm3_hash(server_cert.to_bytes())
 
-        certif.make_sig(client_sk)
+        cert.make_sig(user.input_sk())
 
-        client_sig = certif.to_bytes()
-        return client_sig
+        return cert
 
     def run_run(self, action):
         if action.payload[0] == b"run_init":

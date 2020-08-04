@@ -23,7 +23,7 @@ from constant import *
 from crypto_c_interface import ibe_read_from_file, ibe_write_to_file, ibe_encrypt
 from action import Action
 from packet import Packet
-from utils import bytes2int
+from utils import bytes2int, bytes2str
 from os import urandom
 from auth import Certificate
 from key import IOT_key
@@ -117,28 +117,33 @@ class Client(object):
             m = user.sm4_dec(key=key, c=cipher)
             packet = Packet.from_bytes(m)
 
+            #output sk
             sk = packet.vals[0]
             sk_len = packet.vals[1]
-            client_sig = packet.vals[2]
-            sig_len = packet.vals[3]
             sk_len = bytes2int(sk_len)
             sk = sk[:sk_len]
-            sig_len = bytes2int(sig_len)
-            client_sig = client_sig[:sig_len]
             assert len(sk) == sk_len
-
-            cert = packet.vals[2]
-            cert_len = packet.vals[3]
-            cert_len = bytes2int(cert_len)
-            assert len(cert) == cert_len
-
-            cert = Certificate.from_bytes(cert)
             user.output_sk(sk, mode="local")
-            user.output_cert(cert.to_json())
 
-            sig_file = user.certificate_file
-            ibe_write_to_file(client_sig, sig_file)
+            # The rest of the packet is all the certificate files
+            # Store them one by one
+            last_cert_file = None
+            for cert, cert_len in zip(packet.vals[2:], packet.lens[2:]):
 
+                assert len(cert) == cert_len
+                cert = Certificate.from_bytes(cert)
+                # ATTENTION: A FILENAME MUST BE ASSIGNED TO THE CERTIFICATE, THERE IS NO CHECK
+                # IT MIGHT LEAD TO SOME OTHER ERROR IF THE FILENAME IS NOT GIVEN
+                if cert.payload.aud == bytes2str(user.id):
+                    cert_file = user.certificate_file
+                else:
+                    cert_file = "cert-" + cert.payload.aud + ".conf"
+                if last_cert_file:
+                    cert.payload.parent.filename = last_cert_file
+                user.output_cert(cert.to_json(with_filename=True), cert_file)
+                last_cert_file = cert_file
+
+        
         if packet.type == Packet.PacketType.COMM_RESPOND_INIT:
 
             mode = packet.vals[0]
