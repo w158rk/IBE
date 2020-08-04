@@ -177,6 +177,9 @@ class Client(object):
                 action.payload = packet.to_bytes()
                 return action
 
+            # output the received certificates
+            user.output_certs(certs)
+
             # generate a random key and send it to the server
             key = urandom(16)
             user.key = key
