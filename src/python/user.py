@@ -26,7 +26,6 @@ import threading
 import time
 import json
 import string
-import time
 from os import urandom
 # from random import sample
 # import random
@@ -83,6 +82,7 @@ class User(object):
         self.key = b""
         self.IOT_key = b""
         self.parent = None
+        self.time = None
 
         # inner variables
         self.recv_lists = [set() for i in range(3)]

@@ -139,6 +139,10 @@ class Client(object):
             sig_file = user.certificate_file
             ibe_write_to_file(client_sig, sig_file)
 
+            time_end = time.time()
+            time_start = user.time
+            print('sk totally cost', time_end-time_start)
+
         if packet.type == Packet.PacketType.COMM_RESPOND_INIT:
 
             mode = packet.vals[0]
@@ -230,6 +234,10 @@ class Client(object):
                         key_mes = user.IOT_key
                     f.write(key_mes)
 
+            time_end = time.time()
+            time_start = user.time
+            print('comm totally cost', time_end-time_start)
+
         return action
 
     def gen_action_from_args(self, args):
@@ -255,6 +263,9 @@ class Client(object):
             ret.type = Action.ActionType.SEND
             user = self.user
 
+            time_start = time.time()
+            user.time = time_start
+
             if not user.parent:
                 raise ClientError("cannot request for private key if no parent assigned")
             parent = user.parent
@@ -271,6 +282,9 @@ class Client(object):
         if args.action == "comm":
             ret.type = Action.ActionType.SEND
             user = self.user
+
+            time_start = time.time()
+            user.time = time_start
 
             if os.path.exists(self.user.local_mpk_file) and os.path.exists(self.user.local_sk_file):
                 pass        # do nothing
