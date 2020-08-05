@@ -508,6 +508,8 @@ class User(object):
         if not self.client:
             self.client = Client(self)
 
+        time.sleep(2)               # set some time for the server starting
+
         top_user_list = self.top_user_list
         if not top_user_list:
             raise UserError("The init cannot be invoked without the top users")

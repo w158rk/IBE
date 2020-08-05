@@ -281,7 +281,6 @@ char *SS_cal_sQ_py(char *in, UINT user_cnt, const char *mpk_file)
     }
     
     char *buf = ibe_ec2str(ec_res, ctx);
-    printf("origin: %s\n", buf);
     memcpy(out, buf, EC_POINT_LEN);
     free(buf);
 
