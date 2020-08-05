@@ -83,6 +83,7 @@ class User(object):
         self.IOT_key = b""
         self.parent = None
         self.time = None
+        self.certificate_cache = "./certs"
 
         # inner variables
         self.recv_lists = [set() for i in range(3)]
@@ -172,6 +173,41 @@ class User(object):
             user = self
         return SS_cal_xQ(self.share, user_id=user.id, mpk_file=self.global_mpk_file)
 
+    def check_mpk(self, mpk=b"", certs=[]):
+        """
+        check the validation of a master public key, return True if valid
+        """
+        # TODO(wxy): change the logic of this function if cache is used
+        # Visit all the certs in the list 
+        # NOTE: from up to down / from down to up 
+        # down-to-up in current version 
+        
+        # check: mpk = the mpk in the first certificate 
+        assert mpk == certs[0].payload.mpk
+
+        # check the validation of the links
+        for index, cert in enumerate(certs[:-1]):
+
+            next_cert = certs[index+1] 
+            if not cert.payload.iss==next_cert.payload.aud:
+                return False
+
+            given_dgst = cert.payload.parent.hash
+            cal_dgst = sm3_hash(next_cert.to_bytes())
+            if not given_dgst==cal_dgst:
+                return False
+        
+        # check the validation of all the signatures 
+        for index, cert in enumerate(certs[:-1]):
+            next_cert = certs[index+1] 
+            sig = cert.sig.sig 
+            iss = cert.payload.iss
+            mpk = next_cert.payload.mpk
+            if not cert.verify(next_cert.payload.mpk):
+                return False
+
+        return True
+
     def generate_sym_key(self):
         """
         just generate 256-bit byte string
@@ -226,7 +262,7 @@ class User(object):
 
         return ibe_extract(msk, c_id)
 
-    def ibe_encrypt(self, mode="", m=b"", user_id=b"", filename=""):
+    def ibe_encrypt(self, mode="", m=b"", user_id=b"", filename="", mpk=b""):
         """
         mode is in ["global", "admin", "local", "comm"]
         """
@@ -238,7 +274,7 @@ class User(object):
         elif mode == "local":
             mpk_file = self.local_mpk_file
         elif mode == "comm":
-            mpk_file = filename
+            return ibe_encrypt(m, mpk, user_id)
         else:
             raise UserError()
         with open(mpk_file, "rb") as f:
@@ -279,7 +315,7 @@ class User(object):
             sk = f.read()
         return ibe_sign(m, sk)
 
-    def ibe_verify(self, mode="", m=b"", sm=b"", user_id=b"", filename=""):
+    def ibe_verify(self, mode="", m=b"", sm=b"", user_id=b"", filename="", mpk=b""):
         """
         mode is in ["global", "admin", "local", "comm"]
         """
@@ -291,7 +327,7 @@ class User(object):
         elif mode == "local":
             mpk_file = self.local_mpk_file
         elif mode == "comm":
-            mpk_file = filename
+            return ibe_verify(m, sm, mpk, user_id)
         else:
             raise UserError()
         with open(mpk_file, "rb") as f:
@@ -348,6 +384,19 @@ class User(object):
 
         return True
 
+    def input_all_certs(self):
+        cert_file = self.certificate_file
+        ret = []
+        while True:
+            with open(cert_file, "r") as f:
+                json_str = f.read()
+                cert = Certificate.from_json(json_str)
+                ret.append(cert)
+                if not cert.payload.parent:
+                    break 
+                cert_file = cert.payload.parent.filename
+        return ret
+
     def input_cert(self, filename=None):
         if not filename:
             filename = self.certificate_file
@@ -368,6 +417,7 @@ class User(object):
 
     def input_sk(self, mode="local"):
         return ibe_read_from_file(self.get_sk_file_from_mode(mode))
+
 
     def load_config_file(self):
         config = None
@@ -395,17 +445,30 @@ class User(object):
             cert_file = self.certificate_file
         with open(cert_file, "w") as f:
             f.write(cert)
+    
+    def output_certs(self, certs=[]):
+        """
+        output certs in the cache
+        """
+        if not os.path.exists(self.certificate_cache):
+            os.mkdir(self.certificate_cache)
+
+        for cert in certs:
+            aud = cert.payload.aud
+            filename = "cert-" + aud
+            if not os.path.exists(filename+".conf"):
+                filename = filename+".conf"
+            else:
+                ind = 1
+                while os.path.exists("%s-%d.conf" % (filename, ind)):
+                    ind += 1
+                filename = "%s-%d.conf" % (filename, ind)
+
+            with open(self.certificate_cache + '/' + filename, "w") as f:
+                f.write(cert.to_json())
 
     def output_sk(self, sk, mode="global"):
-        sk_file = None
-        if mode == "global":
-            sk_file = self.global_sk_file
-        elif mode == "admin":
-            sk_file = self.admin_sk_file
-        elif mode == "local":
-            sk_file = self.local_sk_file
-        else:
-            raise UserError()
+        sk_file = self.get_sk_file_from_mode(mode)
         ibe_write_to_file(sk, sk_file)
 
     def output_sP(self, sP, mpk_file=b"./mpk"):

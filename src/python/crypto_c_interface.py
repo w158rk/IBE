@@ -395,7 +395,6 @@ def sm3_hash(m):
     func.argtypes = [PCHAR, c_ulong]
     func.restype = PCHAR
     res = func(c_m, c_m_len)
-    print(res)
 
     if res:
         ret = []

@@ -41,11 +41,12 @@ Basically, a certificate can be split into three parts:
 import json
 
 from wsgiref.handlers import format_date_time
+import email.utils as eut
 from datetime import datetime
 from time import mktime
 from base64 import b64encode, b64decode
 from utils import str2bytes, bytes2str
-from crypto_c_interface import ibe_sign
+from crypto_c_interface import ibe_sign, ibe_verify
 
 
 def global_to_json(obj):
@@ -357,3 +358,18 @@ class Certificate:
         obj = self.to_json()
         obj = str2bytes(obj)
         return b64encode(obj)
+
+    def verify(self, mpk):
+        now = datetime.now()
+        exp = datetime(*eut.parsedate(self.payload.exp)[:6])
+        if now > exp:
+            return False
+        nbf = datetime(*eut.parsedate(self.payload.nbf)[:6])
+        if now < nbf:
+            return False
+
+        header = self.header.to_bytes()
+        payload = self.payload.to_bytes()
+        m = b'.'.join([header, payload])
+        sig = self.sig.sig
+        return ibe_verify(m, sig, mpk, str2bytes(self.payload.iss))

@@ -6,6 +6,7 @@
     "local_mpk_file" : "mpk-local.conf",
     "local_sk_file" : "sk-local.conf",
     "certificate_file": "certificate.conf",
+    "certificate_cache": "./certs",
 
     "id" : "Client3", 
     "addr" : "127.0.0.1",
