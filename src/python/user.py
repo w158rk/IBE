@@ -454,18 +454,27 @@ class User(object):
             os.mkdir(self.certificate_cache)
 
         for cert in certs:
+            fout = True
             aud = cert.payload.aud
+            dgst = sm3_hash(cert.to_bytes())
             filename = "cert-" + aud
             if not os.path.exists(filename+".conf"):
                 filename = filename+".conf"
             else:
                 ind = 1
-                while os.path.exists("%s-%d.conf" % (filename, ind)):
-                    ind += 1
-                filename = "%s-%d.conf" % (filename, ind)
+                cur = "%s-%d.conf" % (filename, ind)
+                while os.path.exists(cur):
+                    # check if it equals to the current one
+                    with open(cur, "rb") as f:
+                        if dgst == f.read():
+                            fout = False 
+                            break 
 
-            with open(self.certificate_cache + '/' + filename, "w") as f:
-                f.write(cert.to_json())
+                    ind += 1
+                filename = cur 
+            if fout:
+                with open(self.certificate_cache + '/' + filename, "wb") as f:
+                    f.write(dgst)
 
     def output_sk(self, sk, mode="global"):
         sk_file = self.get_sk_file_from_mode(mode)
