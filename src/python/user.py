@@ -497,6 +497,7 @@ class User(object):
 
         # at the beginning, we should set up a server for
         # receiving the desired packets
+        print("start server")
         if not is_listening:
             if not self.server:
                 self.server = Server(self)
@@ -519,15 +520,20 @@ class User(object):
         co_cnt = sz + 1
 
         # generate a polynomial at first
+        print("round one")
+        print("generate random polynomial")
         poly = SS_new_rand_poly(co_cnt)
 
         # add f_i(x_i) into the list
+        print("ID to number")
         bn = SS_id2num(self.id, mpk_file=self.global_mpk_file)
+        print("poly apply")
         bn = SS_poly_apply(poly, co_cnt, bn)
         self.recv_lists[0].add(bn)
 
         # round one
         # send the values while receiving
+        print("send values")
         while len(self.recv_lists[0]) < co_cnt or self.sent_ack_cnts[0] < sz:
             for user in top_user_list:
                 packet = Packet.make_init_1(poly, co_cnt, user.id, mpk_file=self.global_mpk_file)
@@ -540,14 +546,18 @@ class User(object):
         # it's time to calculate the share with formula:
         #
         # share = (\sum f(x)) * l_x(0)
+        print("calculate the share")
         share = self.cal_share()
         self.share = share
 
         # round 1 finished, in round 2, shares will be sent among users
         # first, add the share_i * P1 & share_i * P2 in the list
+        print("round 2")
+        print("calculate share * P")
         point = self.cal_shareP()
         self.recv_lists[1].add(point)
 
+        print("send values")
         while len(self.recv_lists[1]) < co_cnt or self.sent_ack_cnts[1] < sz:
             for user in top_user_list:
                 packet = Packet.make_init_2(point)
@@ -556,6 +566,7 @@ class User(object):
 
             time.sleep(2)
 
+        print("calculate sP")
         sP = self.cal_sP()              # a tuple
         self.sP = sP
         self.output_sP(sP, mpk_file=self.global_mpk_file)
@@ -567,6 +578,8 @@ class User(object):
         point = self.cal_shareQ()
         self.recv_lists[round_index].add(point)
 
+        print("round 3")
+        print("send values")
         while len(self.recv_lists[round_index]) < co_cnt or self.sent_ack_cnts[round_index] < sz:
             for user in top_user_list:
                 point = self.cal_shareQ(user=user)
