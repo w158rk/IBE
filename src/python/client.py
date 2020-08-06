@@ -118,7 +118,7 @@ class Client(object):
             m = user.sm4_dec(key=key, c=cipher)
             packet = Packet.from_bytes(m)
 
-            #output sk
+            # output sk
             sk = packet.vals[0]
             sk_len = packet.vals[1]
             sk_len = bytes2int(sk_len)
@@ -142,6 +142,8 @@ class Client(object):
                     cert_file = "cert-" + cert.payload.aud + ".conf"
                 cert_files.append(cert_file)
 
+            user.cert = certs
+
             # ATTENTION: A FILENAME MUST BE ASSIGNED TO THE CERTIFICATE, THERE IS NO CHECK
             # IT MIGHT LEAD TO SOME OTHER ERROR IF THE FILENAME IS NOT GIVEN
             for i in range(len(certs)-1):
@@ -155,7 +157,7 @@ class Client(object):
             print('sk totally cost', time_end-time_start)
      
         if packet.type == Packet.PacketType.COMM_RESPOND_INIT:
-
+            time_start = time.time()
             target_id = packet.vals[1]
             server_id = packet.vals[2]
             server_mpk = packet.vals[3]
@@ -204,10 +206,12 @@ class Client(object):
             action = Action()
             action.type = Action.ActionType.SEND
             action.payload = [packet.to_bytes()]
+            time_end = time.time()
+            print('totally cost', time_end-time_start)
             return action
 
         if packet.type == Packet.PacketType.KEY_RESPOND:
-
+            time_start2 = time.time()
             cipher = packet.vals[2]
             src_id = packet.vals[1]
             key_mode = packet.vals[3]
@@ -222,7 +226,8 @@ class Client(object):
                     elif key_mode == b'IOT':
                         key_mes = user.IOT_key
                     f.write(key_mes)
-
+            time_end2 = time.time()
+            print('totally cost', time_end2-time_start2)
             time_end = time.time()
             time_start = user.time
             print('comm totally cost', time_end-time_start)
@@ -292,10 +297,14 @@ class Client(object):
             mpk_file = user.local_mpk_file
             mpk = ibe_read_from_file(mpk_file)
 
-            certs = user.input_all_certs()
-            certs = [cert.to_bytes() for cert in certs]
+            if user.cert == b'':
+                certs = user.input_all_certs()
+                certs = [cert.to_bytes() for cert in certs]
+                user.cert = certs
+            else:
+                pass
 
-            payload = Packet.make_comm_request_init(des_id=comm_id, src_id=user_id, mpk=mpk, certs=certs, key_mode=key_mode)
+            payload = Packet.make_comm_request_init(des_id=comm_id, src_id=user_id, mpk=mpk, certs=user.cert, key_mode=key_mode)
             ret.payload = [payload.to_bytes()]
 
         if args.action == "comm-no-auth":
@@ -370,7 +379,7 @@ class Client(object):
         delta = timedelta(days=dur_time)
         end = now + delta
         end_stamp = mktime(end.timetuple())
-        IOTkey.end_time = end_stamp
+        IOTkey.end_time = format_date_time(end_stamp)
 
         IOTkey.key = key
         key_mes = IOTkey.to_bytes()
@@ -412,7 +421,7 @@ class Client(object):
 
                 data = sock.recv(RECEIVE_BUFFER_SIZE)
                 # print("received: ", data)
-                # print("data len: ", len(data))
+                print("data len: ", len(data))
                 action = self.gen_action_from_data(data)
 
         except socket.error as e:
