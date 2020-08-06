@@ -10,13 +10,16 @@
 '''
 
 from utils import bytes2str, str2bytes
-import csv
+# import csv
+from threading import Timer
+from base64 import b64encode, b64decode
 
 
 class CertCache:
     def __init__(self, filename="./certs"):
         self.cert_set = set()
         self.filename = filename
+        self._empty = True
 
     def insert_certs(self, dgst_list=[]):
         """
@@ -30,19 +33,24 @@ class CertCache:
     def input_cache(self):
         ret = None
         with open(self.filename, "r") as f:
-            reader = csv.reader(f)
-            certs = [str2bytes(cert) for cert in reader]
+            certs = [str2bytes(b64decode(cert)) for cert in f]
             ret = set(certs)
+        self._empty = False
         return ret            
 
     def output_cache(self):
         cert_list = list(self.cert_set)
+        cert_list = [bytes2str(b64encode(cert)) for cert in cert_list]
         cert_list.sort()
-        cert_list = [bytes2str(cert) for cert in cert_list]
         with open(self.filename, "w") as f:
-            writer = csv.writer(f)
-            writer.writerows(cert_list)
+            f.write('\n'.join(cert_list))
         
+    def empty(self):
+        return self._empty
 
-    
-
+    def run(self, interval=5):
+        """
+        output per 5 seconds by default
+        """
+        sTimer = Timer(3, self.output_cache)
+        sTimer.start()

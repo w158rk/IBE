@@ -16,6 +16,7 @@ import os
 import argparse
 from constant import *
 from utils import str2bytes
+import time
 
 """
 global variables
@@ -374,7 +375,12 @@ def ibe_verify(m, sm, mpk, user_id):
     c_id_len = c_ulong(c_id_len)
 
     lib_ibe = CDLL(LIBIBE_PATH)
+    start = time.time()
     res = lib_ibe.ibe_verify(c_m, c_m_len, c_sm, c_sm_len, p_mpk, c_mpk_len, c_id, c_id_len)
+    end = time.time()
+    print(m)
+    print(sm)
+    print("verify: ", end-start)
 
     return res
 

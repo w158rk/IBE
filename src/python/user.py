@@ -123,6 +123,7 @@ class User(object):
         # NOTE: cert_cache is an object, while certificate_cache is a filename 
         # For the maintainance consideration, never use self.certificate_cache
         self.cert_cache = CertCache(filename=self.certificate_cache)
+        self.cert_cache.run()
 
     @classmethod
     def from_dict(cls, user_dict):
@@ -139,7 +140,7 @@ class User(object):
     #
 
     def add_certs_in_cache(self, certs):
-        self.certificate_cache.insert_certs([sm3_hash(cert) for cert in certs])
+        self.cert_cache.insert_certs([sm3_hash(cert.to_bytes()) for cert in certs])
 
 
     def cal_share(self):
@@ -406,6 +407,9 @@ class User(object):
         DISTINGUISH this from input_cert, this is for input 
         certs in the cache
         """
+        pass
+
+    def input_all_certs(self):
         cert_file = self.certificate_file
         ret = []
         while True:

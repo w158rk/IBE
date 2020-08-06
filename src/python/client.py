@@ -158,6 +158,7 @@ class Client(object):
      
         if packet.type == Packet.PacketType.COMM_RESPOND_INIT:
             time_start = time.time()
+            cur = time_start
             target_id = packet.vals[1]
             server_id = packet.vals[2]
             server_mpk = packet.vals[3]
@@ -173,6 +174,9 @@ class Client(object):
                 assert len(certbytes) == certlen
                 cert = Certificate.from_bytes(certbytes)
                 certs.append(cert)
+            last = cur 
+            cur = time.time()
+            print('parse certificate: ', cur-last)
 
             if not user.check_mpk(server_mpk, certs):
                 action = Action()
@@ -181,9 +185,16 @@ class Client(object):
                 packet.type = Packet.PacketType.COMM_REFUSE
                 action.payload = packet.to_bytes()
                 return action
+            print(len(certs))
+            last = cur 
+            cur = time.time()
+            print('check mpk: ', cur-last)
 
             # output the received certificates
             user.add_certs_in_cache(certs)
+            last = cur 
+            cur = time.time()
+            print('add cache: ', cur-last)
 
             # generate a random key and send it to the server
             key = urandom(16)
@@ -195,13 +206,22 @@ class Client(object):
                 user.IOT_key = key_mes
             else:
                 print("KeyModeError!")
+            last = cur 
+            cur = time.time()
+            print('generate key: ', cur-last)
 
             packet = Packet.make_key_request_plain(des_id=server_id, src_id=target_id, key=key_mes, key_mode=key_mode)
             plain_text = packet.to_bytes()
+            last = cur 
+            cur = time.time()
+            print('make plain: ', cur-last)
 
             cipher = user.ibe_encrypt(mode="comm", m=plain_text, user_id=server_id, mpk=server_mpk)
             sign = user.ibe_sign(mode="local", m=plain_text)
             packet = Packet.make_key_request_sec(cipher=cipher, sign=sign) # default mode = "comm"
+            last = cur 
+            cur = time.time()
+            print('crypto: ', cur-last)
 
             action = Action()
             action.type = Action.ActionType.SEND
