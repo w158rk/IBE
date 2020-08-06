@@ -20,6 +20,8 @@ from client import Client
 from server import Server
 from utils import str2bytes
 from auth import Certificate
+from base64 import b64decode, b64encode
+from cache import CertCache
 
 import socket
 import threading
@@ -115,6 +117,12 @@ class User(object):
                 raise UserError('Error in the configuration of parent')
             self.parent = parent
 
+
+        # certificate cache
+        # NOTE: cert_cache is an object, while certificate_cache is a filename 
+        # For the maintainance consideration, never use self.certificate_cache
+        self.cert_cache = CertCache(filename=self.certificate_cache)
+
     @classmethod
     def from_dict(cls, user_dict):
         user = cls()
@@ -124,6 +132,14 @@ class User(object):
             else:
                 user.__setattr__(attr, user_dict[attr])
         return user
+
+
+    # instance functions
+    #
+
+    def add_certs_in_cache(self, certs):
+        self.certificate_cache.insert_certs([sm3_hash(cert) for cert in certs])
+
 
     def cal_share(self):
         """
@@ -384,7 +400,11 @@ class User(object):
 
         return True
 
-    def input_all_certs(self):
+    def input_certs(self):
+        """
+        DISTINGUISH this from input_cert, this is for input 
+        certs in the cache
+        """
         cert_file = self.certificate_file
         ret = []
         while True:
@@ -398,6 +418,9 @@ class User(object):
         return ret
 
     def input_cert(self, filename=None):
+        """
+        This is for input the certificate of this user 
+        """
         if not filename:
             filename = self.certificate_file
         with open(filename, "r") as f:
@@ -441,40 +464,19 @@ class User(object):
             pass
 
     def output_cert(self, cert="", cert_file=""):
+        """
+        output the cert of this user, DISTINGUISH this from output_certs!
+        """
         if not cert_file:
             cert_file = self.certificate_file
         with open(cert_file, "w") as f:
             f.write(cert)
-    
+
     def output_certs(self, certs=[]):
         """
         output certs in the cache
         """
-        if not os.path.exists(self.certificate_cache):
-            os.mkdir(self.certificate_cache)
-
-        for cert in certs:
-            fout = True
-            aud = cert.payload.aud
-            dgst = sm3_hash(cert.to_bytes())
-            filename = "cert-" + aud
-            if not os.path.exists(filename+".conf"):
-                filename = filename+".conf"
-            else:
-                ind = 1
-                cur = "%s-%d.conf" % (filename, ind)
-                while os.path.exists(cur):
-                    # check if it equals to the current one
-                    with open(cur, "rb") as f:
-                        if dgst == f.read():
-                            fout = False 
-                            break 
-
-                    ind += 1
-                filename = cur 
-            if fout:
-                with open(self.certificate_cache + '/' + filename, "wb") as f:
-                    f.write(dgst)
+        self.cert_cache.output_cache()
 
     def output_sk(self, sk, mode="global"):
         sk_file = self.get_sk_file_from_mode(mode)

@@ -214,7 +214,7 @@ class Server(object):
             # send the server's mpk and certificate
             # it is relatively like the way in which the client do 
             # NOTE(wrk): check its logic if necessary
-            user.output_certs(certs)
+            user.add_certs_in_cache(certs)
 
             mpk = user.input_mpk()
             certs = user.input_all_certs()

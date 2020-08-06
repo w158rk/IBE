@@ -181,7 +181,7 @@ class Client(object):
                 return action
 
             # output the received certificates
-            user.output_certs(certs)
+            user.add_certs_in_cache(certs)
 
             # generate a random key and send it to the server
             key = urandom(16)
