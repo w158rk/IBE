@@ -182,7 +182,7 @@ class Server(object):
             action.payload = [packet.to_bytes()]
 
         if packet.type == Packet.PacketType.COMM_REQUEST_INIT:
-
+            time_start = time.time()
             target_id = packet.vals[0]
             client_id = packet.vals[1]
             client_mpk = packet.vals[2]
@@ -217,18 +217,28 @@ class Server(object):
             user.output_certs(certs)
 
             mpk = user.input_mpk()
-            certs = user.input_all_certs()
-            certs = [cert.to_bytes() for cert in certs]
+            time_start2 = time.time()
+            if user.cert == b'':
+                certs = user.input_all_certs()
+                certs = [cert.to_bytes() for cert in certs]
+                user.cert = certs
+            else:
+                pass
+
+            time_end2 = time.time()
+            print('cost', time_end2-time_start2)
 
             action = Action()
             action.type = Action.ActionType.SEND
             packet = Packet.make_comm_respond_init(mode=b'2', des_id=client_id, 
-                                src_id=target_id, mpk=mpk, certs=certs, key_mode=key_mode)
+                                src_id=target_id, mpk=mpk, certs=user.cert, key_mode=key_mode)
             action.payload = [packet.to_bytes()]
+            time_end = time.time()
+            print('totally cost', time_end-time_start)
             return action
 
         if packet.type == Packet.PacketType.KEY_REQUEST_SEC:
-
+            time_start = time.time()
             mode = packet.vals[0]
             cipher = packet.vals[1]
             sign = packet.vals[2]
@@ -279,6 +289,8 @@ class Server(object):
 
             action.type = Action.ActionType.SEND
             action.payload = [packet.to_bytes()]
+            time_end = time.time()
+            print('totally cost', time_end-time_start)
 
         return action
 
@@ -321,6 +333,8 @@ class Server(object):
         cert.payload.exp = format_date_time(stamp)
         cert.payload.mpk = user.input_mpk(mode="global")
         cert.payload.parent = None
+
+        user.cert = cert.to_bytes()
 
         # There is no need for a top user to generate a signature 
         # Users trust them with the fact that they own the  
@@ -386,7 +400,7 @@ class Server(object):
                     # TODO(wrk): maybe generate some log information
 
                     # print("received: ", data)
-                    # print("data len: ", len(data))
+                    print("data len: ", len(data))
                     action = self.gen_action_from_data(data, temp_vars=temp_vars)
                     if action:
                         if action.type == Action.ActionType.EXIT:

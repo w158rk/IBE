@@ -78,6 +78,7 @@ class User(object):
         self.admin_msk_file = b""
         self.admin_sk_file = b""
         self.certificate_file = b""
+        self.cert = b""
         self.sm4_key = b""
         self.key = b""
         self.IOT_key = b""
