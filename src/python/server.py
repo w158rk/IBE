@@ -151,24 +151,29 @@ class Server(object):
             sk_len = len(client_sk)
             sk_len = int2bytes(sk_len, 4)
 
-
             cert_list = []
+            cert_list2 = []
 
             # append the cert file generated for the next layer
             client_cert = self.gen_client_sig(client_id)
             cert_list.append(client_cert.to_bytes())
 
-            # get all the certificates of current user
-            cert_file = user.certificate_file
-            while True:
-                assert os.path.exists(cert_file)
-                cert = user.input_cert(cert_file)
-                cert = Certificate.from_json(cert)
-                cert_list.append(cert.to_bytes())
-                if not cert.payload.parent:
-                    break
-                # next certificate name
-                cert_file = cert.payload.parent.filename
+            certs = user.input_all_certs()
+            for cert in certs:
+                certs = cert.to_bytes()
+                cert_list.append(certs)
+
+                # get all the certificates of current user
+            # cert_file = user.certificate_file
+            # while True:
+            #     assert os.path.exists(cert_file)
+            #     cert = user.input_cert(cert_file)
+            #     cert = Certificate.from_json(cert)
+            #     cert_list.append(cert.to_bytes())
+            #     if not cert.payload.parent:
+            #         break
+            #     # next certificate name
+            #     cert_file = cert.payload.parent.filename
 
 
             packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, cert_list)
@@ -182,7 +187,6 @@ class Server(object):
             action.payload = [packet.to_bytes()]
 
         if packet.type == Packet.PacketType.COMM_REQUEST_INIT:
-            time_start = time.time()
             target_id = packet.vals[0]
             client_id = packet.vals[1]
             client_mpk = packet.vals[2]
@@ -233,12 +237,9 @@ class Server(object):
             packet = Packet.make_comm_respond_init(mode=b'2', des_id=client_id, 
                                 src_id=target_id, mpk=mpk, certs=user.cert, key_mode=key_mode)
             action.payload = [packet.to_bytes()]
-            time_end = time.time()
-            print('totally cost', time_end-time_start)
             return action
 
         if packet.type == Packet.PacketType.KEY_REQUEST_SEC:
-            time_start = time.time()
             mode = packet.vals[0]
             cipher = packet.vals[1]
             sign = packet.vals[2]
@@ -289,8 +290,6 @@ class Server(object):
 
             action.type = Action.ActionType.SEND
             action.payload = [packet.to_bytes()]
-            time_end = time.time()
-            print('totally cost', time_end-time_start)
 
         return action
 

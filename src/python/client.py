@@ -226,12 +226,9 @@ class Client(object):
             action = Action()
             action.type = Action.ActionType.SEND
             action.payload = [packet.to_bytes()]
-            time_end = time.time()
-            print('totally cost', time_end-time_start)
             return action
 
         if packet.type == Packet.PacketType.KEY_RESPOND:
-            time_start2 = time.time()
             cipher = packet.vals[2]
             src_id = packet.vals[1]
             key_mode = packet.vals[3]
@@ -246,8 +243,6 @@ class Client(object):
                     elif key_mode == b'IOT':
                         key_mes = user.IOT_key
                     f.write(key_mes)
-            time_end2 = time.time()
-            print('totally cost', time_end2-time_start2)
             time_end = time.time()
             time_start = user.time
             print('comm totally cost', time_end-time_start)
