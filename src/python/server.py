@@ -152,7 +152,6 @@ class Server(object):
             sk_len = int2bytes(sk_len, 4)
 
             cert_list = []
-            cert_list2 = []
 
             # append the cert file generated for the next layer
             client_cert = self.gen_client_sig(client_id)
@@ -194,7 +193,7 @@ class Server(object):
 
             # first, check the parameters
             user = self.user
-            assert target_id==user.id 
+            assert target_id == user.id
             assert key_mode in {b"sm4", b"IOT"}
 
             # Then check the validation of mpk
@@ -234,8 +233,8 @@ class Server(object):
 
             action = Action()
             action.type = Action.ActionType.SEND
-            packet = Packet.make_comm_respond_init(mode=b'2', des_id=client_id, 
-                                src_id=target_id, mpk=mpk, certs=user.cert, key_mode=key_mode)
+            packet = Packet.make_comm_respond_init(mode=b'2', des_id=client_id,
+                                                   src_id=target_id, mpk=mpk, certs=user.cert, key_mode=key_mode)
             action.payload = [packet.to_bytes()]
             return action
 
@@ -258,9 +257,8 @@ class Server(object):
             key_mes = packet.vals[2]
             key_mode = packet.vals[3]
 
-            assert target_id==user.id 
+            assert target_id == user.id
             assert key_mode in {b"sm4", b"IOT"}
-
 
             if key_mode == b'sm4':
                 sm4_key = key_mes
