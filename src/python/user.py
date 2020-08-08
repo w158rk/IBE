@@ -118,7 +118,6 @@ class User(object):
                 raise UserError('Error in the configuration of parent')
             self.parent = parent
 
-
         # certificate cache
         # NOTE: cert_cache is an object, while certificate_cache is a filename 
         # For the maintainance consideration, never use self.certificate_cache
@@ -200,7 +199,10 @@ class User(object):
         # NOTE: from up to down / from down to up 
         # down-to-up in current version 
         
-        # check: mpk = the mpk in the first certificate 
+        # check: mpk = the mpk in the first certificate
+        
+        start = time.time()
+         
         assert mpk == certs[0].payload.mpk
 
         # check the validation of the links
@@ -223,6 +225,9 @@ class User(object):
             mpk = next_cert.payload.mpk
             if not cert.verify(next_cert.payload.mpk):
                 return False
+
+        end = time.time()
+        print("sign verify: ", end-start)
 
         return True
 

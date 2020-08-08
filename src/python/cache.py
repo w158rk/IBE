@@ -52,5 +52,5 @@ class CertCache:
         """
         output per 5 seconds by default
         """
-        sTimer = Timer(3, self.output_cache)
+        sTimer = Timer(5, self.output_cache)
         sTimer.start()

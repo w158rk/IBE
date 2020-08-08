@@ -10,20 +10,20 @@
 int ibe_sign(const char* data, size_t data_len,  char* sign_buf, size_t *sign_len, 
     IBEPrivateKey *sk, long sk_len)
 {
-    if(sk_len != SK_LEN&&sk_len != SK_LEN-1)
-    {
-        ERROR_WITH_LONG(SK_LEN_ERROR, sk_len);
-        return 0;
-    }
+    // if(sk_len != SK_LEN&&sk_len != SK_LEN-1)
+    // {
+    //     ERROR_WITH_LONG(SK_LEN_ERROR, sk_len);
+    //     return 0;
+    // }
 
     int ret = 0;
     SMXPrivateKey *smx_sk = NULL;
-    char *buf = ibe_malloc_char(SK_LEN);
+    char *buf = ibe_malloc_char(sk_len);
     char *to_be_free = buf;
 
-    memcpy(buf, *sk, SK_LEN);
+    memcpy(buf, *sk, sk_len);
 
-    if(!d2i_SMXPrivateKey(&smx_sk, &buf, SK_LEN))
+    if(!d2i_SMXPrivateKey(&smx_sk, &buf, sk_len))
     {
         ERROR(SK_FROM_STR_ERROR);
         goto end;

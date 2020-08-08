@@ -11,13 +11,12 @@
     "certificate_file": "certificate.conf",
     "certificate_cache": "./certs",
 
-    "id" : "Client8", 
+    "id" : "Client9", 
     "addr" : "127.0.0.1",
-    "port" : 5012,
+    "port" : 5013,
     "parent" : {
-        "id" : "Client3",
+        "id" : "Client8",
         "addr" : "127.0.0.1",
-        "port" : 5007
+        "port" : 5012
     }
 }
-    

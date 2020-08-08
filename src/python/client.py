@@ -334,6 +334,9 @@ class Client(object):
             ret.type = Action.ActionType.SEND
             user = self.user
 
+            time_start = time.time()
+            user.time = time_start
+
             if os.path.exists(self.user.local_mpk_file) and os.path.exists(self.user.local_sk_file):
                 pass        # do nothing
             else:
