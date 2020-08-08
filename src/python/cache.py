@@ -39,9 +39,7 @@ class CertCache:
         return ret            
 
     def output_cache(self):
-        print("output")
         cert_list = list(self.cert_set)
-        print(cert_list)
         cert_list = [bytes2str(b64encode(cert)) for cert in cert_list]
         cert_list.sort()
         with open(self.filename, "w") as f:
