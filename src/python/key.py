@@ -41,8 +41,6 @@ class IOT_key:
 
         if not time_stamp:
             time_stamp = format_date_time(stamp)
-        if not end_time:
-            end_time = format_date_time(end_stamp)
 
         self.time_stamp = time_stamp
         self.end_time = end_time

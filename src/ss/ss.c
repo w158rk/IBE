@@ -281,7 +281,6 @@ char *SS_cal_sQ_py(char *in, UINT user_cnt, const char *mpk_file)
     }
     
     char *buf = ibe_ec2str(ec_res, ctx);
-    printf("origin: %s\n", buf);
     memcpy(out, buf, EC_POINT_LEN);
     free(buf);
 
@@ -392,6 +391,8 @@ int SS_id2num_init(BIGNUM *res, ID *id, char *filename)
     {
         ERROR("error in calculating X*Z^2");
     }
+
+    return 1;
 
 }
 

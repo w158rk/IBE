@@ -16,6 +16,7 @@ import os
 import argparse
 from constant import *
 from utils import str2bytes
+import time
 
 """
 global variables
@@ -374,10 +375,39 @@ def ibe_verify(m, sm, mpk, user_id):
     c_id_len = c_ulong(c_id_len)
 
     lib_ibe = CDLL(LIBIBE_PATH)
+    start = time.time()
     res = lib_ibe.ibe_verify(c_m, c_m_len, c_sm, c_sm_len, p_mpk, c_mpk_len, c_id, c_id_len)
+    end = time.time()
+    print(m)
+    print(sm)
+    print("verify: ", end-start)
 
     return res
 
+def sm3_hash(m):
+    """
+    get the hashed value of a given byte string m
+    Args:
+        m: byte string
+    """
+
+    c_m = c_char_p()
+    c_m.value = m
+    m_len = len(m)
+    c_m_len = c_ulong(m_len)
+
+    lib_ibe = CDLL(LIBIBE_PATH)
+    func = lib_ibe.hash_sm3_py
+    func.argtypes = [PCHAR, c_ulong]
+    func.restype = PCHAR
+    res = func(c_m, c_m_len)
+
+    if res:
+        ret = []
+        for i in range(SM3_HASH_LEN):
+            ret.append(res[i])
+
+        return b''.join(ret)
 
 def sm4_enc(key, m):
     """encrypt the message with sm4 key
@@ -636,6 +666,7 @@ class CryptoTest(object):
         res = res and self.test_ibe_verify()
         res = res and self.test_sm4_enc()
         res = res and self.test_sm4_dec()
+        self.test_sm3()
 
         if res:
             print("test all passed!")
@@ -663,6 +694,10 @@ class CryptoTest(object):
         if res:
             print("test all passed!")
 
+    def test_sm3(self):
+        m = b"test text"
+        dgst = sm3_hash(m)
+        print(dgst)
 
 def main():
     """main function

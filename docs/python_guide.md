@@ -25,6 +25,8 @@ make
 
 ## 运行指南
 
+**运行所需的python环境：** python 3.8
+
 1. 配置C库位置
 ```python
 # constant.py
@@ -116,10 +118,10 @@ python3 python/client.py -c {config-file} --action init
 
 **返回参数说明：**
 
-- `mpk-global.conf` ：顶级公共参数文件，字节流格式，长度为239位
+- `mpk-global.conf` ：顶级公共参数文件，字节流格式，长度为239字节
 - `mpk-global.conf.len` ：顶级公共参数长度文件
 - `mpk-global.conf.nouse`、`mpk-global.conf.nouse.len` ：中间文件(不用管)
-- `sk-global.conf` :顶级私钥文件，字节流格式，长度为381位
+- `sk-global.conf` :顶级私钥文件，字节流格式，长度为381字节
 
 **备注：** 无
 
@@ -161,16 +163,17 @@ python3 python/client.py -c {config-file} --action sk
 
 **返回实例：**
 
-私钥的获取后子节点会返回4个文件：
+私钥的获取后子节点会返回3+h个文件(其中h为该节点的层数)：
 
-`mpk-global.conf`、`mpk-local.conf`、`sk-local.conf`、`certificate.conf`
+`mpk-global.conf`、`mpk-local.conf`、`sk-local.conf`、`certificate.conf`、`cert-xxx.conf`...
 
 **返回参数说明：**
 
-- `mpk-global.conf` ：顶级公共参数文件，字节流格式，长度为239位
-- `mpk-local.conf` ：父节点域公共参数文件，字节流格式，长度为239位
-- `sk-local.conf` ：父节点域中自己的私钥文件，字节流格式，长度为381位
-- `certificate.conf` :身份验证文件，字节流格式
+- `mpk-global.conf` ：顶级公共参数文件，字节流格式，长度为239字节
+- `mpk-local.conf` ：父节点域公共参数文件，字节流格式，长度为239字节
+- `sk-local.conf` ：父节点域中自己的私钥文件，字节流格式，长度为381字节
+- `certificate.conf` :该字节的身份验证文件，字节流格式，长度为974字节
+- `cert-xxx.conf`：该节点祖先节点的身份验证文件，字节流格式，除顶级节点外长度为974字节，顶级节点的该文件长度为725字节
 
 **备注：**
 
@@ -188,7 +191,7 @@ python3 python/client.py -c {config-file} --action sk
 
 1. 每个结点需要有自己的json文件，用于定义`top_user_list.json`文件的位置，文件名、自己的`id`、`addr`、`port`
 
-2. 进行会话密钥的两个节点需要已经获取了自己在父节点域中的公共参数`local_mpk`、私钥`local_sk`以及身份验证信息`certificate`
+2. 进行会话密钥的两个节点需要已经获取了自己在父节点域中的公共参数`local_mpk`、私钥`local_sk`、身份验证信息`certificate`以及自己所有祖先节点的身份验证信息`cert-xxx`
 
 3. 链接python目录
 ```sh
@@ -222,19 +225,20 @@ python3 python/client.py -c {config-file} --action comm --addr {comm_addr} --por
 
 **返回实例：**
 
-会话密钥协商结束后节点A会返回1-2个文件：
+会话密钥协商结束后节点A会返回2-3个文件：
 
-`{sm4,IOT}-B.conf`、`mpk-B.conf`
+`{sm4,IOT}-B.conf`、`mpk-B.conf`、`cert.conf`
 
-节点B会返回1-2个文件：
+节点B会返回2-3个文件：
 
-`{sm4,IOT}-A.conf`、`mpk-A.conf`
+`{sm4,IOT}-A.conf`、`mpk-A.conf`、`cert.conf`
 
 **返回参数说明：**
 
-- `{sm4,IOT}-B.conf` 、`{sm4,IOT}-A.conf`：生成的会话密钥的文件。字节流格式，其中sm4密钥长度为16位，IOT密钥长度为164位
-- `mpk-B.conf` ：节点B的公共参数文件，字节流格式，长度为239位
-- `mpk-A.conf` ：节点A的公共参数文件，字节流格式，长度为239位
+- `{sm4,IOT}-B.conf` 、`{sm4,IOT}-A.conf`：生成的会话密钥的文件。字节流格式，其中sm4密钥长度为16字节，IOT密钥长度为164字节
+- `mpk-B.conf` ：节点B的公共参数文件，字节流格式，长度为239字节，只有在节点A、B是跨域协商时返回
+- `mpk-A.conf` ：节点A的公共参数文件，字节流格式，长度为239字节，只有在节点A、B是跨域协商时返回
+- `cert.conf`：用于存储验证过的所有证书的hash值
 
 **备注：**
 

@@ -41,11 +41,12 @@ Basically, a certificate can be split into three parts:
 import json
 
 from wsgiref.handlers import format_date_time
+import email.utils as eut
 from datetime import datetime
 from time import mktime
 from base64 import b64encode, b64decode
 from utils import str2bytes, bytes2str
-from crypto_c_interface import ibe_sign
+from crypto_c_interface import ibe_sign, ibe_verify
 
 
 def global_to_json(obj):
@@ -90,7 +91,7 @@ class Certificate:
             obj = bytes2str(obj)
             return cls.from_json(obj)
 
-        def to_json(self):
+        def to_json(self, with_filename=False):
             obj = {
                 "type": self.type,
                 "alg": self.alg
@@ -114,6 +115,60 @@ class Certificate:
             "parent"
         ]
 
+        class Parent:
+            _valid_attrs = [
+                "id",
+                "hash"
+            ]
+
+            def __init__(self, parent_id="", filename="", dgst=""):
+                self.id = parent_id
+                self.filename = filename 
+                self.hash = dgst
+            
+            @classmethod
+            def from_json(cls, json_str):
+                ret = cls()
+                obj = global_from_json(json_str)
+                for attr in obj:
+                    assert attr in cls._valid_attrs or attr=="filename"
+                    val = obj[attr]
+                    if attr == 'hash':
+                        val = b64decode(val)                    
+                    ret.__setattr__(attr, val)
+                return ret
+
+            @classmethod
+            def from_bytes(cls, byte_str):
+                obj = b64decode(byte_str)
+                obj = bytes2str(obj)
+                return cls.from_json(obj)
+
+            def to_json(self, with_filename=False):
+                obj = {}
+                for attr in self._valid_attrs:
+
+                    """
+                    obj[attr] = getattr(self, attr).decode()
+                    """
+
+                    val = getattr(self, attr)
+                    if attr == 'hash':
+                        val = b64encode(val)                    
+                    if type(val) == bytes:
+                        val = bytes2str(val)
+                    obj[attr] = val
+                
+                if with_filename:
+                    obj["filename"] = self.filename
+
+                return global_to_json(obj)
+
+            def to_bytes(self):
+                obj = self.to_json()
+                obj = str2bytes(obj)
+                return b64encode(obj)
+
         def __init__(self,
                      iss="",
                      aud="",
@@ -121,7 +176,7 @@ class Certificate:
                      nbf=None,
                      iat=None,
                      mpk="",
-                     parent=""):
+                     parent=None):
 
             now = datetime.now()
             stamp = mktime(now.timetuple())
@@ -132,6 +187,8 @@ class Certificate:
                 nbf = format_date_time(stamp)
             if not iat:
                 iat = format_date_time(stamp)
+            if not parent:
+                parent = self.Parent()
 
             self.iss = iss
             self.aud = aud
@@ -150,6 +207,8 @@ class Certificate:
                 val = obj[attr]
                 if attr == 'mpk':
                     val = b64decode(val)
+                if attr == 'parent' and val:
+                    val = cls.Parent.from_json(global_to_json(val))
                 ret.__setattr__(attr, val)
             return ret
 
@@ -159,7 +218,7 @@ class Certificate:
             obj = bytes2str(obj)
             return cls.from_json(obj)
 
-        def to_json(self):
+        def to_json(self, with_filename=False):
             obj = {}
             for attr in self._valid_attrs:
 
@@ -172,6 +231,9 @@ class Certificate:
                     val = b64encode(val)
                 if type(val) == bytes:
                     val = bytes2str(val)
+                if attr == "parent" and val:
+                    val = val.to_json(with_filename)
+                    val = global_from_json(val)
                 obj[attr] = val
 
             return global_to_json(obj)
@@ -214,7 +276,7 @@ class Certificate:
             obj = bytes2str(obj)
             return cls.from_json(obj)
 
-        def to_json(self):
+        def to_json(self, with_filename=False):
             obj = {}
             for attr in self._valid_attrs:
 
@@ -223,7 +285,7 @@ class Certificate:
                 """
 
                 val = getattr(self, attr)
-                if attr == 'sig':
+                if attr == 'sig' and val:
                     val = b64encode(val)
                 if type(val) == bytes:
                     val = bytes2str(val)
@@ -279,7 +341,7 @@ class Certificate:
         obj = bytes2str(obj)
         return cls.from_json(obj)
 
-    def to_json(self):
+    def to_json(self, with_filename=False):
         obj = {}
         for attr in self._valid_attrs:
 
@@ -287,7 +349,7 @@ class Certificate:
             obj[attr] = getattr(self, attr).decode()
             """
             val = getattr(self, attr)
-            val = val.to_json()
+            val = val.to_json(with_filename)
             obj[attr] = global_from_json(val)
 
         return global_to_json(obj)
@@ -296,3 +358,18 @@ class Certificate:
         obj = self.to_json()
         obj = str2bytes(obj)
         return b64encode(obj)
+
+    def verify(self, mpk):
+        now = datetime.now()
+        exp = datetime(*eut.parsedate(self.payload.exp)[:6])
+        if now > exp:
+            return False
+        nbf = datetime(*eut.parsedate(self.payload.nbf)[:6])
+        if now < nbf:
+            return False
+
+        header = self.header.to_bytes()
+        payload = self.payload.to_bytes()
+        m = b'.'.join([header, payload])
+        sig = self.sig.sig
+        return ibe_verify(m, sig, mpk, str2bytes(self.payload.iss))

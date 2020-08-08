@@ -20,6 +20,8 @@ from client import Client
 from server import Server
 from utils import str2bytes
 from auth import Certificate
+from base64 import b64decode, b64encode
+from cache import CertCache
 
 import socket
 import threading
@@ -78,11 +80,13 @@ class User(object):
         self.admin_msk_file = b""
         self.admin_sk_file = b""
         self.certificate_file = b""
+        self.cert = b""
         self.sm4_key = b""
         self.key = b""
         self.IOT_key = b""
         self.parent = None
         self.time = None
+        self.certificate_cache = "./certs"
 
         # inner variables
         self.recv_lists = [set() for i in range(3)]
@@ -114,6 +118,12 @@ class User(object):
                 raise UserError('Error in the configuration of parent')
             self.parent = parent
 
+        # certificate cache
+        # NOTE: cert_cache is an object, while certificate_cache is a filename 
+        # For the maintainance consideration, never use self.certificate_cache
+        self.cert_cache = CertCache(filename=self.certificate_cache)
+        self.cert_cache.run()
+
     @classmethod
     def from_dict(cls, user_dict):
         user = cls()
@@ -123,6 +133,14 @@ class User(object):
             else:
                 user.__setattr__(attr, user_dict[attr])
         return user
+
+
+    # instance functions
+    #
+
+    def add_certs_in_cache(self, certs):
+        self.cert_cache.insert_certs([sm3_hash(cert.to_bytes()) for cert in certs])
+
 
     def cal_share(self):
         """
@@ -171,6 +189,47 @@ class User(object):
         if not user:
             user = self
         return SS_cal_xQ(self.share, user_id=user.id, mpk_file=self.global_mpk_file)
+
+    def check_mpk(self, mpk=b"", certs=[]):
+        """
+        check the validation of a master public key, return True if valid
+        """
+        # TODO(wxy): change the logic of this function if cache is used
+        # Visit all the certs in the list 
+        # NOTE: from up to down / from down to up 
+        # down-to-up in current version 
+        
+        # check: mpk = the mpk in the first certificate
+        
+        start = time.time()
+         
+        assert mpk == certs[0].payload.mpk
+
+        # check the validation of the links
+        for index, cert in enumerate(certs[:-1]):
+
+            next_cert = certs[index+1] 
+            if not cert.payload.iss==next_cert.payload.aud:
+                return False
+
+            given_dgst = cert.payload.parent.hash
+            cal_dgst = sm3_hash(next_cert.to_bytes())
+            if not given_dgst==cal_dgst:
+                return False
+        
+        # check the validation of all the signatures 
+        for index, cert in enumerate(certs[:-1]):
+            next_cert = certs[index+1] 
+            sig = cert.sig.sig 
+            iss = cert.payload.iss
+            mpk = next_cert.payload.mpk
+            if not cert.verify(next_cert.payload.mpk):
+                return False
+
+        end = time.time()
+        print("sign verify: ", end-start)
+
+        return True
 
     def generate_sym_key(self):
         """
@@ -226,7 +285,7 @@ class User(object):
 
         return ibe_extract(msk, c_id)
 
-    def ibe_encrypt(self, mode="", m=b"", user_id=b"", filename=""):
+    def ibe_encrypt(self, mode="", m=b"", user_id=b"", filename="", mpk=b""):
         """
         mode is in ["global", "admin", "local", "comm"]
         """
@@ -238,7 +297,7 @@ class User(object):
         elif mode == "local":
             mpk_file = self.local_mpk_file
         elif mode == "comm":
-            mpk_file = filename
+            return ibe_encrypt(m, mpk, user_id)
         else:
             raise UserError()
         with open(mpk_file, "rb") as f:
@@ -279,7 +338,7 @@ class User(object):
             sk = f.read()
         return ibe_sign(m, sk)
 
-    def ibe_verify(self, mode="", m=b"", sm=b"", user_id=b"", filename=""):
+    def ibe_verify(self, mode="", m=b"", sm=b"", user_id=b"", filename="", mpk=b""):
         """
         mode is in ["global", "admin", "local", "comm"]
         """
@@ -291,7 +350,7 @@ class User(object):
         elif mode == "local":
             mpk_file = self.local_mpk_file
         elif mode == "comm":
-            mpk_file = filename
+            return ibe_verify(m, sm, mpk, user_id)
         else:
             raise UserError()
         with open(mpk_file, "rb") as f:
@@ -348,6 +407,35 @@ class User(object):
 
         return True
 
+    def input_certs(self):
+        """
+        DISTINGUISH this from input_cert, this is for input 
+        certs in the cache
+        """
+        pass
+
+    def input_all_certs(self):
+        cert_file = self.certificate_file
+        ret = []
+        while True:
+            with open(cert_file, "r") as f:
+                json_str = f.read()
+                cert = Certificate.from_json(json_str)
+                ret.append(cert)
+                if not cert.payload.parent:
+                    break 
+                cert_file = cert.payload.parent.filename
+        return ret
+
+    def input_cert(self, filename=None):
+        """
+        This is for input the certificate of this user 
+        """
+        if not filename:
+            filename = self.certificate_file
+        with open(filename, "r") as f:
+            return f.read()
+
     def input_mpk(self, mode="local"):
         if mode == "global":
             mpk_file = self.global_mpk_file
@@ -362,6 +450,7 @@ class User(object):
 
     def input_sk(self, mode="local"):
         return ibe_read_from_file(self.get_sk_file_from_mode(mode))
+
 
     def load_config_file(self):
         config = None
@@ -384,20 +473,23 @@ class User(object):
         except AttributeError:
             pass
 
-    def output_cert(self, cert=""):
-        with open(self.certificate_file, "w") as f:
+    def output_cert(self, cert="", cert_file=""):
+        """
+        output the cert of this user, DISTINGUISH this from output_certs!
+        """
+        if not cert_file:
+            cert_file = self.certificate_file
+        with open(cert_file, "w") as f:
             f.write(cert)
 
+    def output_certs(self, certs=[]):
+        """
+        output certs in the cache
+        """
+        self.cert_cache.output_cache()
+
     def output_sk(self, sk, mode="global"):
-        sk_file = None
-        if mode == "global":
-            sk_file = self.global_sk_file
-        elif mode == "admin":
-            sk_file = self.admin_sk_file
-        elif mode == "local":
-            sk_file = self.local_sk_file
-        else:
-            raise UserError()
+        sk_file = self.get_sk_file_from_mode(mode)
         ibe_write_to_file(sk, sk_file)
 
     def output_sP(self, sP, mpk_file=b"./mpk"):
@@ -426,6 +518,7 @@ class User(object):
 
         # at the beginning, we should set up a server for
         # receiving the desired packets
+        print("start server")
         if not is_listening:
             if not self.server:
                 self.server = Server(self)
@@ -437,6 +530,8 @@ class User(object):
         if not self.client:
             self.client = Client(self)
 
+        time.sleep(2)               # set some time for the server starting
+
         top_user_list = self.top_user_list
         if not top_user_list:
             raise UserError("The init cannot be invoked without the top users")
@@ -446,15 +541,20 @@ class User(object):
         co_cnt = sz + 1
 
         # generate a polynomial at first
+        print("round one")
+        print("generate random polynomial")
         poly = SS_new_rand_poly(co_cnt)
 
         # add f_i(x_i) into the list
+        print("ID to number")
         bn = SS_id2num(self.id, mpk_file=self.global_mpk_file)
+        print("poly apply")
         bn = SS_poly_apply(poly, co_cnt, bn)
         self.recv_lists[0].add(bn)
 
         # round one
         # send the values while receiving
+        print("send values")
         while len(self.recv_lists[0]) < co_cnt or self.sent_ack_cnts[0] < sz:
             for user in top_user_list:
                 packet = Packet.make_init_1(poly, co_cnt, user.id, mpk_file=self.global_mpk_file)
@@ -467,14 +567,18 @@ class User(object):
         # it's time to calculate the share with formula:
         #
         # share = (\sum f(x)) * l_x(0)
+        print("calculate the share")
         share = self.cal_share()
         self.share = share
 
         # round 1 finished, in round 2, shares will be sent among users
         # first, add the share_i * P1 & share_i * P2 in the list
+        print("round 2")
+        print("calculate share * P")
         point = self.cal_shareP()
         self.recv_lists[1].add(point)
 
+        print("send values")
         while len(self.recv_lists[1]) < co_cnt or self.sent_ack_cnts[1] < sz:
             for user in top_user_list:
                 packet = Packet.make_init_2(point)
@@ -483,6 +587,7 @@ class User(object):
 
             time.sleep(2)
 
+        print("calculate sP")
         sP = self.cal_sP()              # a tuple
         self.sP = sP
         self.output_sP(sP, mpk_file=self.global_mpk_file)
@@ -494,6 +599,8 @@ class User(object):
         point = self.cal_shareQ()
         self.recv_lists[round_index].add(point)
 
+        print("round 3")
+        print("send values")
         while len(self.recv_lists[round_index]) < co_cnt or self.sent_ack_cnts[round_index] < sz:
             for user in top_user_list:
                 point = self.cal_shareQ(user=user)

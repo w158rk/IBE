@@ -34,3 +34,4 @@ __pycache__/
 src/lib/
  
 data/
+certs
