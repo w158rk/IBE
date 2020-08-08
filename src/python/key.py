@@ -35,10 +35,6 @@ class IOT_key:
         now = datetime.now()
         stamp = mktime(now.timetuple())
 
-        delta = timedelta(days=KEY_DUR_TIME)
-        end = now + delta
-        end_stamp = mktime(end.timetuple())
-
         if not time_stamp:
             time_stamp = format_date_time(stamp)
 

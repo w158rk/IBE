@@ -4,7 +4,7 @@
 '''
 @File    :   init.py
 @Time    :   2020/06/02 09:43:24
-@Author  :   Ruikai Wang 
+@Author  :   Ruikai Wang
 @Version :   1.0
 @Contact :   wrk15835@gmail.com
 @License :   Copyright (c) 2020 Ruikai Wang
@@ -18,6 +18,7 @@ import os
 
 PCHAR = POINTER(c_char)
 PPCHAR = POINTER(c_char_p)
+
 
 def SS_cal_share(val_list, id_list, mpk_file=b"./mpk"):
     assert(len(val_list) == len(id_list))
@@ -50,10 +51,11 @@ def SS_cal_share(val_list, id_list, mpk_file=b"./mpk"):
     res = cal(c_len, c_val_list, c_id_list, c_id_len_list, c_mpk_file)
     return res
 
+
 def SS_cal_sP(l1, l2, mpk_file=b"./mpk"):
     """calculate s * P1 and s * P2 
 
-        sP1 = \sum l1 
+        sP1 = \sum l1
         sP2 = \sum l2
 
     Raise:
@@ -61,8 +63,8 @@ def SS_cal_sP(l1, l2, mpk_file=b"./mpk"):
     """
     if not os.path.exists(mpk_file):
         raise OSError("%s not exists" % mpk_file)
-    
-    assert(len(l1)==len(l2))
+
+    assert(len(l1) == len(l2))
     cnt = len(l1)
     c_cnt = c_int(cnt)
 
@@ -86,22 +88,23 @@ def SS_cal_sP(l1, l2, mpk_file=b"./mpk"):
     for i in range(POINT_LEN):
         o2.append(res[EC_POINT_LEN+i+1])
 
-    o1 = b''.join(o1)    
-    o2 = b''.join(o2)    
+    o1 = b''.join(o1)
+    o2 = b''.join(o2)
 
     return (o1, o2)
+
 
 def SS_cal_sQ(l, mpk_file=b'./mpk'):
     """calculate s * P1 and s * P2 
 
-        sQ = \sum l 
+        sQ = \sum l
 
     Raise:
         OSError
     """
     if not os.path.exists(mpk_file):
         raise OSError("%s not exists" % mpk_file)
-    
+
     cnt = len(l)
     c_cnt = c_int(cnt)
 
@@ -122,6 +125,7 @@ def SS_cal_sQ(l, mpk_file=b'./mpk'):
     ret = b''.join(ret)    
 
     return ret
+
 
 def SS_cal_xP(x, mpk_file=b"./mpk"):
     """calculate x * P1 and x * P2 
@@ -146,6 +150,8 @@ def SS_cal_xP(x, mpk_file=b"./mpk"):
         ret.append(res[i])
 
     return b''.join(ret)
+
+
 def SS_cal_xQ(x, user_id=b'', mpk_file=b"./mpk"):
     # TODO(wrk)
     """calculate x * Q_{id} 
@@ -159,7 +165,7 @@ def SS_cal_xQ(x, user_id=b'', mpk_file=b"./mpk"):
     """
     if not os.path.exists(mpk_file):
         raise OSError("%s not exists" % mpk_file)
-    
+
     point = SS_id2point(user_id, mpk_file=mpk_file)
 
     lib_ibe = CDLL(LIBIBE_PATH)
@@ -175,11 +181,12 @@ def SS_cal_xQ(x, user_id=b'', mpk_file=b"./mpk"):
 
     return b''.join(ret)
 
+
 def SS_id2num(user_id, mpk_file=b"./mpk"):
-    """generate a bignum from the user_id 
+    """generate a bignum from the user_id
 
     Args:
-        user_id: byte string 
+        user_id: byte string
         mpk_file: byte string
 
     Return:
@@ -190,7 +197,7 @@ def SS_id2num(user_id, mpk_file=b"./mpk"):
     """
     if not os.path.exists(mpk_file):
         raise OSError("%s does not exist" % mpk_file)
-    
+
     lib_ibe = CDLL(LIBIBE_PATH)
     id2num = lib_ibe.SS_id2num_py
     id2num.argtypes = ([c_char_p, c_int, c_char_p])
@@ -202,11 +209,12 @@ def SS_id2num(user_id, mpk_file=b"./mpk"):
         ret.append(res[i])
     return b''.join(ret)
 
+
 def SS_id2point(user_id, mpk_file=b"./mpk"):
-    """generate a bignum from the user_id 
+    """generate a bignum from the user_id
 
     Args:
-        user_id: byte string 
+        user_id: byte string
         mpk_file: byte string
 
     Return:
@@ -217,7 +225,7 @@ def SS_id2point(user_id, mpk_file=b"./mpk"):
     """
     if not os.path.exists(mpk_file):
         raise OSError("%s does not exist" % mpk_file)
-    
+
     lib_ibe = CDLL(LIBIBE_PATH)
     id2num = lib_ibe.SS_id2point_py
     id2num.argtypes = ([c_char_p, c_int, c_char_p])
@@ -235,10 +243,10 @@ def SS_new_rand_poly(co_cnt):
 
     Args:
         co_cnt: the number of coefficient, must be larger than 1
-    
+
     Return:
         byte string representing a polynomial if success
-    
+
     Raise:
         ValueError if co_cnt is not larger than 1
     """
@@ -251,19 +259,20 @@ def SS_new_rand_poly(co_cnt):
     new_poly.argtypes = ([c_int])
     new_poly.restype = (PCHAR)
     res = new_poly(co_cnt)
-    
+
     # read all the values in a polynomial which are separated by '\0'
     # replace '\0's with '\n'
     ret = []
     sz = co_cnt * BN_HEX_SIZE
     for i in range(sz):
         ret.append(res[i])
-    
+
     ret = b''.join(ret)
     return ret
 
+
 def SS_output_sP(sP, mpk_file=b"./mpk"):
-    sP1, sP2 = sP 
+    sP1, sP2 = sP
     lib_ibe = CDLL(LIBIBE_PATH)
     store = lib_ibe.SS_output_sP_py
 
@@ -272,10 +281,11 @@ def SS_output_sP(sP, mpk_file=b"./mpk"):
     store.argtypes = [PCHAR, c_char_p]
     store.restype = c_int
     # the third item can be any non-empty byte string
-    # it is used to assure the input string is passed 
+    # it is used to assure the input string is passed
     # to the function exactly
     c_in = b"\x00".join([sP1, sP2, b"end"])
     res = store(c_in, mpk_file)
+
 
 def SS_output_sQ(sQ, user=None, mode="global"):
     """
@@ -284,16 +294,16 @@ def SS_output_sQ(sQ, user=None, mode="global"):
     """
     if not user:
         raise InitError("output sQ cannot be invoked without a user")
-    
-    c_id = user.id 
+
+    c_id = user.id
     c_id_len = len(c_id)
     c_id_len = c_int(c_id_len)
-    if mode=="global":
+    if mode == "global":
         c_mpk_file = user.global_mpk_file
         c_sk_file = user.global_sk_file
-    elif mode=="local":
-        c_mpk_file = user.local_mpk_file 
-        c_sk_file = user.local_sk_file 
+    elif mode == "local":
+        c_mpk_file = user.local_mpk_file
+        c_sk_file = user.local_sk_file
     else:
         raise InitError()
 
@@ -305,23 +315,24 @@ def SS_output_sQ(sQ, user=None, mode="global"):
     c_in = sQ + b"\x00"
     res = store(c_in, c_id, c_id_len, c_mpk_file, c_sk_file)
 
+
 def SS_poly_apply(poly, co_cnt, bn):
     """apply a number to the polynomial
 
     Args:
         poly: byte string
         co_cnt:
-        bn: byte string 
-    
+        bn: byte string
+
     Return:
-        the result f(x), as a byte string 
+        the result f(x), as a byte string
     
     Raise:
         ValueError if co_cnt is not larger than 1
         ValueError if poly or bn is None
     """
     if not poly or not bn:
-        raise ValueError("the polynomial and bn cannot be None")    
+        raise ValueError("the polynomial and bn cannot be None")
     if co_cnt <= 1:
         raise ValueError("The least order of polynomail is 2")
 
@@ -332,12 +343,13 @@ def SS_poly_apply(poly, co_cnt, bn):
     res = apply(poly, co_cnt, bn)
     return res
 
+
 class InitTest(object):
 
     def __init__(self, co_cnt=2):
         self.co_cnt = co_cnt
         self.poly = None
-    
+
     def test_new(self):
         poly = SS_new_rand_poly(self.co_cnt)
         self.poly = poly
@@ -355,6 +367,7 @@ class InitTest(object):
         self.test_apply()
         self.test_id2num()
 
+
 class InitError(Exception):
     def __init__(self, err='Error in Init Module'):
         Exception.__init__(self, err)
@@ -363,6 +376,7 @@ class InitError(Exception):
 def main():
     initTest = InitTest()
     initTest.test_all()
+
 
 if __name__ == "__main__":
     main()

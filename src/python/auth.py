@@ -123,18 +123,18 @@ class Certificate:
 
             def __init__(self, parent_id="", filename="", dgst=""):
                 self.id = parent_id
-                self.filename = filename 
+                self.filename = filename
                 self.hash = dgst
-            
+
             @classmethod
             def from_json(cls, json_str):
                 ret = cls()
                 obj = global_from_json(json_str)
                 for attr in obj:
-                    assert attr in cls._valid_attrs or attr=="filename"
+                    assert attr in cls._valid_attrs or attr == "filename"
                     val = obj[attr]
                     if attr == 'hash':
-                        val = b64decode(val)                    
+                        val = b64decode(val)
                     ret.__setattr__(attr, val)
                 return ret
 
@@ -154,11 +154,11 @@ class Certificate:
 
                     val = getattr(self, attr)
                     if attr == 'hash':
-                        val = b64encode(val)                    
+                        val = b64encode(val)
                     if type(val) == bytes:
                         val = bytes2str(val)
                     obj[attr] = val
-                
+
                 if with_filename:
                     obj["filename"] = self.filename
 

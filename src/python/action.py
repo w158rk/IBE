@@ -32,12 +32,10 @@ class Action(object):
         RUN = 5
         SEND_AND_RUN = 6
         RUN_AND_SEND = 7
-        
 
-    def __init__(self, action_type=ActionType.ABORT, payload=[], 
-                    addr=None, port=None):
+    def __init__(self, action_type=ActionType.ABORT, payload=[],
+                 addr=None, port=None):
         self.type = action_type
         self.payload = payload
-        self.addr = addr 
+        self.addr = addr
         self.port = port
-
