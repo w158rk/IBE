@@ -174,7 +174,6 @@ class Server(object):
             #     # next certificate name
             #     cert_file = cert.payload.parent.filename
 
-
             packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, cert_list)
 
             plain_text = packet.to_bytes()
@@ -211,11 +210,11 @@ class Server(object):
                 action.payload = [packet.to_bytes()]
                 return action
 
-            # The client_mpk is valid, store it in the temperary vars 
+            # The client_mpk is valid, store it in the temperary vars
             temp_vars['mpk'] = client_mpk
 
             # send the server's mpk and certificate
-            # it is relatively like the way in which the client do 
+            # it is relatively like the way in which the client do
             # NOTE(wrk): check its logic if necessary
             user.add_certs_in_cache(certs)
 
@@ -333,15 +332,15 @@ class Server(object):
 
         user.cert = cert.to_bytes()
 
-        # There is no need for a top user to generate a signature 
-        # Users trust them with the fact that they own the  
+        # There is no need for a top user to generate a signature
+        # Users trust them with the fact that they own the
         # private keys corresponding to global public master key
 
-        user.output_cert(cert.to_json())        
+        user.output_cert(cert.to_json())
 
     def gen_client_sig(self, client_id=b""):
         """the private key used here belongs to the server
-        
+
         Returns:
             cert: Certificate
         """
@@ -362,8 +361,8 @@ class Server(object):
 
         cert.payload.exp = format_date_time(stamp)
         cert.payload.mpk = user.input_mpk(mode="admin")
-        cert.payload.parent.id = user.id 
-        
+        cert.payload.parent.id = user.id
+
         # calculate the hash of the server's cert
         cert.payload.parent.hash = sm3_hash(server_cert.to_bytes())
 
@@ -406,7 +405,7 @@ class Server(object):
                             # TODO(wrk): log some error infomation
                             break
                         if action.type == Action.ActionType.SEND:
-                            assert(len(action.payload)==1)
+                            assert(len(action.payload) == 1)
                             sock.send(action.payload[0])
                         if action.type == Action.ActionType.SEND_AND_EXIT:
                             assert(len(action.payload)==1)
