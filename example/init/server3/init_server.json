@@ -4,9 +4,13 @@
 
     "global_mpk_file" : "mpk-global.conf",
     "global_sk_file" : "sk-global.conf",
+    "admin_mpk_file" : "mpk-admin.conf",
+    "admin_msk_file" : "msk-admin.conf",
+    "admin_sk_file" : "sk-admin.conf",
     "local_mpk_file" : "mpk-local.conf",
     "local_msk_file" : "msk-local.conf",
     "local_sk_file" : "sk-local.conf",
+    "certificate_file": "certificate.conf",
 
     "id" : "Server3", 
     "addr" : "127.0.0.1",

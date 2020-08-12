@@ -270,12 +270,14 @@ class User(object):
         nouse_suffix = b".nouse"
         len_suffix = b".len"
         if mode=="global":
+            assert mpk_file
             ibe_setup(mpk_file, mpk_file+nouse_suffix, mpk_file+len_suffix, mpk_file+nouse_suffix+len_suffix)
         if mode=="admin":
             mpk_file = self.admin_mpk_file
             msk_file = self.admin_msk_file
+            assert mpk_file
+            assert msk_file
             ibe_setup(mpk_file, msk_file, mpk_file+len_suffix, msk_file+len_suffix)
-            # TODO(wrk): maybe generate the sk for itself
 
     def ibe_extract(self, mode="", c_id=b""):
         assert mode == "admin"
@@ -479,6 +481,7 @@ class User(object):
         """
         if not cert_file:
             cert_file = self.certificate_file
+        assert cert_file
         with open(cert_file, "w") as f:
             f.write(cert)
 
@@ -542,19 +545,15 @@ class User(object):
 
         # generate a polynomial at first
         print("round one")
-        print("generate random polynomial")
         poly = SS_new_rand_poly(co_cnt)
 
         # add f_i(x_i) into the list
-        print("ID to number")
         bn = SS_id2num(self.id, mpk_file=self.global_mpk_file)
-        print("poly apply")
         bn = SS_poly_apply(poly, co_cnt, bn)
         self.recv_lists[0].add(bn)
 
         # round one
         # send the values while receiving
-        print("send values")
         while len(self.recv_lists[0]) < co_cnt or self.sent_ack_cnts[0] < sz:
             for user in top_user_list:
                 packet = Packet.make_init_1(poly, co_cnt, user.id, mpk_file=self.global_mpk_file)
@@ -562,23 +561,19 @@ class User(object):
                 self.send(user, data)
 
             time.sleep(2)
-
         # now we have all the parts for our share
         # it's time to calculate the share with formula:
         #
         # share = (\sum f(x)) * l_x(0)
-        print("calculate the share")
         share = self.cal_share()
         self.share = share
 
         # round 1 finished, in round 2, shares will be sent among users
         # first, add the share_i * P1 & share_i * P2 in the list
         print("round 2")
-        print("calculate share * P")
         point = self.cal_shareP()
         self.recv_lists[1].add(point)
 
-        print("send values")
         while len(self.recv_lists[1]) < co_cnt or self.sent_ack_cnts[1] < sz:
             for user in top_user_list:
                 packet = Packet.make_init_2(point)
@@ -587,7 +582,6 @@ class User(object):
 
             time.sleep(2)
 
-        print("calculate sP")
         sP = self.cal_sP()              # a tuple
         self.sP = sP
         self.output_sP(sP, mpk_file=self.global_mpk_file)
@@ -600,7 +594,6 @@ class User(object):
         self.recv_lists[round_index].add(point)
 
         print("round 3")
-        print("send values")
         while len(self.recv_lists[round_index]) < co_cnt or self.sent_ack_cnts[round_index] < sz:
             for user in top_user_list:
                 point = self.cal_shareQ(user=user)
@@ -614,6 +607,16 @@ class User(object):
         sQ = self.cal_sQ()
         self.sQ = sQ
         self.output_sQ(sQ)
+
+        # generate the admin domain after the initialization 
+        if os.path.exists(self.admin_mpk_file) and os.path.exists(self.admin_msk_file) and os.path.exists(self.admin_sk_file):
+            pass        # do nothing
+        else:
+            self.server.run_gen_sys()
+
+        if not self.parent and not os.path.exists(self.certificate_file):
+            # top user without certificate file
+            self.server.run_gen_auth()
 
         # clear the related data
         self.is_in_init = False

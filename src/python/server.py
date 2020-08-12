@@ -92,6 +92,7 @@ class Server(object):
 
         if packet.type == Packet.PacketType.INIT_R1_ACK:
             print("receive ACK")
+            self.user.sent_ack_cnts[0] += 1
 
         if packet.type == Packet.PacketType.INIT_R2:
             # add the payload into the recv_list
@@ -311,6 +312,7 @@ class Server(object):
     def run_gen_sys(self):
         print("generate the system")
         user = self.user
+        print("ibe_setup")
         user.ibe_setup(mode="admin")
         sk = user.ibe_extract(mode="admin", c_id=user.id)
         user.output_sk(sk, mode="admin")
@@ -375,6 +377,10 @@ class Server(object):
         if action.payload[0] == b"run_init":
             _, val = action.payload
             self.user.run_init(with_val=val, is_listening=True)
+
+
+            
+
 
     def handle_thread(self, sock, addr, user=None):
         """the main function of handle thread
