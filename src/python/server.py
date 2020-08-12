@@ -125,9 +125,9 @@ class Server(object):
             else:
                 self.run_gen_sys()
 
-            if not self.user.parent and not os.path.exists(self.user.certificate_file):
-                # top user without certificate file
-                self.run_gen_auth()
+            # if not self.user.parent and not os.path.exists(self.user.certificate_file):
+            #     # top user without certificate file
+            #     self.run_gen_auth()
 
             action = Action()
             action.type = Action.ActionType.SEND

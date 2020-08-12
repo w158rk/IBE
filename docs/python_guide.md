@@ -76,7 +76,7 @@ usage: client.py [-h] [--server-ip SRV_ADDR] [--server-port SRV_PORT]
 
 ### 顶级的初始化
 
-**描述：** 根据`top_user_list.json`文件中定义的顶级节点，对系统的顶层进行初始化，最后每个顶级节点得到自己顶级域的公共参数`global_mpk`和顶级域的私钥`global_sk`文件
+**描述：** 根据`top_user_list.json`文件中定义的顶级节点，对系统的顶层进行初始化，最后每个顶级节点得到自己顶级域的公共参数`global_mpk`文件、顶级域的私钥`global_sk`文件以及自己节点域的参数文件
 
 **初始化方式：**
 
@@ -112,16 +112,22 @@ python3 python/client.py -c {config-file} --action init
 
 **返回实例：**
 
-顶级的初始化会返回5个文件：
+顶级的初始化会返回11个文件：
 
-`mpk-global.conf`、`mpk-global.conf.len`、`mpk-global.conf.nouse`、`mpk-global.conf.nouse.len`、`sk-global.conf`
+`mpk-global.conf`、`mpk-global.conf.len`、`mpk-global.conf.nouse`、`mpk-global.conf.nouse.len`、`sk-global.conf`、`mpk-admin.conf`、`mpk-admin.conf.len`、`msk-admin.conf`、`msk-admin.conf.len`、`sk-admin.conf`、`certificate.conf`
 
 **返回参数说明：**
 
-- `mpk-global.conf` ：顶级公共参数文件，字节流格式，长度为239字节
-- `mpk-global.conf.len` ：顶级公共参数长度文件
+- `mpk-global.conf` ：顶级域公共参数文件，字节流格式，长度为239字节
+- `mpk-global.conf.len` ：顶级域公共参数长度文件
 - `mpk-global.conf.nouse`、`mpk-global.conf.nouse.len` ：中间文件(不用管)
-- `sk-global.conf` :顶级私钥文件，字节流格式，长度为`374+len(id)`字节
+- `sk-global.conf` :顶级域私钥文件，字节流格式，长度为381字节
+- `mpk-admin.conf` ：顶级节点节点域公共参数文件，字节流格式，长度为239字节
+- `mpk-admin.conf.len` ：顶级节点节点域公共参数长度文件
+- `msk-admin.conf`：顶级节点节点域私有参数文件，字节流格式，长度为272字节
+- `msk-admin.conf.len` ：顶级节点节点域私有参数长度文件
+- `sk-admin.conf`：顶级节点节点域私钥文件，字节流格式，长度为`374+len(id)`字节
+- `certificate.conf`：顶级节点自身的身份验证文件，字节流格式，长度为725字节
 
 **备注：** 无
 
@@ -177,7 +183,7 @@ python3 python/client.py -c {config-file} --action sk
 
 **备注：**
 
-1. 父节点在收到请求时会先检查自己的证书是否存在(若不存在，顶级节点会自动生成自己的证书`certificate.conf`)以及自己节点域的参数文件是否完整，包括`mpk-admin.conf`、`mpk-admin.conf.len`、`msk-admin.conf`、`msk-admin.conf.len`、`sk-admin.conf`，若不完整父节点会先自动生成自己的节点域
+1. 父节点在收到请求时会先检查自己节点域的参数文件是否完整，包括`mpk-admin.conf`、`mpk-admin.conf.len`、`msk-admin.conf`、`msk-admin.conf.len`、`sk-admin.conf`，若不完整父节点会先自动生成自己的节点域(除顶级节点在顶级初始化阶段会自动生成自己节点域的参数文件外，其他节点在自己子节点第一次私钥请求的同时生成自己的节点域)
 
 2. 子节点在申请时会先生成一个sm4的密钥加密发送给自己的父节点，之后父节点会使用该密钥秘密返回子节点的私钥和证书信息
 
