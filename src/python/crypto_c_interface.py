@@ -135,6 +135,7 @@ def ibe_extract_file(msk, user_id, sk_file):
 
         ibe_write_to_file(re, sk_file)
 
+
 def ibe_extract(msk, user_id):
     """extract the private key for given ID
 
@@ -384,6 +385,7 @@ def ibe_verify(m, sm, mpk, user_id):
 
     return res
 
+
 def sm3_hash(m):
     """
     get the hashed value of a given byte string m
@@ -409,6 +411,7 @@ def sm3_hash(m):
 
         return b''.join(ret)
 
+
 def sm4_enc(key, m):
     """encrypt the message with sm4 key
 
@@ -429,7 +432,7 @@ def sm4_enc(key, m):
     c_m_len = c_ulong(m_len)
 
     c_c = c_char_p()
-    c_len = m_len + 32 # for ensurance
+    c_len = m_len + 32  # for ensurance
     c_c.value = b"\x00" * c_len
     c_c_len = c_ulong(c_len)
     p_c_len = pointer(c_c_len)
@@ -489,7 +492,7 @@ def sm4_dec(key, c):
         # TODO(wxy): this is very inappropriate to handle the decrypted text this way
         # it should be replaced soon
         for i in range(m_len):
-            if(c_m[i]==b'\x00'):
+            if(c_m[i] == b'\x00'):
                 break
             res.append(c_m[i])
 
@@ -698,6 +701,7 @@ class CryptoTest(object):
         m = b"test text"
         dgst = sm3_hash(m)
         print(dgst)
+
 
 def main():
     """main function

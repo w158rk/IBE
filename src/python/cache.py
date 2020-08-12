@@ -6,7 +6,7 @@
 @Author  : Ruikai Wang
 @Contact : wrk15835@gmail.com
 @Version : 0.1
-@Desc    : functions used for certificate cache 
+@Desc    : functions used for certificate cache
 '''
 
 from utils import bytes2str, str2bytes
@@ -36,7 +36,7 @@ class CertCache:
             certs = [str2bytes(b64decode(cert)) for cert in f]
             ret = set(certs)
         self._empty = False
-        return ret            
+        return ret
 
     def output_cache(self):
         cert_list = list(self.cert_set)
@@ -45,7 +45,7 @@ class CertCache:
         with open(self.filename, "w") as f:
             f.write('\n'.join(cert_list))
             f.close()
-        
+
     def empty(self):
         return self._empty
 

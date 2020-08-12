@@ -119,7 +119,7 @@ class User(object):
             self.parent = parent
 
         # certificate cache
-        # NOTE: cert_cache is an object, while certificate_cache is a filename 
+        # NOTE: cert_cache is an object, while certificate_cache is a filename
         # For the maintainance consideration, never use self.certificate_cache
         self.cert_cache = CertCache(filename=self.certificate_cache)
         self.cert_cache.run()
@@ -134,13 +134,10 @@ class User(object):
                 user.__setattr__(attr, user_dict[attr])
         return user
 
-
     # instance functions
-    #
 
     def add_certs_in_cache(self, certs):
         self.cert_cache.insert_certs([sm3_hash(cert.to_bytes()) for cert in certs])
-
 
     def cal_share(self):
         """
@@ -195,20 +192,20 @@ class User(object):
         check the validation of a master public key, return True if valid
         """
         # TODO(wxy): change the logic of this function if cache is used
-        # Visit all the certs in the list 
-        # NOTE: from up to down / from down to up 
-        # down-to-up in current version 
-        
+        # Visit all the certs in the list
+        # NOTE: from up to down / from down to up
+        # down-to-up in current version
+
         # check: mpk = the mpk in the first certificate
-        
+
         start = time.time()
-         
+
         assert mpk == certs[0].payload.mpk
 
         # check the validation of the links
         for index, cert in enumerate(certs[:-1]):
 
-            next_cert = certs[index+1] 
+            next_cert = certs[index+1]
             if not cert.payload.iss==next_cert.payload.aud:
                 return False
 
@@ -216,11 +213,11 @@ class User(object):
             cal_dgst = sm3_hash(next_cert.to_bytes())
             if not given_dgst==cal_dgst:
                 return False
-        
-        # check the validation of all the signatures 
+
+        # check the validation of all the signatures
         for index, cert in enumerate(certs[:-1]):
-            next_cert = certs[index+1] 
-            sig = cert.sig.sig 
+            next_cert = certs[index+1]
+            sig = cert.sig.sig
             iss = cert.payload.iss
             mpk = next_cert.payload.mpk
             if not cert.verify(next_cert.payload.mpk):
@@ -269,10 +266,9 @@ class User(object):
         mpk_file = self.global_mpk_file
         nouse_suffix = b".nouse"
         len_suffix = b".len"
-        if mode=="global":
-            assert mpk_file
+        if mode == "global":
             ibe_setup(mpk_file, mpk_file+nouse_suffix, mpk_file+len_suffix, mpk_file+nouse_suffix+len_suffix)
-        if mode=="admin":
+        if mode == "admin":
             mpk_file = self.admin_mpk_file
             msk_file = self.admin_msk_file
             assert mpk_file
@@ -411,7 +407,7 @@ class User(object):
 
     def input_certs(self):
         """
-        DISTINGUISH this from input_cert, this is for input 
+        DISTINGUISH this from input_cert, this is for input
         certs in the cache
         """
         pass
@@ -425,13 +421,13 @@ class User(object):
                 cert = Certificate.from_json(json_str)
                 ret.append(cert)
                 if not cert.payload.parent:
-                    break 
+                    break
                 cert_file = cert.payload.parent.filename
         return ret
 
     def input_cert(self, filename=None):
         """
-        This is for input the certificate of this user 
+        This is for input the certificate of this user
         """
         if not filename:
             filename = self.certificate_file
@@ -452,7 +448,6 @@ class User(object):
 
     def input_sk(self, mode="local"):
         return ibe_read_from_file(self.get_sk_file_from_mode(mode))
-
 
     def load_config_file(self):
         config = None

@@ -65,7 +65,7 @@ python3 python/server.py -c {config-file}
 ```sh 
 python3 client.py -h
 usage: client.py [-h] [--server-ip SRV_ADDR] [--server-port SRV_PORT]
-                 [--action {init,sk,comm}] [-c [CONFIG_FILE]] 
+                 [--action {init,sk,comm,comm-no-auth}] [-c [CONFIG_FILE]] 
                  [--addr comm_addr] [--port comm_port] [--id comm_id]
                  [--key {sm4,IOT}]
 ```
@@ -121,7 +121,7 @@ python3 python/client.py -c {config-file} --action init
 - `mpk-global.conf` ：顶级公共参数文件，字节流格式，长度为239字节
 - `mpk-global.conf.len` ：顶级公共参数长度文件
 - `mpk-global.conf.nouse`、`mpk-global.conf.nouse.len` ：中间文件(不用管)
-- `sk-global.conf` :顶级私钥文件，字节流格式，长度为381字节
+- `sk-global.conf` :顶级私钥文件，字节流格式，长度为`374+len(id)`字节
 
 **备注：** 无
 
@@ -129,7 +129,7 @@ python3 python/client.py -c {config-file} --action init
 
 ### 私钥的获取
 
-**描述：** 节点根据自己的json文件，向自己的父节点发送获取私钥的请求，若成功，获取顶级域的公共参数`mpk_global`，自己父节点域的公共参数`mpk_local`、自己在父节点域中的私钥`sk_local`以及自己的身份验证信息`certificate`
+**描述：** 节点根据自己的json文件，向自己的父节点发送获取私钥的请求，若成功，获取顶级域的公共参数`mpk_global`，自己父节点域的公共参数`mpk_local`、自己在父节点域中的私钥`sk_local`、自己的身份验证信息`certificate`以及自己所有祖先节点的身份验证信息`cert-xxx`
 
 **初始化方式：**
 
@@ -171,7 +171,7 @@ python3 python/client.py -c {config-file} --action sk
 
 - `mpk-global.conf` ：顶级公共参数文件，字节流格式，长度为239字节
 - `mpk-local.conf` ：父节点域公共参数文件，字节流格式，长度为239字节
-- `sk-local.conf` ：父节点域中自己的私钥文件，字节流格式，长度为381字节
+- `sk-local.conf` ：父节点域中自己的私钥文件，字节流格式，长度为`374+len(id)`字节
 - `certificate.conf` :该字节的身份验证文件，字节流格式，长度为974字节
 - `cert-xxx.conf`：该节点祖先节点的身份验证文件，字节流格式，除顶级节点外长度为974字节，顶级节点的该文件长度为725字节
 
@@ -185,7 +185,7 @@ python3 python/client.py -c {config-file} --action sk
 
 ### 会话密钥的协商
 
-**描述：** 两个节点协商出彼此的会话密钥，其中协商出的会话密钥可分为无时限的sm4密钥以及存在时限的IOT密钥两种类型
+**描述：** 两个节点协商出彼此的会话密钥，其中协商出的会话密钥可分为无时限的sm4密钥以及存在时限的IOT密钥两种类型，会话密钥协商分为跨域和非跨域两种类型
 
 **初始化方式：**
 
@@ -205,7 +205,7 @@ python3 python/server.py -c {config-file}
 
 节点B运行：
 ```sh
-python3 python/client.py -c {config-file} --action comm --addr {comm_addr} --port {comm_port} --id {comm_id} --key{sm4,IOT}
+python3 python/client.py -c {config-file} --action {comm,comm-no-auth} --addr {comm_addr} --port {comm_port} --id {comm_id} --key{sm4,IOT}
 ```
 
 随即开始进行会话密钥的协商，最后两个节点获取相关参数文件
@@ -217,7 +217,7 @@ python3 python/client.py -c {config-file} --action comm --addr {comm_addr} --por
 | 参数名 | 必选 | 类型 | 说明 |
 | :-: | :-: | :-: | :-: |
 | config-file | 是 | string | 配置json文件名 |
-| action | 是 | string | comm用于会话密钥的协商 |
+| action | 是 | string | comm用于跨域会话密钥的协商，comm-no-auth用于非跨域会话密钥的协商 |
 | addr | 是 | string | 进行会话密钥协商的节点的地址 |
 | port | 是 | int | 进行会话密钥协商的节点的端口 |
 | id | 是 | string | 进行会话密钥协商的节点的ID |
@@ -238,19 +238,21 @@ python3 python/client.py -c {config-file} --action comm --addr {comm_addr} --por
 - `{sm4,IOT}-B.conf` 、`{sm4,IOT}-A.conf`：生成的会话密钥的文件。字节流格式，其中sm4密钥长度为16字节，IOT密钥长度为164字节
 - `mpk-B.conf` ：节点B的公共参数文件，字节流格式，长度为239字节，只有在节点A、B是跨域协商时返回
 - `mpk-A.conf` ：节点A的公共参数文件，字节流格式，长度为239字节，只有在节点A、B是跨域协商时返回
-- `cert.conf`：用于存储验证过的所有证书的hash值
+- `cert.conf`：用于存储验证过的所有证书的hash值，字节流格式
 
 **备注：**
 
 1. 节点A在收到节点B的申请会话密钥的信息的时候，会根据节点B发送来的公共参数进行模式的自动判断，分为3种模式：
    
-   1. 模式1：节点A和节点B是同一父节点域下的子节点，节点A和节点B均使用自己的父节点域的公共参数`local_mpk`以及自己在父节点域下的私钥`local_sk`进行会话密钥的协商，不进行证书的身份信息验证
+   1. 模式1(sibling)：节点A和节点B是同一父节点域下的子节点，节点A和节点B均使用自己的父节点域的公共参数`local_mpk`以及自己在父节点域下的私钥`local_sk`进行会话密钥的协商，不进行证书的身份信息验证
 
-   2. 模式2：节点A和节点B是跨域间的节点，节点A和节点B对对方发来的公共参数和身份验证信息进行验证，若验证通过，保存对方的公共参数，并使用其进行后续的会话密钥协商
+   2. 模式2(comm)：节点A和节点B是跨域间的节点，节点A和节点B对对方发来的公共参数和身份验证信息进行验证，若验证通过，保存对方的公共参数，并使用其进行后续的会话密钥协商
 
-   3. 模式3：节点A是节点B的父节点，节点A使用自己域的公共参数`admin_mpk`和私钥`admin_sk`，节点B使用自己父节点域的公共参数`local_mpk`和私钥`local_sk`进行会话密钥的协商，不进行证书的身份信息验证
+   3. 模式3(parent)：节点A是节点B的父节点，节点A使用自己域的公共参数`admin_mpk`和私钥`admin_sk`，节点B使用自己父节点域的公共参数`local_mpk`和私钥`local_sk`进行会话密钥的协商，不进行证书的身份信息验证
 
 2. 只有在节点A和节点B是跨域间节点，然后进行会话密钥的协商时会生成对方节点的公共参数文件
+
+3. 跨域间节点在验证完对方的证书后，会对对方该链路上所有节点的id和证书hash值进行存储，存储在`certs`文件中
 
 ---
 
@@ -266,7 +268,7 @@ python3 python/client.py -c {config-file} --action comm --addr {comm_addr} --por
 
 1. **子节点的json文件：**
 
-除顶级初始化的json文件配置外，需要包括自己的`id`、`addr`、`port`以及自己父节点的`id`、`addr`、`port`的配置，还需要包括关于`log`、`global_mpk_file`、`local_mpk_file`、`local_sk_file`、`certificate_file`文件名的配置
+除顶级初始化的json文件配置外，需要包括自己的`id`、`addr`、`port`以及自己父节点的`id`、`addr`、`port`的配置，还需要包括关于`log`、`global_mpk_file`、`local_mpk_file`、`local_sk_file`、`certificate_file`、`certificate_cache`文件名的配置
 
 1. **父节点的json文件：**
 
@@ -281,6 +283,7 @@ python3 python/client.py -c {config-file} --action comm --addr {comm_addr} --por
 - KEY_DUR_TIME：IOT_key的使用期限，可以根据需要更改，[constant.py]中的只是init部分的定义，具体更改的位置为[link](../src/python/client.py#L168)
 - ROOT_DIR：`IBE`代码的位置，使用代码前根据自己的ROOT更改
 - EC_POINT_LEN、POINT_LEN：椭圆曲线的相关数据，不用动
+- SM3_HASH_LEN：hash的相关数据，不用动
 
 ---
 
@@ -322,7 +325,7 @@ class Signature:
 
 ```
 
-其中，`iss`为证书的发布用户，`aud`为证书的授权用户，`mpk`为该用户的`local mpk`，'parent'为该用户父节点的证书，`sig`为用于验证证书的签名
+其中，`iss`为证书的发布用户，`aud`为证书的授权用户，`mpk`为该用户的`local mpk`，`parent`为该用户父节点的证书的hash，`sig`为用于验证证书的签名
 
 顶级节点在初始阶段会为自己生成证书，使用的mpk为`global_mpk`，其余节点都是由父节点分配sk的同时获取，使用的mpk为`local_mpk`
 
@@ -347,17 +350,16 @@ class IOT_key:
 
 现阶段代码测试的数据如下：
 
-- 第二层节点sk请求 发送数据最大量5006
-- 第三层节点sk请求 发送数据最大量8398
-- 第四层节点sk请求 发送数据最大量12902
-- 第五层节点sk请求 发送数据最大量18894
-- 第六层节点sk请求 发送数据最大量18894
-- 第七层节点sk请求 发送数据最大量32768
+- 第二层节点sk请求 发送数据最大量4666
+- 第三层节点sk请求 发送数据最大量6886
+- 第四层节点sk请求 发送数据最大量9082
+- 第五层节点sk请求 发送数据最大量11302
+- 第六层节点sk请求 发送数据最大量13498
 
-- 第二层节点密钥协商 发送数据最大量3574 验证时间92.76ms
-- 第三层节点密钥协商 发送数据最大量6110 验证时间145.40ms
-- 第四层节点密钥协商 发送数据最大量9486 验证时间186.30ms
-- 第五层节点密钥协商 发送数据最大量13986 验证时间234.78ms
-- 第六层节点密钥协商 发送数据最大量19990 验证时间319.94ms
+- 第二层节点密钥协商 发送数据最大量3314 验证时间72.10ms
+- 第三层节点密钥协商 发送数据最大量4974 验证时间144.51ms
+- 第四层节点密钥协商 发送数据最大量6626 验证时间212.48ms
+- 第五层节点密钥协商 发送数据最大量8282 验证时间284.91ms
+- 第六层节点密钥协商 发送数据最大量9938 验证时间352.73ms
 
-因此目前通信data开辟的最大数据量个数为40000，具体定义在[constant.py](../src/python/constant.py)中的`RECEIVE_BUFFER_SIZE`里
+因此目前通信data开辟的最大数据量个数为20000，具体定义在[constant.py](../src/python/constant.py)中的`RECEIVE_BUFFER_SIZE`里
