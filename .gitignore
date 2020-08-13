@@ -29,6 +29,7 @@ __pycache__/
 *.conf.*
 # *.txt
 *.pyc
+*.db
 
 .gmssl/
 src/lib/

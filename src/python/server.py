@@ -34,6 +34,7 @@ import argparse
 import traceback
 import os
 import time
+import sqlite3
 
 
 _config_file = ""
@@ -146,6 +147,24 @@ class Server(object):
 
             sm4_key = packet.vals[0]
             client_id = packet.vals[1]
+            client_addr = packet.vals[2]
+            client_port = packet.vals[3]
+            cl_id = client_id.decode()
+            cl_addr = client_addr.decode()
+            cl_port = int().from_bytes(client_port, byteorder='big', signed=True)
+
+            client_list = sqlite3.connect('client_list.db')
+
+            client_list.execute('''CREATE TABLE IF NOT EXISTS CLIENT
+                                (ID     CHAR(50)    PRIMARY KEY     NOT NULL,
+                                ADDR    CHAR(50),
+                                PORT    INT);''')
+
+            client_list.execute("INSERT INTO CLIENT (ID,ADDR,PORT) \
+                                 VALUES ('{}','{}','{}')".format(cl_id, cl_addr, cl_port))
+
+            client_list.commit()
+            client_list.close()
 
             client_sk = self.user.ibe_extract(mode="admin", c_id=client_id)
             assert client_sk
