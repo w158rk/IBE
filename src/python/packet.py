@@ -49,6 +49,9 @@ class Packet(object):
         KEY_REQUEST_SEC = 18
         KEY_RESPOND = 19
         COMM_REFUSE = 20
+        QUIT_REQUEST_PLAIN = 21
+        QUIT_REQUEST_SEC = 22
+        UPDATE_SK_PLAIN = 23
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type
@@ -380,6 +383,62 @@ class Packet(object):
 
         lens = [len(des_id), len(src_id), len(m), len(key_mode)]
         vals = [des_id, src_id, m, key_mode]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def quit_request_plain(cls, client_id=b'', m=b''):
+        """
+        make the packet with the client_id and message "quit"
+        """
+        assert client_id
+        assert m
+
+        packet = Packet()
+        packet.type = cls.PacketType.QUIT_REQUEST_PLAIN
+
+        lens = [len(client_id), len(m)]
+        vals = [client_id, m]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def quit_request_sec(cls, cipher=b'', sign=b''):
+        """
+        make the packet with the cipher and the sign
+        """
+        assert cipher
+        assert sign
+
+        packet = Packet()
+        packet.type = cls.PacketType.QUIT_REQUEST_SEC
+
+        lens = [len(cipher), len(sign)]
+        vals = [cipher, sign]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def update_sk_plain(cls, sk=b''):
+        """
+        make the packet with the update sk
+        """
+        assert sk
+
+        packet = Packet()
+        packet.type = cls.PacketType.UPDATE_SK_PLAIN
+
+        lens = [len(sk)]
+        vals = [sk]
 
         packet.lens = lens
         packet.vals = vals

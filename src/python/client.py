@@ -148,14 +148,14 @@ class Client(object):
             # IT MIGHT LEAD TO SOME OTHER ERROR IF THE FILENAME IS NOT GIVEN
             for i in range(len(certs)-1):
                 certs[i].payload.parent.filename = cert_files[i+1]
-            
+
             for cert, cert_file in zip(certs, cert_files):
                 user.output_cert(cert.to_json(with_filename=True), cert_file)
 
             time_end = time.time()
             time_start = user.time
             print('sk totally cost', time_end-time_start)
-     
+
         if packet.type == Packet.PacketType.COMM_RESPOND_INIT:
             time_start = time.time()
             cur = time_start
@@ -165,7 +165,7 @@ class Client(object):
             key_mode = packet.vals[4]
             # first, check the parameters
             user = self.user
-            assert target_id==user.id 
+            assert target_id == user.id
             assert key_mode in {b"sm4", b"IOT"}
 
             # Then check the validation of mpk
@@ -174,7 +174,7 @@ class Client(object):
                 assert len(certbytes) == certlen
                 cert = Certificate.from_bytes(certbytes)
                 certs.append(cert)
-            last = cur 
+            last = cur
             cur = time.time()
             print('parse certificate: ', cur-last)
 
@@ -186,13 +186,13 @@ class Client(object):
                 action.payload = packet.to_bytes()
                 return action
             print(len(certs))
-            last = cur 
+            last = cur
             cur = time.time()
             print('check mpk: ', cur-last)
 
             # output the received certificates
             user.add_certs_in_cache(certs)
-            last = cur 
+            last = cur
             cur = time.time()
             print('add cache: ', cur-last)
 
@@ -206,20 +206,20 @@ class Client(object):
                 user.IOT_key = key_mes
             else:
                 print("KeyModeError!")
-            last = cur 
+            last = cur
             cur = time.time()
             print('generate key: ', cur-last)
 
             packet = Packet.make_key_request_plain(des_id=server_id, src_id=target_id, key=key_mes, key_mode=key_mode)
             plain_text = packet.to_bytes()
-            last = cur 
+            last = cur
             cur = time.time()
             print('make plain: ', cur-last)
 
             cipher = user.ibe_encrypt(mode="comm", m=plain_text, user_id=server_id, mpk=server_mpk)
             sign = user.ibe_sign(mode="local", m=plain_text)
             packet = Packet.make_key_request_sec(cipher=cipher, sign=sign) # default mode = "comm"
-            last = cur 
+            last = cur
             cur = time.time()
             print('crypto: ', cur-last)
 
@@ -323,13 +323,13 @@ class Client(object):
             ret.payload = [payload.to_bytes()]
 
         if args.action == "comm-no-auth":
-            # This option is for the case that the user has known that it is 
-            # to communicate with who shares the public master key with it  
+            # This option is for the case that the user has known that it is
+            # to communicate with who shares the public master key with it
             # 1. If it communicates with its parent, the mode is in `parent`
             # 2. If it communicates with its siblings, the mode is in `sibling`
             # 3. If it communicates with its children, the mode is in `child`
             # send a packet with type KEY_REQUEST_SEC
-            # NOTE: currently, there is no way to distinguish the mode `sibline` and `child` 
+            # NOTE: currently, there is no way to distinguish the mode `sibline` and `child`
             #       so we only provide the mode `parent` and `sibling` for simplicity
             ret.type = Action.ActionType.SEND
             user = self.user
@@ -351,7 +351,7 @@ class Client(object):
             comm_id = str2bytes(comm_id)
             key_mode = str2bytes(args.key_mode)
             assert key_mode in {b"sm4", b"IOT"}
-            mode = None 
+            mode = None
 
             if comm_id == user.parent.id:
                 mode = b"parent"
@@ -377,11 +377,34 @@ class Client(object):
             packet = Packet.make_key_request_sec(mode=mode, cipher=cipher, sign=sign)
 
             ret.payload = [packet.to_bytes()]
-            
+
+        if args.action == "quit":
+            ret.type = Action.ActionType.SEND
+            user = self.user
+
+            if not user.parent:
+                raise ClientError("cannot request for private key if no parent assigned")
+            parent = user.parent
+            assert parent.id
+            assert parent.addr
+            assert parent.port
+            ret.addr = parent.addr
+            ret.port = parent.port
+
+            user_id = user.id
+            packet = Packet.quit_request_plain(client_id=user_id, m=b'quit')
+            plain_text = packet.to_bytes()
+
+            cipher = user.ibe_encrypt(mode="local", m=plain_text, user_id=parent.id)
+            sign = user.ibe_sign(mode="local", m=plain_text)
+            packet = Packet.quit_request_sec(cipher=cipher, sign=sign)
+
+            ret.payload = [payload.to_bytes()]
+
         # NOTE: We don't provide the option of single-side authentication for simplicity
-        # In fact, it can be true that when Bob's certificate is in Alice's cache, Alice can send 
-        # the init packet with a notification saying I trust you. In this way, Bob can generate a 
-        # random symmetric key directly and send it to Alice securely without send his certificates 
+        # In fact, it can be true that when Bob's certificate is in Alice's cache, Alice can send
+        # the init packet with a notification saying I trust you. In this way, Bob can generate a
+        # random symmetric key directly and send it to Alice securely without send his certificates
         # at the first step
 
         return ret
