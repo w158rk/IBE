@@ -51,7 +51,6 @@ class Packet(object):
         COMM_REFUSE = 20
         QUIT_REQUEST_PLAIN = 21
         QUIT_REQUEST_SEC = 22
-        UPDATE_SK_PLAIN = 23
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type

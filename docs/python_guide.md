@@ -4,6 +4,7 @@
 
 ```sh
 git clone https://github.com/w158rk/GmSSL.git
+cd GmSSL
 mkdir build
 cd build
 ../config
@@ -14,6 +15,7 @@ make
 
 ```sh
 git clone -b python https://github.com/w158rk/IBE.git
+cd IBE
 export IBE_LIB={path-to-GmSSL}/build
 mkdir build
 cd build

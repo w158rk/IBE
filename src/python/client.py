@@ -38,6 +38,7 @@ import threading
 import time
 import traceback
 import os
+import sqlite3
 
 _valid_actions = {
     "init": "invoke an initialization",
@@ -380,6 +381,12 @@ class Client(object):
 
             ret.payload = [packet.to_bytes()]
 
+        # NOTE: We don't provide the option of single-side authentication for simplicity
+        # In fact, it can be true that when Bob's certificate is in Alice's cache, Alice can send
+        # the init packet with a notification saying I trust you. In this way, Bob can generate a
+        # random symmetric key directly and send it to Alice securely without send his certificates
+        # at the first step
+
         if args.action == "quit":
             ret.type = Action.ActionType.SEND
             user = self.user
@@ -401,13 +408,30 @@ class Client(object):
             sign = user.ibe_sign(mode="local", m=plain_text)
             packet = Packet.quit_request_sec(cipher=cipher, sign=sign)
 
-            ret.payload = [payload.to_bytes()]
+            ret.payload = [packet.to_bytes()]
 
-        # NOTE: We don't provide the option of single-side authentication for simplicity
-        # In fact, it can be true that when Bob's certificate is in Alice's cache, Alice can send
-        # the init packet with a notification saying I trust you. In this way, Bob can generate a
-        # random symmetric key directly and send it to Alice securely without send his certificates
-        # at the first step
+        # if args.action == "update":
+
+        #     if os.path.exists("client_list.db"):
+        #         pass
+        #     else:
+        #         raise ClientError("please generate your client_list database first")
+
+        #     client_list = sqlite3.connect('client_list.db')
+        #     cursor = client_list.execute("SELECT ID, ADDR, PORT from CLIENT")
+        #     for row in cursor:
+
+        #         ret.type = Action.ActionType.SEND
+        #         user = self.user
+
+        #         ret.addr = row[1]
+        #         ret.port = row[2]
+        #         print(row[1])
+        #         print(row[2])
+
+        #         packet = Packet.update_sk_plain(sk=b'hello')
+        #         print(row[0])
+        #         ret.payload = [packet.to_bytes()]
 
         return ret
 

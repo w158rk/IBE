@@ -160,11 +160,18 @@ class Server(object):
                                 ADDR    CHAR(50),
                                 PORT    INT);''')
 
-            client_list.execute("INSERT INTO CLIENT (ID,ADDR,PORT) \
+            client_list.execute("INSERT OR IGNORE INTO CLIENT (ID,ADDR,PORT) \
                                  VALUES ('{}','{}','{}')".format(cl_id, cl_addr, cl_port))
 
             client_list.commit()
             client_list.close()
+
+            # client_list = sqlite3.connect('client_list.db')
+            # cursor = client_list.execute("SELECT ID, ADDR, PORT from CLIENT")
+            # for row in cursor:
+            #     print(row[0])
+            #     print(row[1])
+            #     print(row[2])
 
             client_sk = self.user.ibe_extract(mode="admin", c_id=client_id)
             assert client_sk
