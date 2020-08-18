@@ -117,6 +117,18 @@ class Server(object):
             print("receive ACK")
             self.user.sent_ack_cnts[2] += 1
 
+        if packet.type == Packet.PacketType.DOMAIN_REQUEST:
+            client_id = packet.vals[0]
+            client_mpk = packet.vals[1]
+
+            domain_cert = self.gen_domain_sig(client_id, client_mpk)
+            cert_m = domain_cert.to_bytes()
+
+            action = Action()
+            action.type = Action.ActionType.SEND
+            packet = Packet.make_domain_respond(cert_m)
+            action.payload = [packet.to_bytes()]
+
         if packet.type == Packet.PacketType.SK_REQUEST_INIT:
             # send system parameter and TODO(wxy): certificate
 
@@ -124,7 +136,8 @@ class Server(object):
             if os.path.exists(self.user.admin_mpk_file) and os.path.exists(self.user.admin_msk_file) and os.path.exists(self.user.admin_sk_file):
                 pass        # do nothing
             else:
-                self.run_gen_sys()
+                # self.run_gen_sys()
+                print("please generate your own domain first")
 
             # if not self.user.parent and not os.path.exists(self.user.certificate_file):
             #     # top user without certificate file
@@ -334,21 +347,23 @@ class Server(object):
             t = threading.Thread(target=self.handle_thread, args=(conn, addr))
             t.start()
 
-    def run_gen_sys(self):
-        print("generate the system")
-        user = self.user
-        print("ibe_setup")
-        user.ibe_setup(mode="admin")
-        sk = user.ibe_extract(mode="admin", c_id=user.id)
-        user.output_sk(sk, mode="admin")
+    # def run_gen_sys(self):
+    #     print("generate the system")
+    #     user = self.user
+    #     print("ibe_setup")
+    #     user.ibe_setup(mode="admin")
+    #     sk = user.ibe_extract(mode="admin", c_id=user.id)
+    #     user.output_sk(sk, mode="admin")
 
-    def run_gen_auth(self):
-        print("generate the certificate")
+    def run_gen_local_auth(self):
+        print("generate the local certificate")
         user = self.user
         cert = Certificate()
 
         cert.payload.iss = None             # top user
-        cert.payload.aud = user.id
+
+        cert.payload.aud = "top-" + user.id.decode()
+        cert.payload.types = "local"
 
         exp = datetime.now()
         exp += timedelta(days=365)
@@ -364,7 +379,38 @@ class Server(object):
         # Users trust them with the fact that they own the
         # private keys corresponding to global public master key
 
-        user.output_cert(cert.to_json())
+        user.output_cert(cert=cert.to_json(), ctype="local")
+
+    def run_gen_admin_auth(self):
+        print("generate the admin certificate")
+        user = self.user
+        local_cert = user.input_cert(filename=user.local_certificate_file)
+        local_cert = Certificate.from_json(local_cert)
+
+        cert = Certificate()
+
+        cert.payload.iss = None             # top user
+        cert.payload.aud = user.id
+        cert.payload.types = "admin"
+
+        exp = datetime.now()
+        exp += timedelta(days=365)
+        stamp = mktime(exp.timetuple())
+
+        cert.payload.exp = format_date_time(stamp)
+        cert.payload.mpk = user.input_mpk(mode="admin")
+        cert.payload.parent.id = user.id
+        cert.payload.parent.filename = user.local_certificate_file
+        cert.payload.parent.hash = sm3_hash(local_cert.to_bytes())
+        cert.make_sig(user.input_sk())
+
+        user.cert = cert.to_bytes()
+
+        # There is no need for a top user to generate a signature
+        # Users trust them with the fact that they own the
+        # private keys corresponding to global public master key
+
+        user.output_cert(cert=cert.to_json(), ctype="admin")
 
     def gen_client_sig(self, client_id=b""):
         """the private key used here belongs to the server
@@ -374,7 +420,7 @@ class Server(object):
         """
         print("generate the client's certificate")
         user = self.user
-        certif_file = user.certificate_file
+        certif_file = user.admin_certificate_file
         server_cert = user.input_cert()
         server_cert = Certificate.from_json(server_cert)
 
@@ -382,6 +428,7 @@ class Server(object):
 
         cert.payload.iss = user.id
         cert.payload.aud = client_id
+        cert.payload.types = "local"
 
         exp = datetime.now()
         exp += timedelta(days=365)
@@ -398,13 +445,37 @@ class Server(object):
 
         return cert
 
+    def gen_domain_sig(self, client_id=b"", client_mpk=b""):
+        user = self.user
+        server_cert = user.input_cert()
+        server_cert = Certificate.from_json(server_cert)
+
+        cert = Certificate()
+
+        cert.payload.iss = user.id
+        cert.payload.aud = client_id
+        cert.payload.types = "admin"
+
+        exp = datetime.now()
+        exp += timedelta(days=365)
+        stamp = mktime(exp.timetuple())
+
+        cert.payload.exp = format_date_time(stamp)
+        cert.payload.mpk = client_mpk
+        cert.payload.parent.id = user.id
+        cert.payload.parent.filename = "cert-" + user.id.decode() + ".conf"
+
+        # calculate the hash of the server's cert
+        cert.payload.parent.hash = sm3_hash(server_cert.to_bytes())
+
+        cert.make_sig(user.input_sk())
+
+        return cert
+
     def run_run(self, action):
         if action.payload[0] == b"run_init":
             _, val = action.payload
             self.user.run_init(with_val=val, is_listening=True)
-
-
-            
 
 
     def handle_thread(self, sock, addr, user=None):

@@ -8,7 +8,9 @@
     "admin_sk_file" : "sk-admin.conf",
     "local_mpk_file" : "mpk-local.conf",
     "local_sk_file" : "sk-local.conf",
-    "certificate_file": "certificate.conf",
+    "local_certificate_file": "local_certificate.conf",
+    "admin_certificate_file": "admin_certificate.conf",
+    "certificate_cache": "./certs",
 
     "id" : "Client6", 
     "addr" : "127.0.0.1",

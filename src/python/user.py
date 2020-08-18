@@ -79,7 +79,8 @@ class User(object):
         self.admin_mpk_file = b""
         self.admin_msk_file = b""
         self.admin_sk_file = b""
-        self.certificate_file = b""
+        self.local_certificate_file = b""
+        self.admin_certificate_file = b""
         self.cert = b""
         self.sm4_key = b""
         self.key = b""
@@ -413,7 +414,7 @@ class User(object):
         pass
 
     def input_all_certs(self):
-        cert_file = self.certificate_file
+        cert_file = self.admin_certificate_file
         ret = []
         while True:
             with open(cert_file, "r") as f:
@@ -430,7 +431,7 @@ class User(object):
         This is for input the certificate of this user
         """
         if not filename:
-            filename = self.certificate_file
+            filename = self.admin_certificate_file
         with open(filename, "r") as f:
             return f.read()
 
@@ -470,12 +471,15 @@ class User(object):
         except AttributeError:
             pass
 
-    def output_cert(self, cert="", cert_file=""):
+    def output_cert(self, cert="", cert_file="", ctype=""):
         """
         output the cert of this user, DISTINGUISH this from output_certs!
         """
         if not cert_file:
-            cert_file = self.certificate_file
+            if ctype == "local":
+                cert_file = self.local_certificate_file
+            elif ctype == "admin":
+                cert_file = self.admin_certificate_file
         assert cert_file
         with open(cert_file, "w") as f:
             f.write(cert)
@@ -495,6 +499,13 @@ class User(object):
 
     def output_sQ(self, sQ):
         SS_output_sQ(sQ, user=self)
+
+    def run_gen_sys(self):
+        print("generate the system")
+        print("ibe_setup")
+        self.ibe_setup(mode="admin")
+        sk = self.ibe_extract(mode="admin", c_id=self.id)
+        self.output_sk(sk, mode="admin")
 
     def run_init(self, with_val=None, is_listening=False):
         """
@@ -603,15 +614,16 @@ class User(object):
         self.sQ = sQ
         self.output_sQ(sQ)
 
-        # generate the admin domain after the initialization 
+        if not self.parent and not os.path.exists(self.local_certificate_file):
+            # top user without certificate file
+            self.server.run_gen_local_auth()
+
+        # generate the admin domain after the initialization
         if os.path.exists(self.admin_mpk_file) and os.path.exists(self.admin_msk_file) and os.path.exists(self.admin_sk_file):
             pass        # do nothing
         else:
-            self.server.run_gen_sys()
-
-        if not self.parent and not os.path.exists(self.certificate_file):
-            # top user without certificate file
-            self.server.run_gen_auth()
+            self.run_gen_sys()
+            self.server.run_gen_admin_auth()
 
         # clear the related data
         self.is_in_init = False

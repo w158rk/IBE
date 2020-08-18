@@ -42,6 +42,7 @@ import sqlite3
 
 _valid_actions = {
     "init": "invoke an initialization",
+    "gen-domain": "generate your own domain",
     "sk": "request for the private key",
     "comm": "initialize a secret session inter-domain",
     "comm-no-auth": "initialize a secret session in a domain"
@@ -73,6 +74,15 @@ class Client(object):
         if packet.type == Packet.PacketType.INIT_R3_ACK:
             print("receive ACK")
             self.user.sent_ack_cnts[2] += 1
+
+        if packet.type == Packet.PacketType.DOMAIN_RESPOND:
+            domain_cert = packet.vals[0]
+
+            cert = Certificate()
+            cert = cert.from_bytes(domain_cert)
+
+            user = self.user
+            user.output_cert(cert.to_json(with_filename=True), user.admin_certificate_file)
 
         if packet.type == Packet.PacketType.SK_RESPOND_INIT:
 
@@ -140,7 +150,7 @@ class Client(object):
                 cert = Certificate.from_bytes(cert)
                 certs.append(cert)
                 if cert.payload.aud == bytes2str(user.id):
-                    cert_file = user.certificate_file
+                    cert_file = user.local_certificate_file
                 else:
                     cert_file = "cert-" + cert.payload.aud + ".conf"
                 cert_files.append(cert_file)
@@ -267,6 +277,24 @@ class Client(object):
         if args.action == "init":
             ret.type = Action.ActionType.RUN
             ret.payload = [b"run_init"]
+
+        if args.action == "gen-domain":
+            ret.type = Action.ActionType.SEND
+            user = self.user
+            user.run_gen_sys()
+
+            if not user.parent:
+                raise ClientError("cannot request for private key if no parent assigned")
+            parent = user.parent
+            assert parent.id
+            assert parent.addr
+            assert parent.port
+            ret.addr = parent.addr
+            ret.port = parent.port
+
+            user_id = user.id
+            payload = Packet.make_domain_requet(user_id, user.admin_mpk_file)
+            ret.payload = [payload.to_bytes()]
 
         if args.action == "sk":
             ret.type = Action.ActionType.SEND

@@ -51,6 +51,8 @@ class Packet(object):
         COMM_REFUSE = 20
         QUIT_REQUEST_PLAIN = 21
         QUIT_REQUEST_SEC = 22
+        DOMAIN_REQUEST = 23
+        DOMAIN_RESPOND = 24
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type
@@ -139,6 +141,45 @@ class Packet(object):
 
         lens = [len(point)]
         vals = [point]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_domain_requet(cls, user_id, mpk_file):
+        """
+        make the packet with the id and the new domain mpk
+        """
+
+        assert os.path.exists(mpk_file)
+
+        packet = Packet()
+        packet.type = cls.PacketType.DOMAIN_REQUEST
+
+        with open(mpk_file, "rb") as f:
+            mpk = f.read()
+
+        lens = [len(user_id), len(mpk)]
+        vals = [user_id, mpk]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_domain_respond(cls, cert=b""):
+        """
+        make the packet with the id and the new domain mpk
+        """
+
+        packet = Packet()
+        packet.type = cls.PacketType.DOMAIN_RESPOND
+
+        lens = [len(cert)]
+        vals = [cert]
 
         packet.lens = lens
         packet.vals = vals

@@ -108,6 +108,7 @@ class Certificate:
         _valid_attrs = [
             "iss",
             "aud",
+            "types",
             "exp",
             "nbf",
             "iat",
@@ -118,6 +119,7 @@ class Certificate:
         class Parent:
             _valid_attrs = [
                 "id",
+                "filename",
                 "hash"
             ]
 
@@ -172,6 +174,7 @@ class Certificate:
         def __init__(self,
                      iss="",
                      aud="",
+                     types="",
                      exp=None,
                      nbf=None,
                      iat=None,
@@ -192,6 +195,7 @@ class Certificate:
 
             self.iss = iss
             self.aud = aud
+            self.types = types
             self.exp = exp
             self.nbf = nbf
             self.iat = iat
