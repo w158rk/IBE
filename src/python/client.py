@@ -84,6 +84,10 @@ class Client(object):
             user = self.user
             user.output_cert(cert.to_json(with_filename=True), user.admin_certificate_file)
 
+            time_end = time.time()
+            time_start = user.time
+            print('gen-domain totally cost', time_end-time_start)
+
         if packet.type == Packet.PacketType.SK_RESPOND_INIT:
 
             # store the global mpk
@@ -198,7 +202,6 @@ class Client(object):
                 packet.type = Packet.PacketType.COMM_REFUSE
                 action.payload = packet.to_bytes()
                 return action
-            print(len(certs))
             last = cur
             cur = time.time()
             print('check mpk: ', cur-last)
@@ -279,8 +282,13 @@ class Client(object):
             ret.payload = [b"run_init"]
 
         if args.action == "gen-domain":
+
             ret.type = Action.ActionType.SEND
             user = self.user
+
+            time_start = time.time()
+            user.time = time_start
+
             user.run_gen_sys()
 
             if not user.parent:
@@ -344,7 +352,7 @@ class Client(object):
             mpk = ibe_read_from_file(mpk_file)
 
             if user.cert == b'':
-                certs = user.input_all_certs()
+                certs = user.input_all_local_certs()
                 certs = [cert.to_bytes() for cert in certs]
                 user.cert = certs
             else:

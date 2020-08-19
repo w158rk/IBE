@@ -197,7 +197,7 @@ class Server(object):
             client_cert = self.gen_client_sig(client_id)
             cert_list.append(client_cert.to_bytes())
 
-            certs = user.input_all_certs()
+            certs = user.input_all_admin_certs()
             for cert in certs:
                 certs = cert.to_bytes()
                 cert_list.append(certs)
@@ -258,10 +258,10 @@ class Server(object):
             # NOTE(wrk): check its logic if necessary
             user.add_certs_in_cache(certs)
 
-            mpk = user.input_mpk()
+            mpk = user.input_mpk(mode="local")
             time_start2 = time.time()
             if user.cert == b'':
-                certs = user.input_all_certs()
+                certs = user.input_all_local_certs()
                 certs = [cert.to_bytes() for cert in certs]
                 user.cert = certs
             else:
@@ -363,7 +363,8 @@ class Server(object):
         cert.payload.iss = None             # top user
 
         cert.payload.aud = "top-" + user.id.decode()
-        cert.payload.types = "local"
+        cert.payload.top_types = "top"
+        cert.payload.admin_types = "local"
 
         exp = datetime.now()
         exp += timedelta(days=365)
@@ -379,19 +380,24 @@ class Server(object):
         # Users trust them with the fact that they own the
         # private keys corresponding to global public master key
 
+        filename = "cert-top-" + user.id.decode() + ".conf"
+
         user.output_cert(cert=cert.to_json(), ctype="local")
+        user.output_cert(cert=cert.to_json(), cert_file=filename)
 
     def run_gen_admin_auth(self):
         print("generate the admin certificate")
         user = self.user
-        local_cert = user.input_cert(filename=user.local_certificate_file)
+        cert_file = "cert-top-" + user.id.decode() + ".conf"
+        local_cert = user.input_cert(filename=cert_file)
         local_cert = Certificate.from_json(local_cert)
 
         cert = Certificate()
 
-        cert.payload.iss = None             # top user
+        cert.payload.iss = "top-" + user.id.decode()
         cert.payload.aud = user.id
-        cert.payload.types = "admin"
+        cert.payload.top_types = "non-top"
+        cert.payload.admin_types = "admin"
 
         exp = datetime.now()
         exp += timedelta(days=365)
@@ -400,9 +406,9 @@ class Server(object):
         cert.payload.exp = format_date_time(stamp)
         cert.payload.mpk = user.input_mpk(mode="admin")
         cert.payload.parent.id = user.id
-        cert.payload.parent.filename = user.local_certificate_file
+        cert.payload.parent.filename = "cert-top-" + user.id.decode() + ".conf"
         cert.payload.parent.hash = sm3_hash(local_cert.to_bytes())
-        cert.make_sig(user.input_sk())
+        cert.make_sig(user.input_sk(mode="global"))
 
         user.cert = cert.to_bytes()
 
@@ -426,9 +432,10 @@ class Server(object):
 
         cert = Certificate()
 
-        cert.payload.iss = user.id
+        cert.payload.iss = user.id.decode()
         cert.payload.aud = client_id
-        cert.payload.types = "local"
+        cert.payload.top_types = "non-top"
+        cert.payload.admin_types = "local"
 
         exp = datetime.now()
         exp += timedelta(days=365)
@@ -437,11 +444,12 @@ class Server(object):
         cert.payload.exp = format_date_time(stamp)
         cert.payload.mpk = user.input_mpk(mode="admin")
         cert.payload.parent.id = user.id
+        cert.payload.parent.filename = "cert-" + user.id.decode() + ".conf"
 
         # calculate the hash of the server's cert
         cert.payload.parent.hash = sm3_hash(server_cert.to_bytes())
 
-        cert.make_sig(user.input_sk())
+        cert.make_sig(user.input_sk(mode="admin"))
 
         return cert
 
@@ -454,7 +462,8 @@ class Server(object):
 
         cert.payload.iss = user.id
         cert.payload.aud = client_id
-        cert.payload.types = "admin"
+        cert.payload.top_types = "non-top"
+        cert.payload.admin_types = "admin"
 
         exp = datetime.now()
         exp += timedelta(days=365)
@@ -468,7 +477,7 @@ class Server(object):
         # calculate the hash of the server's cert
         cert.payload.parent.hash = sm3_hash(server_cert.to_bytes())
 
-        cert.make_sig(user.input_sk())
+        cert.make_sig(user.input_sk(mode="admin"))
 
         return cert
 
@@ -476,7 +485,6 @@ class Server(object):
         if action.payload[0] == b"run_init":
             _, val = action.payload
             self.user.run_init(with_val=val, is_listening=True)
-
 
     def handle_thread(self, sock, addr, user=None):
         """the main function of handle thread

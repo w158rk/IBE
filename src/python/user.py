@@ -207,12 +207,14 @@ class User(object):
         for index, cert in enumerate(certs[:-1]):
 
             next_cert = certs[index+1]
-            if not cert.payload.iss==next_cert.payload.aud:
+            if not cert.payload.iss == next_cert.payload.aud:
+                print("issError")
                 return False
 
             given_dgst = cert.payload.parent.hash
             cal_dgst = sm3_hash(next_cert.to_bytes())
-            if not given_dgst==cal_dgst:
+            if not given_dgst == cal_dgst:
+                print("hashError")
                 return False
 
         # check the validation of all the signatures
@@ -221,7 +223,11 @@ class User(object):
             sig = cert.sig.sig
             iss = cert.payload.iss
             mpk = next_cert.payload.mpk
-            if not cert.verify(next_cert.payload.mpk):
+            top = False
+            if next_cert.payload.top_types == "top":
+                top = True
+            if not cert.verify(next_cert.payload.mpk, top):
+                print("verifyError")
                 return False
 
         end = time.time()
@@ -413,8 +419,21 @@ class User(object):
         """
         pass
 
-    def input_all_certs(self):
+    def input_all_admin_certs(self):
         cert_file = self.admin_certificate_file
+        ret = []
+        while True:
+            with open(cert_file, "r") as f:
+                json_str = f.read()
+                cert = Certificate.from_json(json_str)
+                ret.append(cert)
+                if not cert.payload.parent:
+                    break
+                cert_file = cert.payload.parent.filename
+        return ret
+
+    def input_all_local_certs(self):
+        cert_file = self.local_certificate_file
         ret = []
         while True:
             with open(cert_file, "r") as f:
@@ -435,7 +454,7 @@ class User(object):
         with open(filename, "r") as f:
             return f.read()
 
-    def input_mpk(self, mode="local"):
+    def input_mpk(self, mode=""):
         if mode == "global":
             mpk_file = self.global_mpk_file
         elif mode == "admin":
@@ -447,7 +466,7 @@ class User(object):
 
         return ibe_read_from_file(mpk_file)
 
-    def input_sk(self, mode="local"):
+    def input_sk(self, mode=""):
         return ibe_read_from_file(self.get_sk_file_from_mode(mode))
 
     def load_config_file(self):

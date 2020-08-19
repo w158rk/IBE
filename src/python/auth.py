@@ -108,7 +108,8 @@ class Certificate:
         _valid_attrs = [
             "iss",
             "aud",
-            "types",
+            "top_types",
+            "admin_types",
             "exp",
             "nbf",
             "iat",
@@ -174,7 +175,8 @@ class Certificate:
         def __init__(self,
                      iss="",
                      aud="",
-                     types="",
+                     top_types="",
+                     admin_types="",
                      exp=None,
                      nbf=None,
                      iat=None,
@@ -195,7 +197,8 @@ class Certificate:
 
             self.iss = iss
             self.aud = aud
-            self.types = types
+            self.top_types = top_types
+            self.admin_types = admin_types
             self.exp = exp
             self.nbf = nbf
             self.iat = iat
@@ -363,7 +366,7 @@ class Certificate:
         obj = str2bytes(obj)
         return b64encode(obj)
 
-    def verify(self, mpk):
+    def verify(self, mpk, top):
         now = datetime.now()
         exp = datetime(*eut.parsedate(self.payload.exp)[:6])
         if now > exp:
@@ -376,4 +379,8 @@ class Certificate:
         payload = self.payload.to_bytes()
         m = b'.'.join([header, payload])
         sig = self.sig.sig
-        return ibe_verify(m, sig, mpk, str2bytes(self.payload.iss))
+        if top is False:
+            return ibe_verify(m, sig, mpk, str2bytes(self.payload.iss))
+        else:
+            iss = self.payload.iss[4:]
+            return ibe_verify(m, sig, mpk, str2bytes(iss))
