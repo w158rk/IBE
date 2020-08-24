@@ -203,6 +203,10 @@ class User(object):
 
         assert mpk == certs[0].payload.mpk
 
+        if not certs[0].payload.admin_types == "local":
+            print("The receive cert is not local cert")
+            return False
+
         # check the validation of the links
         for index, cert in enumerate(certs[:-1]):
 
@@ -217,6 +221,10 @@ class User(object):
                 print("hashError")
                 return False
 
+            if cert.payload.mpk != mpk and cert.payload.top_types != "top" and cert.payload.admin_types != "admin":
+                print("typeError")
+                return False
+
         # check the validation of all the signatures
         for index, cert in enumerate(certs[:-1]):
             next_cert = certs[index+1]
@@ -225,7 +233,11 @@ class User(object):
             mpk = next_cert.payload.mpk
             top = False
             if next_cert.payload.top_types == "top":
-                top = True
+                if next_cert.payload.admin_types == "local":
+                    top = True
+                else:
+                    print("toptypeError")
+                    return False
             if not cert.verify(next_cert.payload.mpk, top):
                 print("verifyError")
                 return False
