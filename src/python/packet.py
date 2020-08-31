@@ -53,6 +53,10 @@ class Packet(object):
         QUIT_REQUEST_SEC = 22
         DOMAIN_REQUEST = 23
         DOMAIN_RESPOND = 24
+        GEN_DOMAIN_REQUEST = 25
+        GEN_DOMAIN_PLAIN = 26
+        GEN_DOMAIN_SEC = 27
+        CERT_DOMAIN_REQUEST = 28
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type
@@ -482,6 +486,64 @@ class Packet(object):
 
         lens = [len(sk)]
         vals = [sk]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def gen_domain_request(cls, user_id=b'', key_mode=b'', key=b''):
+
+        packet = Packet()
+        packet.type = cls.PacketType.GEN_DOMAIN_REQUEST
+
+        lens = [len(user_id), len(key_mode), len(key)]
+        vals = [user_id, key_mode, key]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def gen_domain_plain(cls, mpk=b'', msk=b'', sk=b''):
+
+        packet = Packet()
+        packet.type = cls.PacketType.GEN_DOMAIN_PLAIN
+
+        lens = [len(mpk), len(msk), len(sk)]
+        vals = [mpk, msk, sk]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def gen_domain_sec(cls, cipher=b''):
+        packet = Packet()
+        packet.type = cls.PacketType.GEN_DOMAIN_SEC
+
+        lens = [len(cipher)]
+        vals = [cipher]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def gen_domain_cert_requet(cls, user_id, mpk):
+        """
+        make the packet with the id and the new domain mpk
+        """
+
+        packet = Packet()
+        packet.type = cls.PacketType.CERT_DOMAIN_REQUEST
+
+        lens = [len(user_id), len(mpk)]
+        vals = [user_id, mpk]
 
         packet.lens = lens
         packet.vals = vals
