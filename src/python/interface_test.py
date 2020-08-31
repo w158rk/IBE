@@ -27,7 +27,9 @@ _valid_actions = {
     "gen-domain": "generate your own domain",
     "sk": "request for the private key",
     "comm": "initialize a secret session inter-domain",
-    "comm-no-auth": "initialize a secret session in a domain"
+    "comm-no-auth": "initialize a secret session in a domain",
+    "sec": "encrypt the message",
+    "dec": "decrypt the cipher"
 }
 _config_file = ""
 
@@ -63,13 +65,16 @@ class Client(object):
             print(msk)
             print(sk)
 
-        if packet.type == Packet.PacketType.GEN_DOMAIN_RESPOND:
-            domain_cert = packet.vals[0]
+        if packet.type == Packet.PacketType.MAKE_SEC_RESPOND:
+            cipher = packet.vals[0]
+            print(cipher)
+            sm_file = "cipher.conf"
+            with open(sm_file, "wb") as f:
+                f.write(cipher)
 
-            cert = Certificate()
-            cert = cert.from_bytes(domain_cert)
-
-            print(cert.to_json)
+        if packet.type == Packet.PacketType.MAKE_DEC_RESPOND:
+            m = packet.vals[0]
+            print(m)   
 
         if packet.type == Packet.PacketType.DOMAIN_RESPOND:
             domain_cert = packet.vals[0]
@@ -301,6 +306,43 @@ class Client(object):
                 user_mpk = f.read()
 
             packet = Packet.gen_domain_cert_requet(user_id=b"Server1", mpk=user_mpk)
+            ret.payload = [packet.to_bytes()]
+
+        if args.action == "sec":
+            ret.type = Action.ActionType.SEND
+
+            assert args.comm_addr
+            assert args.comm_port
+            ret.addr = args.comm_addr
+            ret.port = args.comm_port
+
+            mpk_file = "mpk.conf"
+            user_mpk = b""
+            with open(mpk_file, "rb") as f:
+                user_mpk = f.read()
+
+            packet = Packet. make_sec_request(user_id=b"Server1", cert=b'', mpk=user_mpk, m=b'hello')
+            ret.payload = [packet.to_bytes()]
+
+        if args.action == "dec":
+            ret.type = Action.ActionType.SEND
+
+            assert args.comm_addr
+            assert args.comm_port
+            ret.addr = args.comm_addr
+            ret.port = args.comm_port
+
+            c_file = "cipher.conf"
+            cipher = b""
+            with open(c_file, "rb") as f:
+                cipher = f.read()
+
+            sk_file = "sk.conf"
+            sk = b""
+            with open(sk_file, "rb") as f:
+                sk = f.read()
+
+            packet = Packet. make_dec_request(sk=sk, c=cipher)
             ret.payload = [packet.to_bytes()]
 
         # if args.action == "init":

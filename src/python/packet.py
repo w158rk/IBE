@@ -57,6 +57,10 @@ class Packet(object):
         GEN_DOMAIN_PLAIN = 26
         GEN_DOMAIN_SEC = 27
         CERT_DOMAIN_REQUEST = 28
+        MAKE_SEC_REQUEST = 29
+        MAKE_SEC_RESPOND = 30
+        MAKE_DEC_REQUEST = 31
+        MAKE_DEC_RESPOND = 32
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type
@@ -535,15 +539,65 @@ class Packet(object):
 
     @classmethod
     def gen_domain_cert_requet(cls, user_id, mpk):
-        """
-        make the packet with the id and the new domain mpk
-        """
-
         packet = Packet()
         packet.type = cls.PacketType.CERT_DOMAIN_REQUEST
 
         lens = [len(user_id), len(mpk)]
         vals = [user_id, mpk]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_sec_request(cls, user_id, mpk, cert, m):
+
+        packet = Packet()
+        packet.type = cls.PacketType.MAKE_SEC_REQUEST
+
+        lens = [len(user_id), len(mpk), len(cert), len(m)]
+        vals = [user_id, mpk, cert, m]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_sec_respond(cls, cipher):
+
+        packet = Packet()
+        packet.type = cls.PacketType.MAKE_SEC_RESPOND
+
+        lens = [len(cipher)]
+        vals = [cipher]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_dec_request(cls, sk, c):
+        packet = Packet()
+        packet.type = cls.PacketType.MAKE_DEC_REQUEST
+
+        lens = [len(sk), len(c)]
+        vals = [sk, c]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_dec_respond(cls, m):
+        packet = Packet()
+        packet.type = cls.PacketType.MAKE_DEC_RESPOND
+
+        lens = [len(m)]
+        vals = [m]
 
         packet.lens = lens
         packet.vals = vals
