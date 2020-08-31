@@ -5,7 +5,7 @@ from action import Action
 from packet import Packet
 from utils import int2bytes, bytes2str
 from auth import Certificate
-from crypto_c_interface import ibe_read_from_file, ibe_write_to_file, sm3_hash, ibe_encrypt, ibe_decrypt
+from crypto_c_interface import ibe_read_from_file, ibe_write_to_file, sm3_hash, ibe_encrypt, ibe_decrypt, ibe_extract
 from wsgiref.handlers import format_date_time
 from datetime import datetime, timedelta
 from time import mktime
@@ -130,6 +130,17 @@ class Server(object):
             action = Action()
             action.type = Action.ActionType.SEND
             packet = Packet.make_dec_respond(m=m)
+            action.payload = [packet.to_bytes()]
+
+        if packet.type == Packet.PacketType.MAKE_SK_REQUEST:
+            msk = packet.vals[0]
+            user_id = packet.vals[1]
+
+            sk = ibe_extract(msk=msk, user_id=user_id)
+
+            action = Action()
+            action.type = Action.ActionType.SEND
+            packet = Packet.make_sk_respond(sk=sk)
             action.payload = [packet.to_bytes()]
 
         if packet.type == Packet.PacketType.DOMAIN_REQUEST:

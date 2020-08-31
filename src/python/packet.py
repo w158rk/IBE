@@ -61,6 +61,8 @@ class Packet(object):
         MAKE_SEC_RESPOND = 30
         MAKE_DEC_REQUEST = 31
         MAKE_DEC_RESPOND = 32
+        MAKE_SK_REQUEST = 33
+        MAKE_SK_RESPOND = 34
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type
@@ -598,6 +600,32 @@ class Packet(object):
 
         lens = [len(m)]
         vals = [m]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_sk_request(cls, msk, user_id):
+        packet = Packet()
+        packet.type = cls.PacketType.MAKE_SK_REQUEST
+
+        lens = [len(msk), len(user_id)]
+        vals = [msk, user_id]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_sk_respond(cls, sk):
+        packet = Packet()
+        packet.type = cls.PacketType.MAKE_SK_RESPOND
+
+        lens = [len(sk)]
+        vals = [sk]
 
         packet.lens = lens
         packet.vals = vals

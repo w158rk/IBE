@@ -74,7 +74,11 @@ class Client(object):
 
         if packet.type == Packet.PacketType.MAKE_DEC_RESPOND:
             m = packet.vals[0]
-            print(m)   
+            print(m)
+
+        if packet.type == Packet.PacketType.MAKE_SK_RESPOND:
+            sk = packet.vals[0]
+            print(sk)
 
         if packet.type == Packet.PacketType.DOMAIN_RESPOND:
             domain_cert = packet.vals[0]
@@ -343,6 +347,22 @@ class Client(object):
                 sk = f.read()
 
             packet = Packet. make_dec_request(sk=sk, c=cipher)
+            ret.payload = [packet.to_bytes()]
+
+        if args.action == "sk":
+            ret.type = Action.ActionType.SEND
+
+            assert args.comm_addr
+            assert args.comm_port
+            ret.addr = args.comm_addr
+            ret.port = args.comm_port
+
+            msk_file = "msk.conf"
+            msk = b""
+            with open(msk_file, "rb") as f:
+                msk = f.read()
+
+            packet = Packet. make_sk_request(msk=msk, user_id=b'CLient1')
             ret.payload = [packet.to_bytes()]
 
         # if args.action == "init":
