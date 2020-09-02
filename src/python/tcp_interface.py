@@ -17,9 +17,6 @@ import socket
 import threading
 import argparse
 import traceback
-import os
-import time
-import sqlite3
 
 
 _config_file = ""
@@ -99,9 +96,24 @@ class Server(object):
         if packet.type == Packet.PacketType.CERT_DOMAIN_REQUEST:
             client_id = packet.vals[0]
             client_mpk = packet.vals[1]
+            father_id = packet.vals[2]
+            father_sk = packet.vals[3]
 
-            domain_cert = self.gen_domain_sig(client_id, client_mpk)
-            cert_m = domain_cert.to_bytes()
+            cert = Certificate()
+            # cert.payload.iss = father_id
+            # cert.payload.aud = client_id
+            # cert.payload.top_types = "non-top"
+            # cert.payload.admin_types = "admin"
+
+            # exp = datetime.now()
+            # exp += timedelta(days=365)
+            # stamp = mktime(exp.timetuple())
+
+            # cert.payload.exp = format_date_time(stamp)
+            # cert.payload.mpk = client_mpk
+
+            # cert.make_sig(father_sk.decode())
+            cert_m = cert.to_bytes()
 
             action = Action()
             action.type = Action.ActionType.SEND
@@ -114,12 +126,15 @@ class Server(object):
             cert = packet.vals[2]
             m = packet.vals[3]
 
-            c = ibe_encrypt(user_id=user_id, mpk=mpk, m=m)
-
-            action = Action()
-            action.type = Action.ActionType.SEND
-            packet = Packet.make_sec_respond(cipher=c)
-            action.payload = [packet.to_bytes()]
+            user = self.user
+            if not user.check_mpk(mpk, cert):
+                print("verifyError")
+            else:
+                c = ibe_encrypt(user_id=user_id, mpk=mpk, m=m)
+                action = Action()
+                action.type = Action.ActionType.SEND
+                packet = Packet.make_sec_respond(cipher=c)
+                action.payload = [packet.to_bytes()]
 
         if packet.type == Packet.PacketType.MAKE_DEC_REQUEST:
             sk = packet.vals[0]
@@ -141,217 +156,6 @@ class Server(object):
             action = Action()
             action.type = Action.ActionType.SEND
             packet = Packet.make_sk_respond(sk=sk)
-            action.payload = [packet.to_bytes()]
-
-        if packet.type == Packet.PacketType.DOMAIN_REQUEST:
-            client_id = packet.vals[0]
-            client_mpk = packet.vals[1]
-
-            domain_cert = self.gen_domain_sig(client_id, client_mpk)
-            cert_m = domain_cert.to_bytes()
-
-            action = Action()
-            action.type = Action.ActionType.SEND
-            packet = Packet.make_domain_respond(cert_m)
-            action.payload = [packet.to_bytes()]
-
-        if packet.type == Packet.PacketType.SK_REQUEST_INIT:
-            # send system parameter and TODO(wxy): certificate
-
-            # check the system parameters
-            if os.path.exists(self.user.admin_mpk_file) and os.path.exists(self.user.admin_msk_file) and os.path.exists(self.user.admin_sk_file):
-                pass        # do nothing
-            else:
-                # self.run_gen_sys()
-                print("please generate your own domain first")
-
-            # if not self.user.parent and not os.path.exists(self.user.certificate_file):
-            #     # top user without certificate file
-            #     self.run_gen_auth()
-
-            action = Action()
-            action.type = Action.ActionType.SEND
-            mpk_file = self.user.admin_mpk_file
-            packet = Packet.make_sk_respond_init(mpk_file=mpk_file)
-            action.payload = [packet.to_bytes()]
-
-        if packet.type == Packet.PacketType.SK_REQUEST_KEY_SEC:
-            # send sk and cert to client
-
-            cipher = packet.vals[0]
-
-            user = self.user
-            m = user.ibe_decrypt(mode="admin", c=cipher)
-            packet = Packet.from_bytes(m)
-
-            sm4_key = packet.vals[0]
-            client_id = packet.vals[1]
-            client_addr = packet.vals[2]
-            client_port = packet.vals[3]
-            cl_id = client_id.decode()
-            cl_addr = client_addr.decode()
-            cl_port = int().from_bytes(client_port, byteorder='big', signed=True)
-
-            client_list = sqlite3.connect('client_list.db')
-
-            client_list.execute('''CREATE TABLE IF NOT EXISTS CLIENT
-                                (ID     CHAR(50)    PRIMARY KEY     NOT NULL,
-                                ADDR    CHAR(50),
-                                PORT    INT);''')
-
-            client_list.execute("INSERT OR IGNORE INTO CLIENT (ID,ADDR,PORT) \
-                                 VALUES ('{}','{}','{}')".format(cl_id, cl_addr, cl_port))
-
-            client_list.commit()
-            client_list.close()
-
-            # client_list = sqlite3.connect('client_list.db')
-            # cursor = client_list.execute("SELECT ID, ADDR, PORT from CLIENT")
-            # for row in cursor:
-            #     print(row[0])
-            #     print(row[1])
-            #     print(row[2])
-
-            client_sk = self.user.ibe_extract(mode="admin", c_id=client_id)
-            assert client_sk
-            sk_len = len(client_sk)
-            sk_len = int2bytes(sk_len, 4)
-
-            cert_list = []
-
-            # append the cert file generated for the next layer
-            client_cert = self.gen_client_sig(client_id)
-            cert_list.append(client_cert.to_bytes())
-
-            certs = user.input_all_admin_certs()
-            for cert in certs:
-                certs = cert.to_bytes()
-                cert_list.append(certs)
-
-                # get all the certificates of current user
-            # cert_file = user.certificate_file
-            # while True:
-            #     assert os.path.exists(cert_file)
-            #     cert = user.input_cert(cert_file)
-            #     cert = Certificate.from_json(cert)
-            #     cert_list.append(cert.to_bytes())
-            #     if not cert.payload.parent:
-            #         break
-            #     # next certificate name
-            #     cert_file = cert.payload.parent.filename
-
-            packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, cert_list)
-
-            plain_text = packet.to_bytes()
-
-            cipher = user.sm4_enc(key=sm4_key, m=plain_text)
-            packet = Packet.make_sk_respond_key_sec(cipher=cipher)
-
-            action.type = Action.ActionType.SEND
-            action.payload = [packet.to_bytes()]
-
-        if packet.type == Packet.PacketType.COMM_REQUEST_INIT:
-            target_id = packet.vals[0]
-            client_id = packet.vals[1]
-            client_mpk = packet.vals[2]
-            key_mode = packet.vals[3]
-
-            # first, check the parameters
-            user = self.user
-            assert target_id == user.id
-            assert key_mode in {b"sm4", b"IOT"}
-
-            # Then check the validation of mpk
-            certs = []
-            for certbytes, certlen in zip(packet.vals[4:], packet.lens[4:]):
-                assert len(certbytes) == certlen
-                cert = Certificate.from_bytes(certbytes)
-                certs.append(cert)
-
-            if not user.check_mpk(client_mpk, certs):
-                action = Action()
-                action.type = Action.ActionType.SEND
-                packet = Packet()
-                packet.type = Packet.PacketType.COMM_REFUSE
-                action.payload = [packet.to_bytes()]
-                return action
-
-            # The client_mpk is valid, store it in the temperary vars
-            temp_vars['mpk'] = client_mpk
-
-            # send the server's mpk and certificate
-            # it is relatively like the way in which the client do
-            # NOTE(wrk): check its logic if necessary
-            user.add_certs_in_cache(certs)
-
-            mpk = user.input_mpk(mode="local")
-            time_start2 = time.time()
-            if user.cert == b'':
-                certs = user.input_all_local_certs()
-                certs = [cert.to_bytes() for cert in certs]
-                user.cert = certs
-            else:
-                pass
-
-            time_end2 = time.time()
-            print('cost', time_end2-time_start2)
-
-            action = Action()
-            action.type = Action.ActionType.SEND
-            packet = Packet.make_comm_respond_init(mode=b'2', des_id=client_id,
-                                                   src_id=target_id, mpk=mpk, certs=user.cert, key_mode=key_mode)
-            action.payload = [packet.to_bytes()]
-            return action
-
-        if packet.type == Packet.PacketType.KEY_REQUEST_SEC:
-            mode = packet.vals[0]
-            cipher = packet.vals[1]
-            sign = packet.vals[2]
-
-            user = self.user
-            if mode == b'comm' or mode == b'sibling':
-                m = user.ibe_decrypt(mode="local", c=cipher)
-            elif mode == b'parent':
-                m = user.ibe_decrypt(mode="admin", c=cipher)
-            else:
-                raise Exception()
-
-            packet = Packet.from_bytes(m)
-            target_id = packet.vals[0]
-            client_id = packet.vals[1]
-            key_mes = packet.vals[2]
-            key_mode = packet.vals[3]
-
-            assert target_id == user.id
-            assert key_mode in {b"sm4", b"IOT"}
-
-            if key_mode == b'sm4':
-                sm4_key = key_mes
-            elif key_mode == b'IOT':
-                key = IOT_key()
-                key = key.from_bytes(key_mes)
-                sm4_key = key.key
-
-            if mode == b'sibling':
-                verify = user.ibe_verify(mode="local", m=m, sm=sign, user_id=client_id)
-            elif mode == b'comm':
-                verify = user.ibe_verify(mode="comm", m=m, sm=sign, user_id=client_id, mpk=temp_vars['mpk'])
-            elif mode == b'parent':
-                verify = user.ibe_verify(mode="admin", m=m, sm=sign, user_id=client_id)
-            else:
-                raise Exception
-
-            if verify:
-                sm4_key_file = bytes2str(key_mode) + "-" + bytes2str(client_id) + ".conf"
-                with open(sm4_key_file, "wb") as f:
-                    f.write(key_mes)
-            else:
-                print("VerifyError!")
-
-            cipher = user.sm4_enc(key=sm4_key, m=b"ACK")
-            packet = Packet.make_key_respond(des_id=client_id, src_id=target_id, m=cipher, key_mode=key_mode)
-
-            action.type = Action.ActionType.SEND
             action.payload = [packet.to_bytes()]
 
         return action

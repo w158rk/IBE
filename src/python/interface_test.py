@@ -23,11 +23,9 @@ import os
 import sqlite3
 
 _valid_actions = {
-    "init": "invoke an initialization",
     "gen-domain": "generate your own domain",
+    "request-domain-cert": "request for the cert",
     "sk": "request for the private key",
-    "comm": "initialize a secret session inter-domain",
-    "comm-no-auth": "initialize a secret session in a domain",
     "sec": "encrypt the message",
     "dec": "decrypt the cipher"
 }
@@ -65,6 +63,12 @@ class Client(object):
             print(msk)
             print(sk)
 
+        if packet.type == Packet.PacketType.CERT_DOMAIN_REQUEST:
+            m_cert = packet.vals[0]
+            cert = Certificate()
+            cert = cert.from_bytes(m_cert)
+            print(cert.to_json())
+
         if packet.type == Packet.PacketType.MAKE_SEC_RESPOND:
             cipher = packet.vals[0]
             print(cipher)
@@ -79,194 +83,6 @@ class Client(object):
         if packet.type == Packet.PacketType.MAKE_SK_RESPOND:
             sk = packet.vals[0]
             print(sk)
-
-        if packet.type == Packet.PacketType.DOMAIN_RESPOND:
-            domain_cert = packet.vals[0]
-
-            cert = Certificate()
-            cert = cert.from_bytes(domain_cert)
-
-            user = self.user
-            user.output_cert(cert.to_json(with_filename=True), user.admin_certificate_file)
-
-            time_end = time.time()
-            time_start = user.time
-            print('gen-domain totally cost', time_end-time_start)
-
-        if packet.type == Packet.PacketType.SK_RESPOND_INIT:
-
-            # store the global mpk
-            global_mpk = packet.vals[0]
-            with open(self.user.global_mpk_file, "wb") as f:
-                f.write(global_mpk)
-
-            # store the mpk
-            mpk = packet.vals[1]
-            with open(self.user.local_mpk_file, "wb") as f:
-                f.write(mpk)
-
-            # then we should send the random key
-            # let the user generate a key, for a client
-            # there is no need to bind anything in client end
-            # just set the user's key
-            user = self.user
-            key = user.generate_sym_key()
-            user.sm4_key = key
-
-            port = user.port.to_bytes(length=2, byteorder='big', signed=True)
-
-            packet = Packet.make_sk_request_key_plain(key=key, user_id=user.id, user_addr=user.addr, user_port=port)
-            plain_text = packet.to_bytes()
-
-            user_id = user.parent.id
-            cipher = user.ibe_encrypt(mode="local", m=plain_text, user_id=user_id)
-            packet = Packet.make_sk_request_key_sec(cipher=cipher)
-
-            action = Action()
-            action.type = Action.ActionType.SEND
-            action.payload = [packet.to_bytes()]
-
-            # encrypt the packet with IBE
-
-        if packet.type == Packet.PacketType.SK_RESPOND_KEY_SEC:
-
-            # get the sec_sk
-            cipher = packet.vals[0]
-
-            user = self.user
-            key = user.sm4_key
-
-            # decrypt to get the sk
-            m = user.sm4_dec(key=key, c=cipher)
-            packet = Packet.from_bytes(m)
-
-            # output sk
-            sk = packet.vals[0]
-            sk_len = packet.vals[1]
-            sk_len = bytes2int(sk_len)
-            sk = sk[:sk_len]
-            assert len(sk) == sk_len
-            user.output_sk(sk, mode="local")
-
-            # The rest of the packet is all the certificate files
-            # Store them one by one
-            certs = []
-            cert_files = []
-
-            for cert, cert_len in zip(packet.vals[2:], packet.lens[2:]):
-
-                assert len(cert) == cert_len
-                cert = Certificate.from_bytes(cert)
-                certs.append(cert)
-                if cert.payload.aud == bytes2str(user.id):
-                    cert_file = user.local_certificate_file
-                else:
-                    cert_file = "cert-" + cert.payload.aud + ".conf"
-                cert_files.append(cert_file)
-
-            user.cert = certs
-
-            # ATTENTION: A FILENAME MUST BE ASSIGNED TO THE CERTIFICATE, THERE IS NO CHECK
-            # IT MIGHT LEAD TO SOME OTHER ERROR IF THE FILENAME IS NOT GIVEN
-            for i in range(len(certs)-1):
-                certs[i].payload.parent.filename = cert_files[i+1]
-
-            for cert, cert_file in zip(certs, cert_files):
-                user.output_cert(cert.to_json(with_filename=True), cert_file)
-
-            time_end = time.time()
-            time_start = user.time
-            print('sk totally cost', time_end-time_start)
-
-        if packet.type == Packet.PacketType.COMM_RESPOND_INIT:
-            time_start = time.time()
-            cur = time_start
-            target_id = packet.vals[1]
-            server_id = packet.vals[2]
-            server_mpk = packet.vals[3]
-            key_mode = packet.vals[4]
-            # first, check the parameters
-            user = self.user
-            assert target_id == user.id
-            assert key_mode in {b"sm4", b"IOT"}
-
-            # Then check the validation of mpk
-            certs = []
-            for certbytes, certlen in zip(packet.vals[5:], packet.lens[5:]):
-                assert len(certbytes) == certlen
-                cert = Certificate.from_bytes(certbytes)
-                certs.append(cert)
-            last = cur
-            cur = time.time()
-            print('parse certificate: ', cur-last)
-
-            if not user.check_mpk(server_mpk, certs):
-                action = Action()
-                action.type = Action.ActionType.SEND
-                packet = Packet()
-                packet.type = Packet.PacketType.COMM_REFUSE
-                action.payload = packet.to_bytes()
-                return action
-            last = cur
-            cur = time.time()
-            print('check mpk: ', cur-last)
-
-            # output the received certificates
-            user.add_certs_in_cache(certs)
-            last = cur
-            cur = time.time()
-            print('add cache: ', cur-last)
-
-            # generate a random key and send it to the server
-            key = urandom(16)
-            user.key = key
-            if key_mode == b'sm4':
-                key_mes = key
-            elif key_mode == b'IOT':
-                key_mes = self.make_key(KEY_DUR_TIME, key)
-                user.IOT_key = key_mes
-            else:
-                print("KeyModeError!")
-            last = cur
-            cur = time.time()
-            print('generate key: ', cur-last)
-
-            packet = Packet.make_key_request_plain(des_id=server_id, src_id=target_id, key=key_mes, key_mode=key_mode)
-            plain_text = packet.to_bytes()
-            last = cur
-            cur = time.time()
-            print('make plain: ', cur-last)
-
-            cipher = user.ibe_encrypt(mode="comm", m=plain_text, user_id=server_id, mpk=server_mpk)
-            sign = user.ibe_sign(mode="local", m=plain_text)
-            packet = Packet.make_key_request_sec(cipher=cipher, sign=sign) # default mode = "comm"
-            last = cur
-            cur = time.time()
-            print('crypto: ', cur-last)
-
-            action = Action()
-            action.type = Action.ActionType.SEND
-            action.payload = [packet.to_bytes()]
-            return action
-
-        if packet.type == Packet.PacketType.KEY_RESPOND:
-            cipher = packet.vals[2]
-            src_id = packet.vals[1]
-            key_mode = packet.vals[3]
-            user = self.user
-            key = user.key
-            m = user.sm4_dec(key, cipher)
-            if m == b"ACK":
-                sm4_key_file = key_mode.decode() + "-" + src_id.decode() + ".conf"
-                with open(sm4_key_file, "wb") as f:
-                    if key_mode == b'sm4':
-                        key_mes = key
-                    elif key_mode == b'IOT':
-                        key_mes = user.IOT_key
-                    f.write(key_mes)
-            time_end = time.time()
-            time_start = user.time
-            print('comm totally cost', time_end-time_start)
 
         return action
 
@@ -309,7 +125,12 @@ class Client(object):
             with open(mpk_file, "rb") as f:
                 user_mpk = f.read()
 
-            packet = Packet.gen_domain_cert_requet(user_id=b"Server1", mpk=user_mpk)
+            sk_file = "sk.conf"
+            father_sk = b""
+            with open(sk_file, "rb") as f:
+                father_sk = f.read()
+
+            packet = Packet.gen_domain_cert_requet(user_id=b"Client1", user_mpk=user_mpk, father_id=b"Server1", father_sk=father_sk)
             ret.payload = [packet.to_bytes()]
 
         if args.action == "sec":
@@ -364,146 +185,6 @@ class Client(object):
 
             packet = Packet. make_sk_request(msk=msk, user_id=b'CLient1')
             ret.payload = [packet.to_bytes()]
-
-        # if args.action == "init":
-        #     ret.type = Action.ActionType.RUN
-        #     ret.payload = [b"run_init"]
-
-        # if args.action == "gen-domain":
-
-        #     ret.type = Action.ActionType.SEND
-        #     user = self.user
-
-        #     time_start = time.time()
-        #     user.time = time_start
-
-        #     user.run_gen_sys()
-
-        #     if not user.parent:
-        #         raise ClientError("cannot request for private key if no parent assigned")
-        #     parent = user.parent
-        #     assert parent.id
-        #     assert parent.addr
-        #     assert parent.port
-        #     ret.addr = parent.addr
-        #     ret.port = parent.port
-
-        #     user_id = user.id
-        #     payload = Packet.make_domain_requet(user_id, user.admin_mpk_file)
-        #     ret.payload = [payload.to_bytes()]
-
-        # if args.action == "sk":
-        #     ret.type = Action.ActionType.SEND
-        #     user = self.user
-
-        #     time_start = time.time()
-        #     user.time = time_start
-
-        #     if not user.parent:
-        #         raise ClientError("cannot request for private key if no parent assigned")
-        #     parent = user.parent
-        #     assert parent.id
-        #     assert parent.addr
-        #     assert parent.port
-        #     ret.addr = parent.addr
-        #     ret.port = parent.port
-
-        #     user_id = user.id
-        #     payload = Packet.make_sk_request_init(user_id)
-        #     ret.payload = [payload.to_bytes()]
-
-        # if args.action == "comm":
-        #     # At this point, we don't take into account the size of data in the air (in channel)
-        #     # Just send them! Our current goal is minimize the time of verification
-        #     ret.type = Action.ActionType.SEND
-        #     user = self.user
-
-        #     time_start = time.time()
-        #     user.time = time_start
-
-        #     if os.path.exists(self.user.local_mpk_file) and os.path.exists(self.user.local_sk_file):
-        #         pass        # do nothing
-        #     else:
-        #         raise ClientError("please generate your own sk first")
-        #     assert args.comm_addr
-        #     assert args.comm_port
-        #     assert args.comm_id
-        #     assert args.key_mode
-        #     ret.addr = args.comm_addr
-        #     ret.port = args.comm_port
-        #     comm_id = args.comm_id
-        #     comm_id = str2bytes(comm_id)
-        #     key_mode = str2bytes(args.key_mode)
-
-        #     user_id = user.id
-        #     mpk_file = user.local_mpk_file
-        #     mpk = ibe_read_from_file(mpk_file)
-
-        #     if user.cert == b'':
-        #         certs = user.input_all_local_certs()
-        #         certs = [cert.to_bytes() for cert in certs]
-        #         user.cert = certs
-        #     else:
-        #         pass
-
-        #     payload = Packet.make_comm_request_init(des_id=comm_id, src_id=user_id, mpk=mpk, certs=user.cert, key_mode=key_mode)
-        #     ret.payload = [payload.to_bytes()]
-
-        # if args.action == "comm-no-auth":
-        #     # This option is for the case that the user has known that it is
-        #     # to communicate with who shares the public master key with it
-        #     # 1. If it communicates with its parent, the mode is in `parent`
-        #     # 2. If it communicates with its siblings, the mode is in `sibling`
-        #     # 3. If it communicates with its children, the mode is in `child`
-        #     # send a packet with type KEY_REQUEST_SEC
-        #     # NOTE: currently, there is no way to distinguish the mode `sibline` and `child`
-        #     #       so we only provide the mode `parent` and `sibling` for simplicity
-        #     ret.type = Action.ActionType.SEND
-        #     user = self.user
-
-        #     time_start = time.time()
-        #     user.time = time_start
-
-        #     if os.path.exists(self.user.local_mpk_file) and os.path.exists(self.user.local_sk_file):
-        #         pass        # do nothing
-        #     else:
-        #         raise ClientError("please generate your own sk first")
-
-        #     assert args.comm_addr
-        #     assert args.comm_port
-        #     assert args.comm_id
-        #     ret.addr = args.comm_addr
-        #     ret.port = args.comm_port
-        #     comm_id = args.comm_id
-        #     comm_id = str2bytes(comm_id)
-        #     key_mode = str2bytes(args.key_mode)
-        #     assert key_mode in {b"sm4", b"IOT"}
-        #     mode = None
-
-        #     if comm_id == user.parent.id:
-        #         mode = b"parent"
-        #     else:
-        #         mode = b"sibling"
-
-        #     # generate a random key and send it to the server
-        #     key = urandom(16)
-        #     user.key = key
-        #     if key_mode == b'sm4':
-        #         key_mes = key
-        #     elif key_mode == b'IOT':
-        #         key_mes = self.make_key(KEY_DUR_TIME, key)
-        #         user.IOT_key = key_mes
-        #     else:
-        #         print("KeyModeError!")
-
-        #     packet = Packet.make_key_request_plain(des_id=comm_id, src_id=user.id, key=key_mes, key_mode=key_mode)
-        #     plain_text = packet.to_bytes()
-
-        #     cipher = user.ibe_encrypt(mode="local", m=plain_text, user_id=comm_id)
-        #     sign = user.ibe_sign(mode="local", m=plain_text)
-        #     packet = Packet.make_key_request_sec(mode=mode, cipher=cipher, sign=sign)
-
-        #     ret.payload = [packet.to_bytes()]
 
         return ret
 

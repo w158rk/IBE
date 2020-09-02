@@ -540,12 +540,12 @@ class Packet(object):
         return packet
 
     @classmethod
-    def gen_domain_cert_requet(cls, user_id, mpk):
+    def gen_domain_cert_requet(cls, user_id, user_mpk, father_id, father_sk):
         packet = Packet()
         packet.type = cls.PacketType.CERT_DOMAIN_REQUEST
 
-        lens = [len(user_id), len(mpk)]
-        vals = [user_id, mpk]
+        lens = [len(user_id), len(user_mpk), len(father_id), len(father_sk)]
+        vals = [user_id, user_mpk, father_id, father_sk]
 
         packet.lens = lens
         packet.vals = vals
