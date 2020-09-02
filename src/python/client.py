@@ -110,7 +110,7 @@ class Client(object):
 
             port = user.port.to_bytes(length=2, byteorder='big', signed=True)
 
-            packet = Packet.make_sk_request_key_plain(key=key, user_id=user.id, user_addr=user.addr, user_port=port)
+            packet = Packet.make_sk_request_key_plain(key=key, user_id=user.id)
             plain_text = packet.to_bytes()
 
             user_id = user.parent.id

@@ -242,21 +242,19 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sk_request_key_plain(cls, key=b'', user_id=b'', user_addr=b'', user_port=b''):
+    def make_sk_request_key_plain(cls, key=b'', user_id=b''):
         """
         make a packet with a random key
         """
 
         assert key
         assert user_id
-        assert user_addr
-        assert user_port
 
         packet = Packet()
         packet.type = cls.PacketType.SK_REQUEST_KEY_PLAIN
 
-        lens = [len(key), len(user_id), len(user_addr), len(user_port)]
-        vals = [key, user_id, user_addr, user_port]
+        lens = [len(key), len(user_id)]
+        vals = [key, user_id]
 
         packet.lens = lens
         packet.vals = vals

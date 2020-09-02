@@ -8,7 +8,6 @@ project (RPO_IBE)
 #设置库
 # SET(PROJECT_LIB_DIR ${CMAKE_SOURCE_DIR}/src/lib)
 if(NOT DEFINED ENV{IBE_LIB})
-    # 没有找到JAVA_HOME环境变量
     message(FATAL_ERROR "not defined environment variable:IBE_LIB")  
 endif()
 
