@@ -4,7 +4,7 @@ import argparse
 import fastapi
 
 from user import User
-from base64 import b64encode
+from base64 import urlsafe_b64encode
 from utils import bytes2str
 from client import Client
 
@@ -66,4 +66,4 @@ def request_for_sk():
     # local_sk_file, read and return that 
     ret = _user.input_sk(mode="local")
     
-    return b64encode(ret)
+    return urlsafe_b64encode(ret)

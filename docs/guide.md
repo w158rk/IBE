@@ -1,3 +1,14 @@
+# 2020-09-03
+
+
+## REST API
+
+### 使用方式
+
+1. server端不变 
+2. client端修改为`python3 python/restAPI.py -c client.json`
+3. 浏览器访问`http://localhost:8000/sk/request`可以获得请求到的私钥
+
 # 2020-07-28
 'auth.py'文件中存在的问题：
     mpk和sig存在文件中的byte类型无法进行decode转换，会出现起始字节无效的ERROR
