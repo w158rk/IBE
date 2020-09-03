@@ -528,7 +528,7 @@ class Client(object):
                 action = self.gen_action_from_data(data)
 
         except socket.error as e:
-            print("Socket Error: %s" % str(e))
+            traceback.print_exc()
         except AssertionError as e:
             traceback.print_exc()
         except Exception as e:

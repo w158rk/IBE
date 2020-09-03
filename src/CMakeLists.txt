@@ -11,4 +11,4 @@ add_library(ibe SHARED ${MY_SRC})  #指定编译包含的源文件{MY_SRC}中的
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(ibe PUBLIC DEBUG)
 endif(CMAKE_BUILD_TYPE MATCHES Debug)
-target_link_libraries(ibe ssl crypto pthread)
+target_link_libraries(ibe gmcrypto pthread)

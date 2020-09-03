@@ -9,7 +9,8 @@
     "admin_sk_file" : "sk-admin.conf",
     "local_mpk_file" : "mpk-global.conf",
     "local_sk_file" : "sk-global.conf",
-    "certificate_file": "certificate.conf",
+    "local_certificate_file": "certificate.conf",
+    "admin_certificate_file": "certificate.conf",
 
     "id" : "Server1", 
     "addr" : "127.0.0.1",

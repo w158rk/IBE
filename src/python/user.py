@@ -23,7 +23,6 @@ from auth import Certificate
 from base64 import b64decode, b64encode
 from cache import CertCache
 
-import uvicorn
 import socket
 import threading
 import time
@@ -128,8 +127,6 @@ class User(object):
         self.cert_cache = CertCache(filename=self.certificate_cache)
         self.cert_cache.run()
 
-        #http server 
-        self.run_http_server()
 
     @classmethod
     def from_dict(cls, user_dict):
@@ -265,7 +262,7 @@ class User(object):
         # self.sym_key = ret
         return lint
 
-    def get_sk_file_from_mode(self, mode):
+    def get_sk_file_from_mode(self, mode="local"):
         sk_file = ""
         if mode == "global":
             sk_file = self.global_sk_file
@@ -463,12 +460,14 @@ class User(object):
                 cert_file = cert.payload.parent.filename
         return ret
 
-    def input_cert(self, filename=None):
+    def input_cert(self, filename=''):
         """
         This is for input the certificate of this user
         """
         if not filename:
             filename = self.admin_certificate_file
+        if not filename:
+            filename = self.local_certificate_file
         with open(filename, "r") as f:
             return f.read()
 
@@ -543,10 +542,6 @@ class User(object):
         self.ibe_setup(mode="admin")
         sk = self.ibe_extract(mode="admin", c_id=self.id)
         self.output_sk(sk, mode="admin")
-
-    def run_http_server(self):
-        if self.http_addr and self.port:
-            uvicorn.run("restAPI:app", host=self.http_addr, port=self.port, log_level="info")
 
     def run_init(self, with_val=None, is_listening=False):
         """
