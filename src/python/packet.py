@@ -63,6 +63,8 @@ class Packet(object):
         MAKE_DEC_RESPOND = 32
         MAKE_SK_REQUEST = 33
         MAKE_SK_RESPOND = 34
+        MAKE_SEC_REQUEST_INIT = 35
+        MAKE_SEC_RESPOND_INIT = 36
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type
@@ -551,13 +553,21 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sec_request(cls, user_id, mpk, cert, m):
+    def make_sec_request_init(cls, des_id=b'', src_id=b'', mpk=b'', certs=[]):
+        assert des_id
+        assert src_id
+        assert mpk
+        assert certs
 
         packet = Packet()
-        packet.type = cls.PacketType.MAKE_SEC_REQUEST
+        packet.type = cls.PacketType.MAKE_SEC_REQUEST_INIT
 
-        lens = [len(user_id), len(mpk), len(cert), len(m)]
-        vals = [user_id, mpk, cert, m]
+        lens = [len(des_id), len(src_id), len(mpk)]
+        vals = [des_id, src_id, mpk]
+
+        for cert in certs:
+            lens.append(len(cert))
+            vals.append(cert)
 
         packet.lens = lens
         packet.vals = vals
@@ -565,10 +575,36 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sec_respond(cls, cipher):
+    def make_sec_respond_init(cls, des_id=b'', src_id=b'', mpk=b'', certs=[]):
+        assert des_id
+        assert src_id
+        assert mpk
+        assert certs
 
         packet = Packet()
-        packet.type = cls.PacketType.MAKE_SEC_RESPOND
+        packet.type = cls.PacketType.MAKE_SEC_RESPOND_INIT
+
+        lens = [len(des_id), len(src_id), len(mpk)]
+        vals = [des_id, src_id, mpk]
+
+        for cert in certs:
+            lens.append(len(cert))
+            vals.append(cert)
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_sec_request(cls, cipher=b''):
+        """
+        just make the cipher in the packet
+        """
+        assert cipher
+
+        packet = Packet()
+        packet.type = cls.PacketType.MAKE_SEC_REQUEST
 
         lens = [len(cipher)]
         vals = [cipher]
@@ -577,6 +613,34 @@ class Packet(object):
         packet.vals = vals
 
         return packet
+
+    # @classmethod
+    # def make_sec_request(cls, user_id, mpk, cert, m):
+
+    #     packet = Packet()
+    #     packet.type = cls.PacketType.MAKE_SEC_REQUEST
+
+    #     lens = [len(user_id), len(mpk), len(cert), len(m)]
+    #     vals = [user_id, mpk, cert, m]
+
+    #     packet.lens = lens
+    #     packet.vals = vals
+
+    #     return packet
+
+    # @classmethod
+    # def make_sec_respond(cls, cipher):
+
+    #     packet = Packet()
+    #     packet.type = cls.PacketType.MAKE_SEC_RESPOND
+
+    #     lens = [len(cipher)]
+    #     vals = [cipher]
+
+    #     packet.lens = lens
+    #     packet.vals = vals
+
+    #     return packet
 
     @classmethod
     def make_dec_request(cls, sk, c):

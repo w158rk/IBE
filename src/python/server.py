@@ -281,6 +281,53 @@ class Server(object):
             action.payload = [packet.to_bytes()]
             return action
 
+        if packet.type == Packet.PacketType.MAKE_SEC_REQUEST_INIT:
+            target_id = packet.vals[0]
+            client_id = packet.vals[1]
+            client_mpk = packet.vals[2]
+
+            # first, check the parameters
+            user = self.user
+            assert target_id == user.id
+
+            # Then check the validation of mpk
+            certs = []
+            for certbytes, certlen in zip(packet.vals[3:], packet.lens[3:]):
+                assert len(certbytes) == certlen
+                cert = Certificate.from_bytes(certbytes)
+                certs.append(cert)
+
+            if not user.check_mpk(client_mpk, certs):
+                action = Action()
+                action.type = Action.ActionType.SEND
+                packet = Packet()
+                packet.type = Packet.PacketType.COMM_REFUSE
+                action.payload = [packet.to_bytes()]
+                return action
+
+            # The client_mpk is valid, store it in the temperary vars
+            temp_vars['mpk'] = client_mpk
+
+            # send the server's mpk and certificate
+            # it is relatively like the way in which the client do
+            # NOTE(wrk): check its logic if necessary
+            user.add_certs_in_cache(certs)
+
+            mpk = user.input_mpk(mode="local")
+            if user.cert == b'':
+                certs = user.input_all_local_certs()
+                certs = [cert.to_bytes() for cert in certs]
+                user.cert = certs
+            else:
+                pass
+
+            action = Action()
+            action.type = Action.ActionType.SEND
+            packet = Packet.make_sec_respond_init(des_id=client_id,
+                                                  src_id=target_id, mpk=mpk, certs=user.cert)
+            action.payload = [packet.to_bytes()]
+            return action
+
         if packet.type == Packet.PacketType.KEY_REQUEST_SEC:
             mode = packet.vals[0]
             cipher = packet.vals[1]

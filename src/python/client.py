@@ -45,7 +45,8 @@ _valid_actions = {
     "gen-domain": "generate your own domain",
     "sk": "request for the private key",
     "comm": "initialize a secret session inter-domain",
-    "comm-no-auth": "initialize a secret session in a domain"
+    "comm-no-auth": "initialize a secret session in a domain",
+    "sec": "sec the message"
 }
 _config_file = ""
 
@@ -263,6 +264,40 @@ class Client(object):
             time_start = user.time
             print('comm totally cost', time_end-time_start)
 
+        if packet.type == Packet.PacketType.MAKE_SEC_RESPOND_INIT:
+            target_id = packet.vals[0]
+            server_id = packet.vals[1]
+            server_mpk = packet.vals[2]
+            # first, check the parameters
+            user = self.user
+            assert target_id == user.id
+
+            # Then check the validation of mpk
+            certs = []
+            for certbytes, certlen in zip(packet.vals[3:], packet.lens[3:]):
+                assert len(certbytes) == certlen
+                cert = Certificate.from_bytes(certbytes)
+                certs.append(cert)
+
+            if not user.check_mpk(server_mpk, certs):
+                action = Action()
+                action.type = Action.ActionType.SEND
+                packet = Packet()
+                packet.type = Packet.PacketType.COMM_REFUSE
+                action.payload = packet.to_bytes()
+                return action
+
+            # output the received certificates
+            user.add_certs_in_cache(certs)
+
+            with open("send_message.txt", "r") as f:
+                message = f.read()
+
+            cipher = user.ibe_encrypt(mode="comm", m=message.encode(), user_id=server_id, mpk=server_mpk)
+
+            with open("cipher.conf", "wb") as f:
+                f.write(cipher)
+
         return action
 
     def gen_action_from_args(self, args):
@@ -416,6 +451,38 @@ class Client(object):
             packet = Packet.make_key_request_sec(mode=mode, cipher=cipher, sign=sign)
 
             ret.payload = [packet.to_bytes()]
+
+        if args.action == "sec":
+            # At this point, we don't take into account the size of data in the air (in channel)
+            # Just send them! Our current goal is minimize the time of verification
+            ret.type = Action.ActionType.SEND
+            user = self.user
+
+            if os.path.exists(self.user.local_mpk_file) and os.path.exists(self.user.local_sk_file):
+                pass        # do nothing
+            else:
+                raise ClientError("please generate your own sk first")
+            assert args.comm_addr
+            assert args.comm_port
+            assert args.comm_id
+            ret.addr = args.comm_addr
+            ret.port = args.comm_port
+            comm_id = args.comm_id
+            comm_id = str2bytes(comm_id)
+
+            user_id = user.id
+            mpk_file = user.local_mpk_file
+            mpk = ibe_read_from_file(mpk_file)
+
+            if user.cert == b'':
+                certs = user.input_all_local_certs()
+                certs = [cert.to_bytes() for cert in certs]
+                user.cert = certs
+            else:
+                pass
+
+            payload = Packet.make_sec_request_init(des_id=comm_id, src_id=user_id, mpk=mpk, certs=user.cert)
+            ret.payload = [payload.to_bytes()]
 
         # NOTE: We don't provide the option of single-side authentication for simplicity
         # In fact, it can be true that when Bob's certificate is in Alice's cache, Alice can send

@@ -13,7 +13,6 @@
     "admin_certificate_file": "admin_certificate.conf",
     "certificate_cache": "./certs",
 
-
     "id" : "Server1", 
     "addr" : "127.0.0.1",
     "port" : 5003,

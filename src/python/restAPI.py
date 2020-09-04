@@ -14,6 +14,7 @@ _client = None
 _args = None
 app = fastapi.FastAPI() 
 
+
 def set_env():
     parser = argparse.ArgumentParser(description="IBE restAPI, currenly we recommend to user -c to provide a configuration file")
     parser.add_argument("--server-ip", action="store", dest="srv_addr",
@@ -29,15 +30,16 @@ def set_env():
 
     global _args
     global _config_file
-    global _user 
+    global _user
     global _client
-    
+
     _args = parser.parse_args()
     _config_file = _args.config_file
 
     if _config_file:
         _user = User(config_file=_config_file)
         _client = Client(_user)
+
 
 def main():
     set_env()
@@ -48,9 +50,11 @@ def main():
 if __name__ == "__main__":
     main()
 
+
 @app.get("/")
 def root():
     return "Rest API for a Node"
+
 
 @app.get("/sk/request")
 def request_for_sk():
@@ -61,9 +65,28 @@ def request_for_sk():
     try:
         _client.run(args=_args)
     except Exception:
-        return None 
-    # the private key would be output to the user's 
-    # local_sk_file, read and return that 
+        return None
+    # the private key would be output to the user's
+    # local_sk_file, read and return that
     ret = _user.input_sk(mode="local")
-    
+
+    return urlsafe_b64encode(ret)
+
+
+@app.get("/sec/request/addr/{addr}/port/{port}/user_id/{user_id}")
+def request_for_sec(addr: str, port: int, user_id: str):
+    if not _args:
+        set_env()
+    _args.action = "sec"
+    _args.comm_addr = addr
+    _args.comm_port = port
+    _args.comm_id = user_id
+    try:
+        _client.run(args=_args)
+    except Exception:
+        return None
+
+    with open("cipher.conf", "rb") as f:
+        ret = f.read()
+
     return urlsafe_b64encode(ret)
