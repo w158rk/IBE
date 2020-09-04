@@ -483,6 +483,10 @@ class User(object):
 
         return ibe_read_from_file(mpk_file)
 
+    def input_msk(self):
+        msk_file = self.admin_msk_file
+        return ibe_read_from_file(msk_file)
+
     def input_sk(self, mode=""):
         return ibe_read_from_file(self.get_sk_file_from_mode(mode))
 

@@ -46,7 +46,8 @@ _valid_actions = {
     "sk": "request for the private key",
     "comm": "initialize a secret session inter-domain",
     "comm-no-auth": "initialize a secret session in a domain",
-    "sec": "sec the message"
+    "sec": "encrypt the message",
+    "dec": "decrypt the cipher"
 }
 _config_file = ""
 
@@ -483,6 +484,15 @@ class Client(object):
 
             payload = Packet.make_sec_request_init(des_id=comm_id, src_id=user_id, mpk=mpk, certs=user.cert)
             ret.payload = [payload.to_bytes()]
+
+        if args.action == "dec":
+            user = self.user
+            with open("cipher.conf", "rb") as f:
+                cipher = f.read()
+            m = user.ibe_decrypt(mode="local", c=cipher)
+
+            with open("message.conf", "wb") as f:
+                f.write(m)
 
         # NOTE: We don't provide the option of single-side authentication for simplicity
         # In fact, it can be true that when Bob's certificate is in Alice's cache, Alice can send

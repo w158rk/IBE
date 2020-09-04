@@ -7,6 +7,7 @@ from user import User
 from base64 import urlsafe_b64encode
 from utils import bytes2str
 from client import Client
+from crypto_c_interface import ibe_decrypt, ibe_read_from_file
 
 _config_file = ""
 _user = None
@@ -90,3 +91,47 @@ def request_for_sec(addr: str, port: int, user_id: str):
         ret = f.read()
 
     return urlsafe_b64encode(ret)
+
+
+@app.get("/dec/request")
+def request_for_dec():
+    # if not _args:
+    #     set_env()
+    # _args.action = "dec"
+    # try:
+    #     _client.run(args=_args)
+    # except Exception:
+    #     return None
+
+    # with open("message.conf", "rb") as f:
+    #     ret = f.read()
+
+    # return ret.decode()
+    with open("cipher.conf", "rb") as f:
+        cipher = f.read()
+    sk = ibe_read_from_file("sk-local.conf")
+    ret = ibe_decrypt(cipher, sk)
+
+    return ret
+
+
+@app.get("/domain/request")
+def request_for_domain():
+    if not _args:
+        set_env()
+    _args.action = "gen-domain"
+    try:
+        _client.run(args=_args)
+    except Exception:
+        return None
+
+    sk = _user.input_sk(mode="admin")
+    mpk = _user.input_mpk(mode="admin")
+    msk = _user.input_msk()
+
+    with open(_user.admin_certificate_file, "rb") as f:
+        cert = f.read()
+
+    item = {"sk": urlsafe_b64encode(sk), "mpk": urlsafe_b64encode(mpk), "msk": urlsafe_b64encode(msk), "cert": cert}
+
+    return item
