@@ -17,6 +17,7 @@ import argparse
 from constant import *
 from utils import str2bytes
 import time
+import traceback
 
 """
 global variables
@@ -229,10 +230,8 @@ def ibe_encrypt(m, mpk, user_id):
     # ATTENTION: Never pass a python int object to a size_t type variable in C!
     c_id_len = c_ulong(c_id_len)
 
-    try:
-        lib_ibe = CDLL(LIBIBE_PATH)
-    except Exception:
-        traceback.print_exc()
+    lib_ibe = CDLL(LIBIBE_PATH)
+
     res = lib_ibe.ibe_encrypt(c_m, c_m_len, c_c, p_c_len, p_mpk, c_mpk_len, c_id, c_id_len)
 
     if res:

@@ -1,11 +1,12 @@
 
 import uvicorn
 import argparse
-import fastapi
+from fastapi import FastAPI
+from pydantic import BaseModel
 
 from user import User
-from base64 import urlsafe_b64encode
-from utils import bytes2str
+from base64 import urlsafe_b64encode, urlsafe_b64decode
+from utils import bytes2str, str2bytes
 from client import Client
 from crypto_c_interface import ibe_encrypt, ibe_decrypt, ibe_read_from_file, ibe_write_to_file, ibe_extract, ibe_setup, sm3_hash
 from pydantic import BaseModel
@@ -29,7 +30,7 @@ class API_input(BaseModel):
     cipher: bytes = None
 
 
-app = fastapi.FastAPI()
+app = FastAPI()
 
 
 def set_env():
@@ -84,28 +85,42 @@ def request_for_sk(item: API_input):
 
     return ret
 
+class Encrypt_Body(BaseModel):
+    message: str
+    mpk: str 
+    user_id: str
 
-@app.post("/sec/request")
-def request_for_sec(item: API_input):
+@app.get("/encrypt")
+def request_for_sec(item: Encrypt_Body):
 
-    assert item.message
-    assert item.user_mpk
-    assert item.user_id
+    message = str2bytes(item.message)
+    message = urlsafe_b64decode(message)
+    mpk = str2bytes(item.mpk)
+    mpk = urlsafe_b64decode(mpk)
+    user_id = str2bytes(item.user_id)
+    
+    ret = ibe_encrypt(message, mpk, user_id)
+    ret = urlsafe_b64encode(ret)
+    ret = bytes2str(ret)
 
-    ret = ibe_encrypt(item.message, item.user_mpk, item.user_id)
+    return {"cipher": ret}
 
-    return ret
+class Decrypt_Body(BaseModel):
+    cipher: str 
+    sk: str
+@app.get("/decrypt")
+def request_for_dec(item: Decrypt_Body):
 
+    cipher = str2bytes(item.cipher)
+    cipher = urlsafe_b64decode(cipher)
+    sk = str2bytes(item.sk)
+    sk = urlsafe_b64decode(sk)
 
-@app.post("/dec/request")
-def request_for_dec(item: API_input):
+    ret = ibe_decrypt(cipher, sk)
+    ret = urlsafe_b64encode(ret)
+    ret = bytes2str(ret)
 
-    assert item.cipher
-    assert item.user_sk
-
-    ret = ibe_decrypt(item.cipher, item.user_sk)
-
-    return ret
+    return {"dmessage": ret}
 
 
 @app.post("/gen-domain/request")
