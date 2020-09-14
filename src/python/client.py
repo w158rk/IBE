@@ -23,7 +23,7 @@ from constant import *
 from crypto_c_interface import ibe_read_from_file, ibe_write_to_file, ibe_encrypt
 from action import Action
 from packet import Packet
-from utils import bytes2int, bytes2str, str2bytes
+from utils import bytes2int, bytes2str, str2bytes, int2bytes
 from os import urandom
 from auth import Certificate
 from key import IOT_key
@@ -90,7 +90,7 @@ class Client(object):
             time_start = user.time
             print('gen-domain totally cost', time_end-time_start)
 
-        if packet.type == Packet.PacketType.SK_RESPOND_INIT:
+        if packet.type == Packet.PacketType.MPK_RESPOND:
 
             # store the global mpk
             global_mpk = packet.vals[0]
@@ -125,6 +125,16 @@ class Client(object):
 
             # encrypt the packet with IBE
 
+        #======================================================================
+        # Domain
+        #======================================================================
+
+        if packet.type == Packet.PacketType.DOMAIN_FINISH:
+            action = Action()
+            action.type = Action.ActionType.EXIT
+        #======================================================================
+
+
         if packet.type == Packet.PacketType.SK_RESPOND_KEY_SEC:
 
             # get the sec_sk
@@ -138,44 +148,19 @@ class Client(object):
             packet = Packet.from_bytes(m)
 
             # output sk
-            sk = packet.vals[0]
-            sk_len = packet.vals[1]
-            sk_len = bytes2int(sk_len)
-            sk = sk[:sk_len]
-            assert len(sk) == sk_len
+            sk = packet.vals[2]
+            client_id = packet.vals[0]
+            server_id = packet.vals[1]
+            print(client_id)
+            assert client_id == user.id 
+            assert server_id == user.parent.id
             user.output_sk(sk, mode="local")
-
-            # The rest of the packet is all the certificate files
-            # Store them one by one
-            certs = []
-            cert_files = []
-
-            for cert, cert_len in zip(packet.vals[2:], packet.lens[2:]):
-
-                assert len(cert) == cert_len
-                cert = Certificate.from_bytes(cert)
-                certs.append(cert)
-                if cert.payload.aud == bytes2str(user.id):
-                    cert_file = user.local_certificate_file
-                else:
-                    cert_file = "cert-" + cert.payload.aud + ".conf"
-                cert_files.append(cert_file)
-
-            user.cert = certs
-
-            # ATTENTION: A FILENAME MUST BE ASSIGNED TO THE CERTIFICATE, THERE IS NO CHECK
-            # IT MIGHT LEAD TO SOME OTHER ERROR IF THE FILENAME IS NOT GIVEN
-            for i in range(len(certs)-1):
-                certs[i].payload.parent.filename = cert_files[i+1]
-
-            for cert, cert_file in zip(certs, cert_files):
-                user.output_cert(cert.to_json(with_filename=True), cert_file)
 
             time_end = time.time()
             time_start = user.time
             print('sk totally cost', time_end-time_start)
 
-        if packet.type == Packet.PacketType.COMM_RESPOND_INIT:
+        if packet.type == Packet.PacketType.COMM_SERVER_HELLO:
             time_start = time.time()
             cur = time_start
             target_id = packet.vals[1]
@@ -337,7 +322,11 @@ class Client(object):
             ret.port = parent.port
 
             user_id = user.id
-            payload = Packet.make_domain_requet(user_id, user.admin_mpk_file)
+            mpk = user.input_mpk(mode="admin")
+            payload = Packet.make_domain_request_plain(user_id, mpk)
+            payload = payload.to_bytes()
+            sig = user.ibe_sign(mode="local", payload)
+            payload = Packet.make_domain_request_sec(payload, sig)
             ret.payload = [payload.to_bytes()]
 
         if args.action == "sk":
@@ -357,7 +346,21 @@ class Client(object):
             ret.port = parent.port
 
             user_id = user.id
-            payload = Packet.make_sk_request_init(user_id)
+            if not os.path.exists(user.local_mpk_file) or not os.path.exists(user.global_mpk_file):
+                payload = Packet.make_mpk_request(user_id)
+            else:
+                key = user.generate_sym_key()
+                user.sm4_key = key
+
+                port = int2bytes(user.port, 2)
+
+                packet = Packet.make_sk_request_key_plain(key=key, user_id=user.id)
+                plain_text = packet.to_bytes()
+
+                user_id = user.parent.id
+                cipher = user.ibe_encrypt(mode="local", m=plain_text, user_id=user_id)
+                payload = Packet.make_sk_request_key_sec(cipher=cipher)
+
             ret.payload = [payload.to_bytes()]
 
         if args.action == "comm":

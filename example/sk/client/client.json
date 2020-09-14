@@ -6,6 +6,10 @@
     "local_mpk_file" : "mpk-local.conf",
     "local_sk_file" : "sk-local.conf",
     "local_certificate_file": "certificate.conf",
+    "admin_mpk_file" : "mpk-admin.conf",
+    "admin_msk_file" : "msk-admin.conf",
+    "admin_sk_file" : "sk-admin.conf",
+    "admin_certificate_file": "certificate.conf",
 
     "id" : "Client", 
     "http_addr" : "127.0.0.1",

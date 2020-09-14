@@ -35,36 +35,38 @@ class Packet(object):
         INIT_R2_ACK = 4
         INIT_R3 = 5       # for the third round of initialization
         INIT_R3_ACK = 6
-        SK_REQUEST_INIT = 7
-        SK_RESPOND_INIT = 8
-        SK_REQUEST_KEY_PLAIN = 9
-        SK_REQUEST_KEY_SEC = 10
-        SK_RESPOND_KEY_PLAIN = 11
-        SK_RESPOND_KEY_SEC = 12
-        SK_KEY_ACK = 13
-        SK_KEY_ACK_ACK = 14
-        COMM_REQUEST_INIT = 15
-        COMM_RESPOND_INIT = 16
-        KEY_REQUEST_PLAIN = 17
-        KEY_REQUEST_SEC = 18
-        KEY_RESPOND = 19
-        COMM_REFUSE = 20
-        QUIT_REQUEST_PLAIN = 21
-        QUIT_REQUEST_SEC = 22
-        DOMAIN_REQUEST = 23
-        DOMAIN_RESPOND = 24
-        GEN_DOMAIN_REQUEST = 25
-        GEN_DOMAIN_PLAIN = 26
-        GEN_DOMAIN_SEC = 27
-        CERT_DOMAIN_REQUEST = 28
-        MAKE_SEC_REQUEST = 29
-        MAKE_SEC_RESPOND = 30
-        MAKE_DEC_REQUEST = 31
-        MAKE_DEC_RESPOND = 32
-        MAKE_SK_REQUEST = 33
-        MAKE_SK_RESPOND = 34
-        MAKE_SEC_REQUEST_INIT = 35
-        MAKE_SEC_RESPOND_INIT = 36
+
+        MPK_REQUEST = 10
+        MPK_RESPOND = 11
+
+        SK_REQUEST_KEY_PLAIN = 20
+        SK_REQUEST_KEY_SEC = 21
+        SK_RESPOND_KEY_PLAIN = 22
+        SK_RESPOND_KEY_SEC = 23
+        SK_KEY_ACK = 24
+        SK_KEY_ACK_ACK = 25
+
+        COMM_CLIENT_HELLO = 30
+        COMM_SERVER_HELLO = 31
+        COMM_CLIENT_FINISH = 32
+        COMM_SERVER_FINISH = 33
+        COMM_REFUSE = 34
+
+        KEY_REQUEST_PLAIN = 40
+        KEY_REQUEST_SEC = 41
+        KEY_RESPOND = 42
+
+        QUIT_REQUEST_PLAIN = 50
+        QUIT_REQUEST_SEC = 51
+
+        DOMAIN_REQUEST_PLAIN = 60
+        DOMAIN_REQUEST_SEC = 61
+        DOMAIN_SUBMIT_PLAIN = 62
+        DOMAIN_SUBMIT_SEC = 63
+        DOMAIN_COMMIT_PLAIN = 64
+        DOMAIN_COMMIT_SEC = 65
+        DOMAIN_RESPOND = 66
+        DOMAIN_FINISH = 67
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type
@@ -143,7 +145,7 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_init_3(cls, point, mpk_file="./mpk"):
+    def make_init_3(cls, point):
         """
         the point is calculated in the user module, just add it into a packet
         """
@@ -159,26 +161,68 @@ class Packet(object):
 
         return packet
 
+    #####################################################################
+    # domain related
+    #####################################################################
+
     @classmethod
-    def make_domain_requet(cls, user_id, mpk_file):
+    def make_domain_request_plain(cls, user_id, mpk):
         """
         make the packet with the id and the new domain mpk
         """
 
-        assert os.path.exists(mpk_file)
-
         packet = Packet()
-        packet.type = cls.PacketType.DOMAIN_REQUEST
+        packet.type = cls.PacketType.DOMAIN_REQUEST_PLAIN
 
-        with open(mpk_file, "rb") as f:
-            mpk = f.read()
-
+        mpk = b64encode(mpk)
         lens = [len(user_id), len(mpk)]
         vals = [user_id, mpk]
 
         packet.lens = lens
         packet.vals = vals
 
+        return packet
+
+    @classmethod
+    def make_domain_request_sec(cls, payload, sig):
+        """
+        pack the plain payload and the signature
+        """
+
+
+        packet = Packet()
+        packet.type = cls.PacketType.DOMAIN_REQUEST_SEC
+
+        lens = [len(payload), len(sig)]
+        vals = [payload, sig]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_domain_submit_plain(cls, user_id, mpk):
+        packet = cls.make_domain_request_plain(user_id, mpk)
+        packet.type = cls.PacketType.DOMAIN_SUBMIT_PLAIN
+        return packet
+
+    @classmethod
+    def make_domain_submit_sec(cls, payload, sig):
+        packet = cls.make_domain_request_plain(payload, sig)
+        packet.type = cls.PacketType.DOMAIN_SUBMIT_SEC
+        return packet
+
+    @classmethod
+    def make_domain_commit_plain(cls, user_id, mpk):
+        packet = cls.make_domain_request_plain(user_id, mpk)
+        packet.type = cls.PacketType.DOMAIN_COMMIT_PLAIN
+        return packet
+
+    @classmethod
+    def make_domain_commit_sec(cls, payload, sig):
+        packet = cls.make_domain_request_plain(payload, sig)
+        packet.type = cls.PacketType.DOMAIN_COMMIT_SEC
         return packet
 
     @classmethod
@@ -198,14 +242,22 @@ class Packet(object):
 
         return packet
 
+    @classmethod 
+    def make_domain_finish(cls):
+        packet = cls()
+        packet.type = cls.PacketType.DOMAIN_FINISH 
+        return packet
+
+    #=====================================================================#
+
     @classmethod
-    def make_sk_request_init(cls, user_id):
+    def make_mpk_request(cls, user_id):
         """
         plaintext, with only the user_id
         """
 
         packet = Packet()
-        packet.type = cls.PacketType.SK_REQUEST_INIT
+        packet.type = cls.PacketType.MPK_REQUEST
 
         lens = [len(user_id)]
         vals = [user_id]
@@ -216,7 +268,7 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sk_respond_init(cls, mpkglobal_file="./mpk-global.conf", mpk_file="./mpk_file"):
+    def make_mpk_respond(cls, mpkglobal_file="./mpk-global.conf", mpk_file="./mpk_file"):
         """
         read the content of the given files, TODO(wxy): certificate left
         """
@@ -233,7 +285,7 @@ class Packet(object):
             global_mpk = f.read()
 
         packet = Packet()
-        packet.type = cls.PacketType.SK_RESPOND_INIT
+        packet.type = cls.PacketType.MPK_RESPOND
 
         lens = [len(global_mpk), len(mpk)]
         vals = [global_mpk, mpk]
@@ -244,7 +296,7 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sk_request_key_plain(cls, key=b'', user_id=b''):
+    def make_sk_request_key_plain(cls, key=b'', user_id=b'', secret=b'secret'):
         """
         make a packet with a random key
         """
@@ -255,8 +307,8 @@ class Packet(object):
         packet = Packet()
         packet.type = cls.PacketType.SK_REQUEST_KEY_PLAIN
 
-        lens = [len(key), len(user_id)]
-        vals = [key, user_id]
+        lens = [len(key), len(user_id), len(secret)]
+        vals = [key, user_id, secret]
 
         packet.lens = lens
         packet.vals = vals
@@ -282,23 +334,19 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_sk_respond_key_plain(cls, user_sk=b'', sk_len=b'', cert_list=[]):
+    def make_sk_respond_key_plain(cls, user_sk=b'', user_id=b'', server_id=b''):
         """
         make the packet with client's sk and sk length
         """
         assert user_sk
-        assert sk_len
-        assert cert_list
+        assert user_id 
+        assert server_id
 
         packet = Packet()
         packet.type = cls.PacketType.SK_RESPOND_KEY_PLAIN
 
-        lens = [len(user_sk), len(sk_len)]
-        vals = [user_sk, sk_len]
-
-        for cert in cert_list:
-            vals.append(cert)
-            lens.append(len(cert))
+        lens = [len(user_id), len(server_id), len(user_sk)]
+        vals = [user_id, server_id, user_sk]
 
         packet.lens = lens
         packet.vals = vals
@@ -323,19 +371,23 @@ class Packet(object):
 
         return packet
 
+    #==================================================================
+    # comm
+    #==================================================================
+
     @classmethod
-    def make_comm_request_init(cls, des_id=b'', src_id=b'', mpk=b'', key_mode=b"", certs=[]):
+    def make_comm_client_hello(cls, des_id=b'', src_id=b'', mpk=b'', key_mode=b"", certs=[]):
         """
         for the first communication init
         """
         assert des_id
         assert src_id
-        assert mpk
+        assert mpk          # the mpk might be eliminated in the cloud mode
         assert certs
         assert key_mode
 
         packet = Packet()
-        packet.type = cls.PacketType.COMM_REQUEST_INIT
+        packet.type = cls.PacketType.COMM_CLIENT_HELLO
 
         lens = [len(des_id), len(src_id), len(mpk), len(key_mode)]
         vals = [des_id, src_id, mpk, key_mode]
@@ -350,7 +402,7 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_comm_respond_init(cls, mode=b'', des_id=b'', src_id=b'', mpk=b'', certs=[], key_mode=b''):
+    def make_comm_server_hello(cls, mode=b'', des_id=b'', src_id=b'', mpk=b'', certs=[], key_mode=b''):
         """
         for the first communication init respond
 
@@ -366,7 +418,7 @@ class Packet(object):
         assert key_mode
 
         packet = Packet()
-        packet.type = cls.PacketType.COMM_RESPOND_INIT
+        packet.type = cls.PacketType.COMM_SERVER_HELLO
 
         lens = [len(mode), len(des_id), len(src_id), len(mpk), len(key_mode)]
         vals = [mode, des_id, src_id, mpk, key_mode]
@@ -379,6 +431,7 @@ class Packet(object):
         packet.vals = vals
 
         return packet
+    #==================================================================
 
     @classmethod
     def make_key_request_plain(cls, des_id=b'', src_id=b'', key=b'', key_mode=b''):
@@ -668,18 +721,6 @@ class Packet(object):
 
         return packet
 
-    @classmethod
-    def make_sk_request(cls, msk, user_id):
-        packet = Packet()
-        packet.type = cls.PacketType.MAKE_SK_REQUEST
-
-        lens = [len(msk), len(user_id)]
-        vals = [msk, user_id]
-
-        packet.lens = lens
-        packet.vals = vals
-
-        return packet
 
     @classmethod
     def make_sk_respond(cls, sk):

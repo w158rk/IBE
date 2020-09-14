@@ -358,7 +358,7 @@ class User(object):
             sk = f.read()
         return ibe_sign(m, sk)
 
-    def ibe_verify(self, mode="", m=b"", sm=b"", user_id=b"", filename="", mpk=b""):
+    def ibe_verify(self, mode="", m=b"", sm=b"", user_id=b""):
         """
         mode is in ["global", "admin", "local", "comm"]
         """
@@ -373,6 +373,7 @@ class User(object):
             return ibe_verify(m, sm, mpk, user_id)
         else:
             raise UserError()
+        
         with open(mpk_file, "rb") as f:
             mpk = f.read()
         return ibe_verify(m, sm, mpk, user_id)
@@ -653,10 +654,6 @@ class User(object):
         sQ = self.cal_sQ()
         self.sQ = sQ
         self.output_sQ(sQ)
-
-        if not self.parent and not os.path.exists(self.local_certificate_file):
-            # top user without certificate file
-            self.server.run_gen_local_auth()
 
         # generate the admin domain after the initialization
         if os.path.exists(self.admin_mpk_file) and os.path.exists(self.admin_msk_file) and os.path.exists(self.admin_sk_file):

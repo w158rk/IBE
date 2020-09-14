@@ -18,7 +18,7 @@ function exists.
 
 from action import Action
 from packet import Packet
-from utils import int2bytes, bytes2str
+from utils import int2bytes, bytes2str, str2bytes
 from auth import Certificate
 from crypto_c_interface import ibe_read_from_file, ibe_write_to_file, sm3_hash
 from wsgiref.handlers import format_date_time
@@ -65,10 +65,8 @@ class Server(object):
         """
 
         action = Action()
-        if data == b"sk":
-            action.type = Action.ActionType.SEND_AND_EXIT
-            action.payload = [b"sk received"]
-            return action
+        user = self.user 
+
         try:
             packet = Packet.from_bytes(data)
         except Exception:
@@ -117,19 +115,59 @@ class Server(object):
             print("receive ACK")
             self.user.sent_ack_cnts[2] += 1
 
-        if packet.type == Packet.PacketType.DOMAIN_REQUEST:
-            client_id = packet.vals[0]
-            client_mpk = packet.vals[1]
+        #=======================================================================
+        # Domain
+        #=======================================================================
 
-            domain_cert = self.gen_domain_sig(client_id, client_mpk)
-            cert_m = domain_cert.to_bytes()
+        if packet.type == Packet.PacketType.DOMAIN_REQUEST_SEC:
+            # verify the signature 
+            payload = packet.vals[0]
+            sig = packet.vals[1]
+            packet = Packet.from_bytes(payload)
+            user_id = packet.vals[0]
+            check = user.ibe_verify(mode="admin", payload, sig, user_id)
 
-            action = Action()
-            action.type = Action.ActionType.SEND
-            packet = Packet.make_domain_respond(cert_m)
-            action.payload = [packet.to_bytes()]
+            if not check:
+                print("The received domain request is invalid")
+            else:
+                sig = user.ibe_sign(mode="local", payload) 
+                action = Action()
+                action.type = Action.ActionType.SEND
+                packet = Packet.make_domain_submit_sec(payload, sig)
+                # TODO(wrk): Find the IP and port of the top user
+                # action.addr = 
+                # action.port = 
+                action.payload = [packet.to_bytes()]
 
-        if packet.type == Packet.PacketType.SK_REQUEST_INIT:
+        if packet.type == Packet.PacketType.DOMAIN_COMMIT_SEC:
+
+            payload = packet.vals[0]
+            sig = packet.vals[1]
+            packet = Packet.from_bytes(payload)
+            user_id = packet.vals[0]
+            # TODO(wrk): mode="cloud" implementation
+            check = user.ibe_verify(mode="cloud", payload, sig, user_id)
+
+            if not check:
+                print("The received domain request is invalid")
+            else:
+                sig = user.ibe_sign(mode="local", payload) 
+                action = Action()
+                action.type = Action.ActionType.SEND
+                packet = Packet.make_domain_commit_sec(payload, sig)
+                # TODO(wrk): Find the IP and port of the top user
+                # action.addr = 
+                # action.port = 
+                action.payload = [packet.to_bytes()]
+
+        if packet.type == Packet.PacketType.DOMAIN_FINISH:
+            # TODO(wrk): close the socket with some ways
+            pass 
+
+        #=======================================================================
+
+
+        if packet.type == Packet.PacketType.MPK_REQUEST:
             # send system parameter and TODO(wxy): certificate
 
             # check the system parameters
@@ -146,7 +184,7 @@ class Server(object):
             action = Action()
             action.type = Action.ActionType.SEND
             mpk_file = self.user.admin_mpk_file
-            packet = Packet.make_sk_respond_init(mpk_file=mpk_file)
+            packet = Packet.make_mpk_respond(mpk_file=mpk_file)
             action.payload = [packet.to_bytes()]
 
         if packet.type == Packet.PacketType.SK_REQUEST_KEY_SEC:
@@ -160,65 +198,26 @@ class Server(object):
 
             sm4_key = packet.vals[0]
             client_id = packet.vals[1]
-            # client_addr = packet.vals[2]
-            # client_port = packet.vals[3]
-            cl_id = client_id.decode()
-            # cl_addr = client_addr.decode()
-            # cl_port = int().from_bytes(client_port, byteorder='big', signed=True)
+            secret = packet.vals[2]             #TODO(wrk): unimplemented
 
+            client_id = bytes2str(client_id)
+            secret = bytes2str(secret)
             client_list = sqlite3.connect('client_list.db')
 
-            # client_list.execute('''CREATE TABLE IF NOT EXISTS CLIENT
-            #                     (ID     CHAR(50)    PRIMARY KEY     NOT NULL,
-            #                     ADDR    CHAR(50),
-            #                     PORT    INT);''')
             client_list.execute('''CREATE TABLE IF NOT EXISTS CLIENT
-                                (ID     CHAR(50)    PRIMARY KEY     NOT NULL);''')
-
-            # client_list.execute("INSERT OR IGNORE INTO CLIENT (ID,ADDR,PORT) \
-                                #  VALUES ('{}','{}','{}')".format(cl_id, cl_addr, cl_port))
-            client_list.execute("INSERT OR IGNORE INTO CLIENT (ID) \
-                                 VALUES ('{}')".format(cl_id))
+                                (ID     CHAR(256)    PRIMARY KEY    NOT NULL,
+                                secret CHAR(256)                   NOT NULL);
+                                ''')
+            client_list.execute("INSERT OR IGNORE INTO CLIENT (ID,secret) VALUES ('{}','{}')".format(client_id, secret))
 
             client_list.commit()
             client_list.close()
 
-            # client_list = sqlite3.connect('client_list.db')
-            # cursor = client_list.execute("SELECT ID, ADDR, PORT from CLIENT")
-            # for row in cursor:
-            #     print(row[0])
-            #     print(row[1])
-            #     print(row[2])
-
+            client_id = str2bytes(client_id)
             client_sk = self.user.ibe_extract(mode="admin", c_id=client_id)
             assert client_sk
-            sk_len = len(client_sk)
-            sk_len = int2bytes(sk_len, 4)
 
-            cert_list = []
-
-            # append the cert file generated for the next layer
-            client_cert = self.gen_client_sig(client_id)
-            cert_list.append(client_cert.to_bytes())
-
-            certs = user.input_all_admin_certs()
-            for cert in certs:
-                certs = cert.to_bytes()
-                cert_list.append(certs)
-
-                # get all the certificates of current user
-            # cert_file = user.certificate_file
-            # while True:
-            #     assert os.path.exists(cert_file)
-            #     cert = user.input_cert(cert_file)
-            #     cert = Certificate.from_json(cert)
-            #     cert_list.append(cert.to_bytes())
-            #     if not cert.payload.parent:
-            #         break
-            #     # next certificate name
-            #     cert_file = cert.payload.parent.filename
-
-            packet = Packet.make_sk_respond_key_plain(client_sk, sk_len, cert_list)
+            packet = Packet.make_sk_respond_key_plain(client_sk, client_id, user.id)
 
             plain_text = packet.to_bytes()
 
@@ -228,7 +227,7 @@ class Server(object):
             action.type = Action.ActionType.SEND
             action.payload = [packet.to_bytes()]
 
-        if packet.type == Packet.PacketType.COMM_REQUEST_INIT:
+        if packet.type == Packet.PacketType.COMM_CLIENT_HELLO:
             target_id = packet.vals[0]
             client_id = packet.vals[1]
             client_mpk = packet.vals[2]
@@ -398,13 +397,6 @@ class Server(object):
             t = threading.Thread(target=self.handle_thread, args=(conn, addr))
             t.start()
 
-    # def run_gen_sys(self):
-    #     print("generate the system")
-    #     user = self.user
-    #     print("ibe_setup")
-    #     user.ibe_setup(mode="admin")
-    #     sk = user.ibe_extract(mode="admin", c_id=user.id)
-    #     user.output_sk(sk, mode="admin")
 
     def run_gen_local_auth(self):
         print("generate the local certificate")
@@ -439,15 +431,12 @@ class Server(object):
     def run_gen_admin_auth(self):
         print("generate the admin certificate")
         user = self.user
-        cert_file = "cert-top-" + user.id.decode() + ".conf"
-        local_cert = user.input_cert(filename=cert_file)
-        local_cert = Certificate.from_json(local_cert)
 
         cert = Certificate()
 
-        cert.payload.iss = "top-" + user.id.decode()
+        cert.payload.iss = bytes2str(user.id)
         cert.payload.aud = user.id
-        cert.payload.top_types = "non-top"
+        cert.payload.top_types = "top"
         cert.payload.admin_types = "admin"
 
         exp = datetime.now()
@@ -456,9 +445,6 @@ class Server(object):
 
         cert.payload.exp = format_date_time(stamp)
         cert.payload.mpk = user.input_mpk(mode="admin")
-        cert.payload.parent.id = user.id
-        cert.payload.parent.filename = "cert-top-" + user.id.decode() + ".conf"
-        cert.payload.parent.hash = sm3_hash(local_cert.to_bytes())
         cert.make_sig(user.input_sk(mode="global"))
 
         user.cert = cert.to_bytes()
