@@ -39,6 +39,7 @@ import time
 import traceback
 import os
 import sqlite3
+import cloud
 
 _valid_actions = {
     "init": "invoke an initialization",
@@ -62,10 +63,13 @@ class Client(object):
     def __init__(self, user):
         self.user = user
         user.client = self
+        self.comm_target = None
 
     def gen_action_from_data(self, data):
         action = Action()
         packet = Packet.from_bytes(data)
+        user = self.user
+
         if packet.type == Packet.PacketType.INIT_R1_ACK:
             print("receive ACK")
             self.user.sent_ack_cnts[0] += 1
@@ -125,7 +129,6 @@ class Client(object):
 
 
         if packet.type == Packet.PacketType.SK_RESPOND_KEY_SEC:
-
             # get the sec_sk
             cipher = packet.vals[0]
 
@@ -149,76 +152,28 @@ class Client(object):
             time_start = user.time
             print('sk totally cost', time_end-time_start)
 
-        if packet.type == Packet.PacketType.COMM_SERVER_HELLO:
-            time_start = time.time()
-            cur = time_start
-            target_id = packet.vals[1]
-            server_id = packet.vals[2]
-            server_mpk = packet.vals[3]
-            key_mode = packet.vals[4]
-            # first, check the parameters
-            user = self.user
-            assert target_id == user.id
-            assert key_mode in {b"sm4", b"IOT"}
+        if packet.type == Packet.PacketType.COMM_SERVER_HELLO_SEC:
 
-            # Then check the validation of mpk
-            certs = []
-            for certbytes, certlen in zip(packet.vals[5:], packet.lens[5:]):
-                assert len(certbytes) == certlen
-                cert = Certificate.from_bytes(certbytes)
-                certs.append(cert)
-            last = cur
-            cur = time.time()
-            print('parse certificate: ', cur-last)
+            # first, the packet should be decrypted
+            payload = packet.vals[0]
+            sig = packet.vals[1]
+            payload = user.ibe_decrypt("local", payload)
+            
+            packet = Packet.from_bytes(payload)
+            user_id, server_id, key_mode, key = packet.vals
+            assert server_id == self.comm_target
+            mpk = cloud.query_mpk(server_id)
+            check = user.ibe_verify(mode="comm", m=payload, sm=sig, user_id=server_id, mpk=mpk)
 
-            if not user.check_mpk(server_mpk, certs):
-                action = Action()
-                action.type = Action.ActionType.SEND
-                packet = Packet()
-                packet.type = Packet.PacketType.COMM_REFUSE
-                action.payload = packet.to_bytes()
-                return action
-            last = cur
-            cur = time.time()
-            print('check mpk: ', cur-last)
-
-            # output the received certificates
-            user.add_certs_in_cache(certs)
-            last = cur
-            cur = time.time()
-            print('add cache: ', cur-last)
-
-            # generate a random key and send it to the server
-            key = urandom(16)
-            user.key = key
-            if key_mode == b'sm4':
-                key_mes = key
-            elif key_mode == b'IOT':
-                key_mes = self.make_key(KEY_DUR_TIME, key)
-                user.IOT_key = key_mes
+            if not check:
+                #TODO: refuse
+                pass
             else:
-                print("KeyModeError!")
-            last = cur
-            cur = time.time()
-            print('generate key: ', cur-last)
-
-            packet = Packet.make_key_request_plain(des_id=server_id, src_id=target_id, key=key_mes, key_mode=key_mode)
-            plain_text = packet.to_bytes()
-            last = cur
-            cur = time.time()
-            print('make plain: ', cur-last)
-
-            cipher = user.ibe_encrypt(mode="comm", m=plain_text, user_id=server_id, mpk=server_mpk)
-            sign = user.ibe_sign(mode="local", m=plain_text)
-            packet = Packet.make_key_request_sec(cipher=cipher, sign=sign) # default mode = "comm"
-            last = cur
-            cur = time.time()
-            print('crypto: ', cur-last)
-
-            action = Action()
-            action.type = Action.ActionType.SEND
-            action.payload = [packet.to_bytes()]
-            return action
+                print("Session Key: ", key)
+                packet = Packet.make_comm_client_finish(key)
+                action = Action()
+                action.type = Action.ActionType.SEND_AND_EXIT
+                action.payload = [packet.to_bytes()]
 
         if packet.type == Packet.PacketType.KEY_RESPOND:
             cipher = packet.vals[2]
@@ -334,25 +289,21 @@ class Client(object):
             assert args.comm_port
             assert args.comm_id
             assert args.key_mode
+
             ret.addr = args.comm_addr
             ret.port = args.comm_port
             comm_id = args.comm_id
             comm_id = str2bytes(comm_id)
+            self.comm_target = comm_id
             key_mode = str2bytes(args.key_mode)
 
             user_id = user.id
-            mpk_file = user.local_mpk_file
-            mpk = ibe_read_from_file(mpk_file)
 
-            if user.cert == b'':
-                certs = user.input_all_local_certs()
-                certs = [cert.to_bytes() for cert in certs]
-                user.cert = certs
-            else:
-                pass
-
-            payload = Packet.make_comm_request_init(des_id=comm_id, src_id=user_id, mpk=mpk, certs=user.cert, key_mode=key_mode)
-            ret.payload = [payload.to_bytes()]
+            payload = Packet.make_comm_client_hello_plain(des_id=comm_id, src_id=user_id, key_mode=key_mode)
+            payload = payload.to_bytes()
+            sig = user.ibe_sign(mode="local", m=payload)
+            packet = Packet.make_comm_client_hello_sec(payload, sig)
+            ret.payload = [packet.to_bytes()]
 
         if args.action == "comm-no-auth":
             # This option is for the case that the user has known that it is
@@ -550,6 +501,10 @@ class Client(object):
                 if action.type == Action.ActionType.SEND:
                     assert (len(action.payload) == 1)
                     sock.sendall(action.payload[0])
+                if action.type == Action.ActionType.SEND_AND_EXIT:
+                    assert (len(action.payload) == 1)
+                    sock.sendall(action.payload[0])
+                    break
                 if action.type == Action.ActionType.RUN:
                     # TODO(wrk): Is this line possible?
                     self.run_run(action)

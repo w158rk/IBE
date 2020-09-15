@@ -20,11 +20,11 @@ from action import Action
 from packet import Packet
 from utils import int2bytes, bytes2str, str2bytes
 from auth import Certificate
-from crypto_c_interface import ibe_read_from_file, ibe_write_to_file, sm3_hash
+from crypto_c_interface import ibe_read_from_file, ibe_write_to_file, sm3_hash, sm4_dec
 from wsgiref.handlers import format_date_time
 from datetime import datetime, timedelta
 from time import mktime
-from constant import RECEIVE_BUFFER_SIZE
+from constant import RECEIVE_BUFFER_SIZE, COMM_FINISH_SECRET
 from key import IOT_key
 
 import sys
@@ -230,58 +230,53 @@ class Server(object):
             action.type = Action.ActionType.SEND
             action.payload = [packet.to_bytes()]
 
-        if packet.type == Packet.PacketType.COMM_CLIENT_HELLO:
+        #===================================================================
+        # COMM
+        #===================================================================
+
+        if packet.type == Packet.PacketType.COMM_CLIENT_HELLO_SEC:
+
+            payload = packet.vals[0]
+            sig = packet.vals[1]
+            packet = Packet.from_bytes(payload)
             target_id = packet.vals[0]
             client_id = packet.vals[1]
-            client_mpk = packet.vals[2]
-            key_mode = packet.vals[3]
+            key_mode = packet.vals[2]
 
             # first, check the parameters
             user = self.user
             assert target_id == user.id
             assert key_mode in {b"sm4", b"IOT"}
 
-            # Then check the validation of mpk
-            certs = []
-            for certbytes, certlen in zip(packet.vals[4:], packet.lens[4:]):
-                assert len(certbytes) == certlen
-                cert = Certificate.from_bytes(certbytes)
-                certs.append(cert)
-
-            if not user.check_mpk(client_mpk, certs):
+            # Then check the signature
+            # TODO: query_mpk
+            mpk = cloud.query_mpk(client_id)
+            check = user.ibe_verify(mode="comm", m=payload, user_id=client_id, mpk=mpk)
+            if not check:
+                #TODO(wrk): refuse the comm
+                pass
+            else:
+                # send the response
                 action = Action()
                 action.type = Action.ActionType.SEND
-                packet = Packet()
-                packet.type = Packet.PacketType.COMM_REFUSE
+                key = user.generate_sym_key()
+                temp_vars["key"] = key
+                packet = Packet.make_comm_server_hello_plain(client_id, target_id, key_mode, key)
+
+                payload = packet.to_bytes()
+                cipher = user.ibe_encrypt("comm", payload, client_id, mpk=mpk)
+                sig = user.ibe_sign("local", payload)
+                packet = Packet.make_comm_server_hello_sec(cipher, sig)
                 action.payload = [packet.to_bytes()]
-                return action
+                print("server_hello")
 
-            # The client_mpk is valid, store it in the temperary vars
-            temp_vars['mpk'] = client_mpk
-
-            # send the server's mpk and certificate
-            # it is relatively like the way in which the client do
-            # NOTE(wrk): check its logic if necessary
-            user.add_certs_in_cache(certs)
-
-            mpk = user.input_mpk(mode="local")
-            time_start2 = time.time()
-            if user.cert == b'':
-                certs = user.input_all_local_certs()
-                certs = [cert.to_bytes() for cert in certs]
-                user.cert = certs
-            else:
-                pass
-
-            time_end2 = time.time()
-            print('cost', time_end2-time_start2)
-
-            action = Action()
-            action.type = Action.ActionType.SEND
-            packet = Packet.make_comm_respond_init(mode=b'2', des_id=client_id,
-                                                   src_id=target_id, mpk=mpk, certs=user.cert, key_mode=key_mode)
-            action.payload = [packet.to_bytes()]
-            return action
+        if packet.type == Packet.PacketType.COMM_CLIENT_FINISH:
+            # check the key
+            payload = packet.vals[0]            
+            payload = sm4_dec(temp_vars["key"], payload)
+            assert payload == COMM_FINISH_SECRET
+            print("Session Key: ", temp_vars["key"])
+            # close the socket in some ways 
 
         if packet.type == Packet.PacketType.KEY_REQUEST_SEC:
             mode = packet.vals[0]

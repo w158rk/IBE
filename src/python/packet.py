@@ -14,6 +14,8 @@
 from enum import Enum
 from init import SS_poly_apply, SS_id2num
 from utils import str2bytes, int2bytes, bytes2int
+from crypto_c_interface import sm4_enc, sm4_dec
+from constant import COMM_FINISH_SECRET
 
 import os
 from base64 import b64encode, b64decode
@@ -46,11 +48,12 @@ class Packet(object):
         SK_KEY_ACK = 24
         SK_KEY_ACK_ACK = 25
 
-        COMM_CLIENT_HELLO = 30
-        COMM_SERVER_HELLO = 31
-        COMM_CLIENT_FINISH = 32
-        COMM_SERVER_FINISH = 33
-        COMM_REFUSE = 34
+        COMM_CLIENT_HELLO_PLAIN = 30
+        COMM_CLIENT_HELLO_SEC = 31
+        COMM_SERVER_HELLO_PLAIN = 32
+        COMM_SERVER_HELLO_SEC = 33
+        COMM_CLIENT_FINISH = 34
+        COMM_REFUSE = 36
 
         KEY_REQUEST_PLAIN = 40
         KEY_REQUEST_SEC = 41
@@ -360,17 +363,16 @@ class Packet(object):
     #==================================================================
 
     @classmethod
-    def make_comm_client_hello(cls, des_id=b'', src_id=b'', mpk=b'', key_mode=b""):
+    def make_comm_client_hello_plain(cls, des_id=b'', src_id=b'', key_mode=b""):
         """
         for the first communication init
         """
         assert des_id
         assert src_id
-        assert mpk          # the mpk might be eliminated in the cloud
         assert key_mode
 
         packet = Packet()
-        packet.type = cls.PacketType.COMM_CLIENT_HELLO
+        packet.type = cls.PacketType.COMM_CLIENT_HELLO_PLAIN
 
         lens = [len(des_id), len(src_id), len(key_mode)]
         vals = [des_id, src_id, key_mode]
@@ -381,35 +383,76 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_comm_server_hello(cls, mode=b'', des_id=b'', src_id=b'', mpk=b'', certs=[], key_mode=b''):
+    def make_comm_client_hello_sec(cls, payload=b'', sig=b''):
         """
-        for the first communication init respond
-
-        mode(?):
-            1: same domin
-            2: cross domin
-            3: comm with father node
+        add the signature
         """
-        assert des_id
-        assert src_id
-        assert mpk
-        assert certs
-        assert key_mode
 
         packet = Packet()
-        packet.type = cls.PacketType.COMM_SERVER_HELLO
+        packet.type = cls.PacketType.COMM_CLIENT_HELLO_SEC
 
-        lens = [len(mode), len(des_id), len(src_id), len(mpk), len(key_mode)]
-        vals = [mode, des_id, src_id, mpk, key_mode]
-
-        for cert in certs:
-            lens.append(len(cert))
-            vals.append(cert)
+        lens = [len(payload), len(sig)]
+        vals = [payload, sig]
 
         packet.lens = lens
         packet.vals = vals
 
         return packet
+
+    @classmethod
+    def make_comm_server_hello_plain(cls, des_id=b'', src_id=b'', key_mode=b"", key=b""):
+        """
+        key: session key
+        """
+        assert des_id
+        assert src_id
+        assert key_mode
+        assert key
+
+        packet = Packet()
+        packet.type = cls.PacketType.COMM_SERVER_HELLO_PLAIN
+
+        lens = [len(des_id), len(src_id), len(key_mode), len(key)]
+        vals = [des_id, src_id, key_mode, key]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_comm_server_hello_sec(cls, cipher=b'', sig=b''):
+        """
+        pack the cipher and signature
+        """
+
+        packet = Packet()
+        packet.type = cls.PacketType.COMM_SERVER_HELLO_SEC
+
+        lens = [len(cipher), len(sig)]
+        vals = [cipher, sig]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_comm_client_finish(cls, key):
+
+        packet = Packet()
+        packet.type = cls.PacketType.COMM_CLIENT_FINISH
+
+        payload = sm4_enc(key, COMM_FINISH_SECRET)
+
+        vals = [payload]
+        lens = [len(payload)]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
     #==================================================================
 
 

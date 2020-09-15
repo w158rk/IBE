@@ -21,7 +21,6 @@ def upload(top_data=None, packet=None):
         mpk = packet.vals[1] 
 
         user_id = bytes2str(user_id)
-        mpk = urlsafe_b64encode(mpk)
         mpk = bytes2str(mpk)
         sig = urlsafe_b64encode(sig)
         sig = bytes2str(sig)
@@ -44,14 +43,13 @@ def upload(top_data=None, packet=None):
 
         # insert the information, all the things converted into str
         user_id = bytes2str(user_id)
-        mpk = urlsafe_b64encode(mpk)
         mpk = bytes2str(mpk)
         sig = urlsafe_b64encode(parent_sig)
         sig = bytes2str(sig)
 
     db = sqlite3.connect(GLOBAL_DB)
     db.execute('''CREATE TABLE IF NOT EXISTS t_mpk
-                (id         VARCHAR(32)    PRIMARY KEY              ,
+                (id         INTEGER    PRIMARY KEY      autoincrement        ,
                 user_id     VARCHAR(32)                     NOT NULL,
                 mpk         CHAR(512)                       NOT NULL,
                 sig         CHAR(128)                        NOT NULL);
@@ -66,4 +64,21 @@ def query_mpk(user_id):
     get mpk from user_id
     """
     db = sqlite3.connect(GLOBAL_DB)
-    db.execute("SELECT mpk, sig FROM t_mpk WHERE id={}".format(user_id))
+    user_id = bytes2str(user_id)
+    ids = user_id.split(".")
+    parent_id = ".".join(ids[1:])
+    print(parent_id)
+    res = db.execute("SELECT mpk, sig FROM t_mpk WHERE user_id='{}'".format(parent_id))
+    
+    res = res.fetchone()
+    if not res:
+        return None
+
+    mpk, sig = res
+    sig = str2bytes(sig)
+    sig = urlsafe_b64decode(sig)
+    #TODO(wrk): verify the signature
+
+    mpk = str2bytes(mpk)
+    mpk = urlsafe_b64decode(mpk)
+    return mpk

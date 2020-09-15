@@ -358,7 +358,7 @@ class User(object):
             sk = f.read()
         return ibe_sign(m, sk)
 
-    def ibe_verify(self, mode="", m=b"", sm=b"", user_id=b""):
+    def ibe_verify(self, mode="", m=b"", sm=b"", user_id=b"", mpk=b""):
         """
         mode is in ["global", "admin", "local", "comm"]
         """
