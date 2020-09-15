@@ -373,7 +373,7 @@ class User(object):
             return ibe_verify(m, sm, mpk, user_id)
         else:
             raise UserError()
-        
+
         with open(mpk_file, "rb") as f:
             mpk = f.read()
         return ibe_verify(m, sm, mpk, user_id)
@@ -542,8 +542,6 @@ class User(object):
         SS_output_sQ(sQ, user=self)
 
     def run_gen_sys(self):
-        print("generate the system")
-        print("ibe_setup")
         self.ibe_setup(mode="admin")
         sk = self.ibe_extract(mode="admin", c_id=self.id)
         self.output_sk(sk, mode="admin")
@@ -644,7 +642,7 @@ class User(object):
         while len(self.recv_lists[round_index]) < co_cnt or self.sent_ack_cnts[round_index] < sz:
             for user in top_user_list:
                 point = self.cal_shareQ(user=user)
-                packet = Packet.make_init_3(point, mpk_file=self.global_mpk_file)
+                packet = Packet.make_init_3(point)
                 data = packet.to_bytes()
                 self.send(user, data)
 

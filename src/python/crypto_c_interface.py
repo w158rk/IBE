@@ -208,6 +208,8 @@ def ibe_encrypt(m, mpk, user_id):
         cipher, in bytes type
     """
 
+
+
     c_m = c_char_p()
     c_m.value = m
     m_len = len(m)

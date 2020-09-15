@@ -47,7 +47,8 @@ _valid_actions = {
     "comm": "initialize a secret session inter-domain",
     "comm-no-auth": "initialize a secret session in a domain",
     "sec": "encrypt the message",
-    "dec": "decrypt the cipher"
+    "dec": "decrypt the cipher",
+    "domain-update": "update the parameters of current domain"
 }
 _config_file = ""
 
@@ -76,19 +77,6 @@ class Client(object):
         if packet.type == Packet.PacketType.INIT_R3_ACK:
             print("receive ACK")
             self.user.sent_ack_cnts[2] += 1
-
-        if packet.type == Packet.PacketType.DOMAIN_RESPOND:
-            domain_cert = packet.vals[0]
-
-            cert = Certificate()
-            cert = cert.from_bytes(domain_cert)
-
-            user = self.user
-            user.output_cert(cert.to_json(with_filename=True), user.admin_certificate_file)
-
-            time_end = time.time()
-            time_start = user.time
-            print('gen-domain totally cost', time_end-time_start)
 
         if packet.type == Packet.PacketType.MPK_RESPOND:
 
@@ -130,6 +118,7 @@ class Client(object):
         #======================================================================
 
         if packet.type == Packet.PacketType.DOMAIN_FINISH:
+            print("Domain generation finished")
             action = Action()
             action.type = Action.ActionType.EXIT
         #======================================================================
@@ -250,40 +239,6 @@ class Client(object):
             time_start = user.time
             print('comm totally cost', time_end-time_start)
 
-        if packet.type == Packet.PacketType.MAKE_SEC_RESPOND_INIT:
-            target_id = packet.vals[0]
-            server_id = packet.vals[1]
-            server_mpk = packet.vals[2]
-            # first, check the parameters
-            user = self.user
-            assert target_id == user.id
-
-            # Then check the validation of mpk
-            certs = []
-            for certbytes, certlen in zip(packet.vals[3:], packet.lens[3:]):
-                assert len(certbytes) == certlen
-                cert = Certificate.from_bytes(certbytes)
-                certs.append(cert)
-
-            if not user.check_mpk(server_mpk, certs):
-                action = Action()
-                action.type = Action.ActionType.SEND
-                packet = Packet()
-                packet.type = Packet.PacketType.COMM_REFUSE
-                action.payload = packet.to_bytes()
-                return action
-
-            # output the received certificates
-            user.add_certs_in_cache(certs)
-
-            with open("send_message.txt", "r") as f:
-                message = f.read()
-
-            cipher = user.ibe_encrypt(mode="comm", m=message.encode(), user_id=server_id, mpk=server_mpk)
-
-            with open("cipher.conf", "wb") as f:
-                f.write(cipher)
-
         return action
 
     def gen_action_from_args(self, args):
@@ -297,6 +252,7 @@ class Client(object):
             the Action object
         """
         ret = Action()
+        user = self.user
 
         if args.action == "init":
             ret.type = Action.ActionType.RUN
@@ -325,7 +281,7 @@ class Client(object):
             mpk = user.input_mpk(mode="admin")
             payload = Packet.make_domain_request_plain(user_id, mpk)
             payload = payload.to_bytes()
-            sig = user.ibe_sign(mode="local", payload)
+            sig = user.ibe_sign("local", payload)
             payload = Packet.make_domain_request_sec(payload, sig)
             ret.payload = [payload.to_bytes()]
 
@@ -351,8 +307,6 @@ class Client(object):
             else:
                 key = user.generate_sym_key()
                 user.sm4_key = key
-
-                port = int2bytes(user.port, 2)
 
                 packet = Packet.make_sk_request_key_plain(key=key, user_id=user.id)
                 plain_text = packet.to_bytes()
@@ -526,29 +480,28 @@ class Client(object):
 
             ret.payload = [packet.to_bytes()]
 
-        # if args.action == "update":
+        if args.action == "domain-update":
+            
+            ret.type = Action.ActionType.SEND
 
-        #     if os.path.exists("client_list.db"):
-        #         pass
-        #     else:
-        #         raise ClientError("please generate your client_list database first")
+            user_id = user.id 
+            old_mpk = user.input_mpk(mode="admin")
+            user.run_gen_sys()
+            new_mpk = user.input_mpk(mode="admin")
 
-        #     client_list = sqlite3.connect('client_list.db')
-        #     cursor = client_list.execute("SELECT ID, ADDR, PORT from CLIENT")
-        #     for row in cursor:
+            parent = user.parent
+            assert parent.id
+            assert parent.addr
+            assert parent.port
+            ret.addr = parent.addr
+            ret.port = parent.port
 
-        #         ret.type = Action.ActionType.SEND
-        #         user = self.user
-
-        #         ret.addr = row[1]
-        #         ret.port = row[2]
-        #         print(row[1])
-        #         print(row[2])
-
-        #         packet = Packet.update_sk_plain(sk=b'hello')
-        #         print(row[0])
-        #         ret.payload = [packet.to_bytes()]
-
+            packet = Packet.make_domain_update_plain(user_id, old_mpk, new_mpk) 
+            payload = packet.to_bytes()
+            sig = user.ibe_sign("local", payload)
+            packet = Packet.make_domain_update_sec(payload, sig)
+            ret.payload = [packet.to_bytes()]
+            
         return ret
 
     def run_run(self, action):
@@ -596,7 +549,6 @@ class Client(object):
                     break
                 if action.type == Action.ActionType.SEND:
                     assert (len(action.payload) == 1)
-                    # print("send: ", action.payload[0])
                     sock.sendall(action.payload[0])
                 if action.type == Action.ActionType.RUN:
                     # TODO(wrk): Is this line possible?
@@ -604,7 +556,6 @@ class Client(object):
 
                 data = sock.recv(RECEIVE_BUFFER_SIZE)
                 # print("received: ", data)
-                print("data len: ", len(data))
                 action = self.gen_action_from_data(data)
 
         except socket.error as e:

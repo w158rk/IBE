@@ -35,7 +35,7 @@ import traceback
 import os
 import time
 import sqlite3
-
+import cloud
 
 _config_file = ""
 
@@ -125,44 +125,47 @@ class Server(object):
             sig = packet.vals[1]
             packet = Packet.from_bytes(payload)
             user_id = packet.vals[0]
-            check = user.ibe_verify(mode="admin", payload, sig, user_id)
+            check = user.ibe_verify("admin", payload, sig, user_id)
 
             if not check:
                 print("The received domain request is invalid")
             else:
-                sig = user.ibe_sign(mode="local", payload) 
+                sig = user.ibe_sign("admin", payload) 
                 action = Action()
+                packet = Packet.make_domain_submit_sec(data, sig)
+                cloud.upload(packet=packet)
+                
                 action.type = Action.ActionType.SEND
-                packet = Packet.make_domain_submit_sec(payload, sig)
-                # TODO(wrk): Find the IP and port of the top user
-                # action.addr = 
-                # action.port = 
+                packet = Packet.make_domain_finish()
                 action.payload = [packet.to_bytes()]
-
-        if packet.type == Packet.PacketType.DOMAIN_COMMIT_SEC:
-
-            payload = packet.vals[0]
-            sig = packet.vals[1]
-            packet = Packet.from_bytes(payload)
-            user_id = packet.vals[0]
-            # TODO(wrk): mode="cloud" implementation
-            check = user.ibe_verify(mode="cloud", payload, sig, user_id)
-
-            if not check:
-                print("The received domain request is invalid")
-            else:
-                sig = user.ibe_sign(mode="local", payload) 
-                action = Action()
-                action.type = Action.ActionType.SEND
-                packet = Packet.make_domain_commit_sec(payload, sig)
-                # TODO(wrk): Find the IP and port of the top user
-                # action.addr = 
-                # action.port = 
-                action.payload = [packet.to_bytes()]
+                # TODO(wrk): currently, we just send the DOMAIN_FINISH 
+                # packet to the client to finish the process 
+                
 
         if packet.type == Packet.PacketType.DOMAIN_FINISH:
             # TODO(wrk): close the socket with some ways
             pass 
+        
+        if packet.type == Packet.PacketType.DOMAIN_UPDATE_REQUEST_SEC:
+            payload = packet.vals[0]
+            sig = packet.vals[1]
+            packet = Packet.from_bytes(payload)
+            user_id = packet.vals[0]
+            check = user.ibe_verify("admin", payload, sig, user_id)
+
+            old_mpk = packet.vals[1]
+            new_mpk = packet.vals[2]
+
+            #TODO(wrk): check if the old_mpk belongs to the user
+            packet = Packet.make_domain_request_plain(user_id, new_mpk)
+            payload = packet.to_bytes()
+            sig = user.ibe_sign("admin", payload)
+            data = (packet, sig)
+            cloud.upload(top_data=data)
+
+            action.type = Action.ActionType.SEND
+            packet = Packet.make_domain_finish()
+            action.payload = [packet.to_bytes()]
 
         #=======================================================================
 
@@ -280,53 +283,6 @@ class Server(object):
             action.payload = [packet.to_bytes()]
             return action
 
-        if packet.type == Packet.PacketType.MAKE_SEC_REQUEST_INIT:
-            target_id = packet.vals[0]
-            client_id = packet.vals[1]
-            client_mpk = packet.vals[2]
-
-            # first, check the parameters
-            user = self.user
-            assert target_id == user.id
-
-            # Then check the validation of mpk
-            certs = []
-            for certbytes, certlen in zip(packet.vals[3:], packet.lens[3:]):
-                assert len(certbytes) == certlen
-                cert = Certificate.from_bytes(certbytes)
-                certs.append(cert)
-
-            if not user.check_mpk(client_mpk, certs):
-                action = Action()
-                action.type = Action.ActionType.SEND
-                packet = Packet()
-                packet.type = Packet.PacketType.COMM_REFUSE
-                action.payload = [packet.to_bytes()]
-                return action
-
-            # The client_mpk is valid, store it in the temperary vars
-            temp_vars['mpk'] = client_mpk
-
-            # send the server's mpk and certificate
-            # it is relatively like the way in which the client do
-            # NOTE(wrk): check its logic if necessary
-            user.add_certs_in_cache(certs)
-
-            mpk = user.input_mpk(mode="local")
-            if user.cert == b'':
-                certs = user.input_all_local_certs()
-                certs = [cert.to_bytes() for cert in certs]
-                user.cert = certs
-            else:
-                pass
-
-            action = Action()
-            action.type = Action.ActionType.SEND
-            packet = Packet.make_sec_respond_init(des_id=client_id,
-                                                  src_id=target_id, mpk=mpk, certs=user.cert)
-            action.payload = [packet.to_bytes()]
-            return action
-
         if packet.type == Packet.PacketType.KEY_REQUEST_SEC:
             mode = packet.vals[0]
             cipher = packet.vals[1]
@@ -432,28 +388,16 @@ class Server(object):
         print("generate the admin certificate")
         user = self.user
 
-        cert = Certificate()
+        user_id = user.id 
+        mpk = user.input_mpk(mode="admin")
 
-        cert.payload.iss = bytes2str(user.id)
-        cert.payload.aud = user.id
-        cert.payload.top_types = "top"
-        cert.payload.admin_types = "admin"
+        packet = Packet.make_domain_request_plain(user_id, mpk)
+        bstr = packet.to_bytes()
+        sig = user.ibe_sign("global", bstr)
+        data = (packet, sig)
 
-        exp = datetime.now()
-        exp += timedelta(days=365)
-        stamp = mktime(exp.timetuple())
+        cloud.upload(top_data=data)
 
-        cert.payload.exp = format_date_time(stamp)
-        cert.payload.mpk = user.input_mpk(mode="admin")
-        cert.make_sig(user.input_sk(mode="global"))
-
-        user.cert = cert.to_bytes()
-
-        # There is no need for a top user to generate a signature
-        # Users trust them with the fact that they own the
-        # private keys corresponding to global public master key
-
-        user.output_cert(cert=cert.to_json(), ctype="admin")
 
     def gen_client_sig(self, client_id=b""):
         """the private key used here belongs to the server

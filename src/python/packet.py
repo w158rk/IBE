@@ -61,12 +61,12 @@ class Packet(object):
 
         DOMAIN_REQUEST_PLAIN = 60
         DOMAIN_REQUEST_SEC = 61
-        DOMAIN_SUBMIT_PLAIN = 62
-        DOMAIN_SUBMIT_SEC = 63
-        DOMAIN_COMMIT_PLAIN = 64
-        DOMAIN_COMMIT_SEC = 65
-        DOMAIN_RESPOND = 66
-        DOMAIN_FINISH = 67
+        DOMAIN_SUBMIT_SEC = 62
+        DOMAIN_FINISH = 63
+        DOMAIN_UPDATE_REQUEST_PLAIN = 64
+        DOMAIN_UPDATE_REQUEST_SEC = 65
+        DOMAIN_UPDATE_RESPOND_PLAIN = 66
+        DOMAIN_UPDATE_RESPOND_SEC = 67
 
     def __init__(self, pack_type=PacketType.INIT_R1, lens=[], vals=[]):
         self.type = pack_type
@@ -202,44 +202,9 @@ class Packet(object):
         return packet
 
     @classmethod
-    def make_domain_submit_plain(cls, user_id, mpk):
-        packet = cls.make_domain_request_plain(user_id, mpk)
-        packet.type = cls.PacketType.DOMAIN_SUBMIT_PLAIN
-        return packet
-
-    @classmethod
     def make_domain_submit_sec(cls, payload, sig):
-        packet = cls.make_domain_request_plain(payload, sig)
+        packet = cls.make_domain_request_sec(payload, sig)
         packet.type = cls.PacketType.DOMAIN_SUBMIT_SEC
-        return packet
-
-    @classmethod
-    def make_domain_commit_plain(cls, user_id, mpk):
-        packet = cls.make_domain_request_plain(user_id, mpk)
-        packet.type = cls.PacketType.DOMAIN_COMMIT_PLAIN
-        return packet
-
-    @classmethod
-    def make_domain_commit_sec(cls, payload, sig):
-        packet = cls.make_domain_request_plain(payload, sig)
-        packet.type = cls.PacketType.DOMAIN_COMMIT_SEC
-        return packet
-
-    @classmethod
-    def make_domain_respond(cls, cert=b""):
-        """
-        make the packet with the id and the new domain mpk
-        """
-
-        packet = Packet()
-        packet.type = cls.PacketType.DOMAIN_RESPOND
-
-        lens = [len(cert)]
-        vals = [cert]
-
-        packet.lens = lens
-        packet.vals = vals
-
         return packet
 
     @classmethod 
@@ -247,6 +212,25 @@ class Packet(object):
         packet = cls()
         packet.type = cls.PacketType.DOMAIN_FINISH 
         return packet
+
+    @classmethod
+    def make_domain_update_plain(cls, user_id, old_mpk, new_mpk):
+        packet = cls()
+        packet.type = cls.PacketType.DOMAIN_UPDATE_REQUEST_PLAIN
+        lens = [len(user_id), len(old_mpk), len(new_mpk)]
+        vals = [user_id, old_mpk, new_mpk]
+
+        packet.lens = lens
+        packet.vals = vals
+
+        return packet
+
+    @classmethod
+    def make_domain_update_sec(cls, payload, sig):
+        packet = cls.make_domain_request_sec(payload, sig)
+        packet.type = cls.PacketType.DOMAIN_UPDATE_REQUEST_SEC
+        return packet
+
 
     #=====================================================================#
 
@@ -382,7 +366,7 @@ class Packet(object):
         """
         assert des_id
         assert src_id
-        assert mpk          # the mpk might be eliminated in the cloud mode
+        assert mpk          # the mpk might be eliminated in the cloud
         assert certs
         assert key_mode
 
@@ -432,6 +416,7 @@ class Packet(object):
 
         return packet
     #==================================================================
+
 
     @classmethod
     def make_key_request_plain(cls, des_id=b'', src_id=b'', key=b'', key_mode=b''):
@@ -591,6 +576,8 @@ class Packet(object):
         packet.vals = vals
 
         return packet
+    
+
 
     @classmethod
     def gen_domain_cert_requet(cls, user_id, user_mpk, father_id, father_sk):
