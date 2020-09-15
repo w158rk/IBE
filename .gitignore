@@ -22,6 +22,8 @@ schedule.md
 
 .vscode/
 
+test.py
+
 U_*
 V_*
 __pycache__/

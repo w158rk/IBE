@@ -21,13 +21,13 @@ _client = None
 _args = None
 
 
-class API_input(BaseModel):
-    user_id: str = None
-    user_mpk: bytes = None
-    user_msk: bytes = None
-    user_sk: bytes = None
-    message: str = None
-    cipher: bytes = None
+# class API_input(BaseModel):
+#     user_id: str = None
+#     user_mpk: bytes = None
+#     user_msk: bytes = None
+#     user_sk: bytes = None
+#     message: str = None
+#     cipher: bytes = None
 
 
 app = FastAPI()
@@ -75,22 +75,31 @@ def root():
     return "Rest API for a Node"
 
 
+class Sk_Body(BaseModel):
+    msk: str
+    user_id: str
+
+
 @app.post("/sk")
-def request_for_sk(item: API_input):
+def request_for_sk(item: Sk_Body):
 
-    assert item.user_id
-    assert item.user_msk
+    msk = str2bytes(item.msk)
+    msk = urlsafe_b64decode(msk)
+    user_id = str2bytes(item.user_id)
 
-    ret = ibe_extract(item.msk, item.user_id)
+    ret = ibe_extract(msk, user_id)
+    ret = urlsafe_b64encode(ret)
 
-    return ret
+    return {"sk": ret}
+
 
 class Encrypt_Body(BaseModel):
     message: str
-    mpk: str 
+    mpk: str
     user_id: str
 
-@app.get("/encrypt")
+
+@app.post("/encrypt")
 def request_for_sec(item: Encrypt_Body):
 
     message = str2bytes(item.message)
@@ -98,17 +107,20 @@ def request_for_sec(item: Encrypt_Body):
     mpk = str2bytes(item.mpk)
     mpk = urlsafe_b64decode(mpk)
     user_id = str2bytes(item.user_id)
-    
+
     ret = ibe_encrypt(message, mpk, user_id)
     ret = urlsafe_b64encode(ret)
     ret = bytes2str(ret)
 
     return {"cipher": ret}
 
+
 class Decrypt_Body(BaseModel):
-    cipher: str 
+    cipher: str
     sk: str
-@app.get("/decrypt")
+
+
+@app.post("/decrypt")
 def request_for_dec(item: Decrypt_Body):
 
     cipher = str2bytes(item.cipher)
@@ -123,17 +135,21 @@ def request_for_dec(item: Decrypt_Body):
     return {"dmessage": ret}
 
 
+class Domain_Body(BaseModel):
+    user_id: str
+
+
 @app.post("/gen-domain/request")
-def request_gen_domain(item: API_input):
+def request_gen_domain(item: Domain_Body):
 
-    assert item.user_id
+    user_id = str2bytes(item.user_id)
 
-    ibe_setup("mpk.conf", "msk.conf", "mpk-len.conf", "msk-len.conf")
+    ibe_setup(b"mpk.conf", b"msk.conf", b"mpk-len.conf", b"msk-len.conf")
 
     mpk = ibe_read_from_file("mpk.conf")
-    msk = ibe_read_from_file("mpk.conf")
+    msk = ibe_read_from_file("msk.conf")
 
-    sk = ibe_extract(msk, item.user_id)
+    sk = ibe_extract(msk, user_id)
     ibe_write_to_file(sk, "sk.conf")
 
     out_item = {"msk": urlsafe_b64encode(msk), "mpk": urlsafe_b64encode(mpk), "sk": urlsafe_b64encode(sk)}
