@@ -44,15 +44,17 @@ def upload(top_data=None, packet=None):
 
         # insert the information, all the things converted into str
         user_id = bytes2str(user_id)
+        mpk = urlsafe_b64encode(mpk)
         mpk = bytes2str(mpk)
-        sig = bytes2str(parent_sig)
+        sig = urlsafe_b64encode(parent_sig)
+        sig = bytes2str(sig)
 
     db = sqlite3.connect(GLOBAL_DB)
     db.execute('''CREATE TABLE IF NOT EXISTS t_mpk
                 (id         VARCHAR(32)    PRIMARY KEY              ,
                 user_id     VARCHAR(32)                     NOT NULL,
-                mpk         CHAR(237)                       NOT NULL,
-                sig         CHAR(32)                        NOT NULL);
+                mpk         CHAR(512)                       NOT NULL,
+                sig         CHAR(128)                        NOT NULL);
                 ''')
     print("insert an entry to the database")
     db.execute("INSERT INTO t_mpk (user_id,mpk,sig) VALUES ('{}','{}','{}')".format(user_id, mpk, sig))

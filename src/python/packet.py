@@ -360,25 +360,20 @@ class Packet(object):
     #==================================================================
 
     @classmethod
-    def make_comm_client_hello(cls, des_id=b'', src_id=b'', mpk=b'', key_mode=b"", certs=[]):
+    def make_comm_client_hello(cls, des_id=b'', src_id=b'', mpk=b'', key_mode=b""):
         """
         for the first communication init
         """
         assert des_id
         assert src_id
         assert mpk          # the mpk might be eliminated in the cloud
-        assert certs
         assert key_mode
 
         packet = Packet()
         packet.type = cls.PacketType.COMM_CLIENT_HELLO
 
-        lens = [len(des_id), len(src_id), len(mpk), len(key_mode)]
-        vals = [des_id, src_id, mpk, key_mode]
-
-        for cert in certs:
-            lens.append(len(cert))
-            vals.append(cert)
+        lens = [len(des_id), len(src_id), len(key_mode)]
+        vals = [des_id, src_id, key_mode]
 
         packet.lens = lens
         packet.vals = vals

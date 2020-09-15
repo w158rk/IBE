@@ -1,0 +1,25 @@
+{
+    "log" : "server.log",
+    "top_user_list": "../top_user_list.json",
+
+    "global_mpk_file" : "mpk-global.conf",
+    "local_mpk_file" : "mpk-local.conf",
+    "local_sk_file" : "sk-local.conf",
+    "local_certificate_file": "certificate.conf",
+    "admin_mpk_file" : "mpk-admin.conf",
+    "admin_msk_file" : "msk-admin.conf",
+    "admin_sk_file" : "sk-admin.conf",
+    "admin_certificate_file": "certificate.conf",
+
+    "id" : "edu.cn", 
+    "port" : 5006,
+    "addr" : "127.0.0.1",
+    "http_addr" : "127.0.0.1",
+    "http_port" : 8000,
+    "parent" : {
+        "id" : "cn",
+        "addr" : "127.0.0.1",
+        "port" : 5003
+    }
+}
+    
